@@ -1,0 +1,261 @@
+📁 .git
+   📄 COMMIT_EDITMSG
+   📄 config
+   📄 description
+   📄 FETCH_HEAD
+   📄 HEAD
+   
+   📄 index
+   📁 info
+      📄 exclude
+   📁 logs
+      📄 HEAD
+      📁 refs
+         📁 heads
+            📄 main
+            📄 Mauli
+         📁 remotes
+            📁 origin
+               📄 Ajai-Kumar
+               📄 HEAD
+               📄 Jiju
+               📄 main
+               📄 Mauli
+               📄 New-AK
+   📁 objects
+ 
+   📄 ORIG_HEAD
+   📁 refs
+      📁 heads
+         📄 main
+         📄 Mauli
+      📁 remotes
+         📁 origin
+            📄 Ajai-Kumar
+            📄 HEAD
+            📄 Jiju
+            📄 main
+            📄 Mauli
+            📄 New-AK
+      📁 tags
+📄 .gitattributes
+📄 .gitignore
+📁 admin
+   📄 .env
+   📄 .eslintrc.cjs
+   📄 .gitignore
+   📄 index.html
+   📄 package-lock.json
+   📄 package.json
+   📄 postcss.config.js
+   📁 public
+      📄 favicon.svg
+      📄 vite.svg
+   📄 README.md
+   📄 show-structure.js
+   📁 src
+      📄 App.jsx
+      📁 assets
+         📄 1.png
+         
+      📁 components
+         📄 Navbar.jsx
+         📄 Sidebar.jsx
+         📄 StylistPanel.jsx
+      📁 context
+         📄 AdminContext.jsx
+         📄 AppContext.jsx
+         📄 DoctorContext.jsx
+         📄 SlotManagementContext.jsx
+         📄 StylistContext.jsx
+      📄 index.css
+      📄 main.jsx
+      📁 pages
+         📁 Admin
+            📄 AddDoctor.jsx
+            📄 AllAppointments.jsx
+            📄 backup_AllAppoinment.jsx
+            📄 Dashboard.jsx
+            📄 DoctorsList.jsx
+            📄 EditStylist.jsx
+            📄 Main-AllAppointments.jsx
+            📄 MyProfile.jsx
+            📄 ServicesCategory.jsx
+            📄 SlotManagement copy.jsx
+            📄 SlotManagement.jsx
+         📁 Doctor
+            📄 DoctorAppointments.jsx
+            📄 DoctorDashboard.jsx
+            📄 DoctorEarnings.jsx
+            📄 DoctorProfile.jsx
+         📄 Login.jsx
+   📄 tailwind.config.js
+   📄 vercel.json
+   📄 vite.config.js
+📁 backend
+   📄 .env
+   📄 .gitignore
+   📁 config
+      📄 cloudinary.js
+      📄 mongodb.js
+      📄 passport.js
+   📁 controllers
+      📄 adminController.js
+      📄 authController.js
+      📄 Before slot booked changing bookingController.js
+      📄 Before slot booked changing userController.js
+      📄 bookingController.js
+      📄 doctorController.js
+      📄 doctorOtpController.js
+      📄 serviceCategoryController.js
+      📄 userController.js
+      📄 userPasswordController.js
+   📄 demo.js
+   📁 middleware
+      📄 authAdmin.js
+      📄 authDoctor.js
+      📄 authUser.js
+      📄 multer.js
+   📁 models
+      📄 AdminNotification.js
+      📄 appointmentModel.js
+      📄 BlockedDate.js
+      📄 Booking.js
+      📄 doctorModel.js
+      📄 RecurringHoliday.js
+      📄 ServiceCategory.js
+      📄 SlotSettings.js
+      📄 SpecialWorkingDay.js
+      📄 userModel.js
+   📄 package-lock.json
+   📄 package.json
+   📁 routes
+      📄 adminRoute.js
+      📄 authRoutes.js
+      📄 doctorRoute.js
+      📄 userRoute.js
+   📄 server.js
+   📄 show-structure.js
+   📄 show-structure.txt
+   📁 uploads
+      
+   📁 utils
+      📄 appointmentCron.js
+      📄 Local Work Prod Not Have Block Special Code slotUtils copy.js
+      📄 sendEmail.js
+      📄 sendOtp.js
+      📄 slotUtils.js
+📄 demo.js
+📄 demo.jsx
+📁 frontend
+   📄 .env
+   📄 .eslintrc.cjs
+   📄 .gitignore
+   📁 android
+      📁 app
+         📁 build
+            📄 .npmkeep
+         📁 src
+            📁 androidTest
+               📁 java
+                  📁 com
+                     📁 getcapacitor
+                        📁 myapp
+            📁 main
+               📁 assets
+                  📁 public
+                     📁 assets
+               📁 java
+                  📁 com
+                     📁 uniquesalon
+                        📁 app
+               📁 res
+                  📁 drawable
+                  📁 drawable-land-hdpi
+                  📁 drawable-land-mdpi
+                  📁 drawable-land-xhdpi
+                  📁 drawable-land-xxhdpi
+                  📁 drawable-land-xxxhdpi
+                  📁 drawable-port-hdpi
+                  📁 drawable-port-mdpi
+                  📁 drawable-port-xhdpi
+                  📁 drawable-port-xxhdpi
+                  📁 drawable-port-xxxhdpi
+                  📁 drawable-v24
+                  📁 layout
+                  📁 mipmap-anydpi-v26
+                  📁 mipmap-hdpi
+                  📁 mipmap-mdpi
+                  📁 mipmap-xhdpi
+                  📁 mipmap-xxhdpi
+                  📁 mipmap-xxxhdpi
+                  📁 values
+                  📁 xml
+            📁 test
+               📁 java
+                  📁 com
+                     📁 getcapacitor
+                        📁 myapp
+      📁 capacitor-cordova-android-plugins
+         📁 src
+            📁 main
+               📁 java
+               📁 res
+      📁 gradle
+         📁 wrapper
+   📄 backup status dynmic MyAppointments.jsx
+   📄 demo.jsx
+   📁 dist
+      📁 assets
+         
+   📄 index.html
+   📄 package-lock.json
+   📄 package.json
+   📄 postcss.config.js
+   📁 public
+      📄 favicon.svg
+      📄 icon-192.png
+      📄 icon-512.png
+      📄 manifest.json
+      📄 vite.svg
+   📄 README.md
+   📄 show-structure.js
+   📁 src
+      📄 App.jsx
+      📁 assets
+         
+      📁 components
+         📄 Banner.jsx
+         📄 Footer.jsx
+         📄 Header.jsx
+         📄 Navbar.jsx
+         📄 RelatedDoctors.jsx
+         📄 ScrollToTop.jsx
+         📄 SpecialityMenu.jsx
+         📄 TopDoctors.jsx
+      📁 context
+         📄 AppContext.jsx
+      📄 index.css
+      📄 main.jsx
+      📁 pages
+         📄 About.jsx
+         📄 Appointment.jsx
+         📄 AuthCallback.jsx
+         📄 before multiple change MyAppointments.jsx
+         📄 Contact.jsx
+         📄 Doctors.jsx
+         📄 ForgotPassword.jsx
+         📄 Home.jsx
+         📄 Local Work Prod Not Work Appointment copy.jsx
+         📄 Login.jsx
+         📄 MyAppointments.jsx
+         📄 MyProfile.jsx
+         📄 Services.jsx
+         📄 Verify.jsx
+   📄 tailwind.config.js
+   📄 vercel.json
+   📄 vite.config.js
+📄 How_To_Run_Project.pdf
+📄 Salon-Booking-Full-API.postman_collection.json
+📄 show-structure.js
+📄 show-structure.txt

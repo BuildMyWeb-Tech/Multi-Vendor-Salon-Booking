@@ -1,0 +1,1287 @@
+{
+  "info": {
+    "name": "Salon Booking Full API",
+    "description": "Complete API collection for Salon Booking Application with User, Admin, and Doctor endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "salon-booking-api"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "docId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appointmentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "API Working",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User APIs",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.token) {",
+                  "        pm.collectionVariables.set('authToken', jsonData.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.token) {",
+                  "        pm.collectionVariables.set('authToken', jsonData.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/get-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "get-profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "John Doe Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "1234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "{\"line1\": \"123 Main St\", \"line2\": \"Apt 4B\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "dob",
+                  "value": "1990-01-01",
+                  "type": "text"
+                },
+                {
+                  "key": "gender",
+                  "value": "Male",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/update-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "update-profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Slots",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/available-slots?date=2026-01-25&docId={{docId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "available-slots"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-01-25"
+                },
+                {
+                  "key": "docId",
+                  "value": "{{docId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Book Appointment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.appointmentId) {",
+                  "        pm.collectionVariables.set('appointmentId', jsonData.appointmentId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"docId\": \"{{docId}}\",\n  \"slotDate\": \"2026-01-25\",\n  \"slotTime\": \"2026-01-25T10:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/book-appointment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "book-appointment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List User Appointments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/cancel-appointment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "cancel-appointment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reschedule Appointment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"appointmentId\": \"{{appointmentId}}\",\n  \"slotDate\": \"2026-01-26\",\n  \"slotTime\": \"11:00 AM\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/reschedule-appointment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "reschedule-appointment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Payment Razorpay",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/payment-razorpay",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "payment-razorpay"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Razorpay",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_xxx\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/verifyRazorpay",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "verifyRazorpay"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Payment Stripe",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/payment-stripe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "payment-stripe"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Stripe",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\",\n  \"success\": \"true\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/verifyStripe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "verifyStripe"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin APIs",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.token) {",
+                  "        pm.collectionVariables.set('authToken', jsonData.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Doctor/Stylist",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Dr. Smith",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "drsmith@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password123",
+                  "type": "text"
+                },
+                {
+                  "key": "specialty",
+                  "value": "Hair Styling",
+                  "type": "text"
+                },
+                {
+                  "key": "experience",
+                  "value": "5 Years",
+                  "type": "text"
+                },
+                {
+                  "key": "about",
+                  "value": "Experienced hair stylist",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "100",
+                  "type": "text"
+                },
+                {
+                  "key": "certification",
+                  "value": "Certified Professional",
+                  "type": "text"
+                },
+                {
+                  "key": "instagram",
+                  "value": "@drsmith",
+                  "type": "text"
+                },
+                {
+                  "key": "workingHours",
+                  "value": "10AM-7PM",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/add-doctor",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "add-doctor"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Doctors",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/all-doctors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "all-doctors"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Appointments (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Appointment (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/cancel-appointment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "cancel-appointment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Doctor Availability",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"docId\": \"{{docId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/change-availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "change-availability"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "dashboard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Slot Settings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/slot-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "slot-settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Slot Settings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slotStartTime\": \"09:00\",\n  \"slotEndTime\": \"18:00\",\n  \"slotDuration\": 30,\n  \"breakTime\": true,\n  \"breakStartTime\": \"13:00\",\n  \"breakEndTime\": \"14:00\",\n  \"daysOpen\": [1, 2, 3, 4, 5],\n  \"openSlotsFromDate\": \"2026-01-01\",\n  \"openSlotsTillDate\": \"2026-12-31\",\n  \"allowRescheduling\": true,\n  \"rescheduleHoursBefore\": 24,\n  \"maxAdvanceBookingDays\": 30,\n  \"minBookingTimeBeforeSlot\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/slot-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "slot-settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Blocked Date",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-01-30\",\n  \"reason\": \"Holiday\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/blocked-dates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "blocked-dates"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Blocked Date",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/blocked-dates/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "blocked-dates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "blocked_date_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Recurring Holiday",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Year\",\n  \"type\": \"annual\",\n  \"value\": \"01-01\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/recurring-holidays",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "recurring-holidays"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Recurring Holiday",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/recurring-holidays/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "recurring-holidays", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "holiday_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Special Working Day",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-01-25\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/special-working-days",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "special-working-days"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Special Working Day",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/special-working-days/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "special-working-days", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "special_day_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Slot Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/public/slot-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "public", "slot-settings"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Doctor APIs",
+      "item": [
+        {
+          "name": "Doctor Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.token) {",
+                  "        pm.collectionVariables.set('authToken', jsonData.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"drsmith@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctor Appointments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Appointment (Doctor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"docId\": \"{{docId}}\",\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/cancel-appointment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "cancel-appointment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Appointment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"docId\": \"{{docId}}\",\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/complete-appointment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "complete-appointment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctor List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "list"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Availability (Doctor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"docId\": \"{{docId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/change-availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "change-availability"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Doctor Dashboard",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "dashboard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctor Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Doctor Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"docId\": \"{{docId}}\",\n  \"fees\": 150,\n  \"address\": {\"line1\": \"456 Medical St\", \"line2\": \"Suite 200\"},\n  \"available\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctor/update-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctor", "update-profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

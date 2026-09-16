@@ -1,0 +1,47 @@
+# --------------------
+# Environment variables
+# --------------------
+.env
+.env.*
+!*.example
+
+# --------------------
+# Node modules
+# --------------------
+node_modules/
+
+# --------------------
+# Build outputs
+# --------------------
+dist/
+build/
+
+# --------------------
+# Logs
+# --------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --------------------
+# OS files
+# --------------------
+.DS_Store
+Thumbs.db
+
+# --------------------
+# Vite / Cache
+# --------------------
+.vite/
+.cache/
+
+# --------------------
+# Editor settings
+# --------------------
+.vscode/
+.idea/
+
+# --------------------
+# PDF / temp (optional)
+# --------------------
+*.log
