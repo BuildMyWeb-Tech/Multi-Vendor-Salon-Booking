@@ -159,12 +159,13 @@ export const getAvailableDates = async (req, res) => {
     if (!doctor) return res.json({ success: false, message: 'Stylist not found' });
     if (!doctor.available) return res.json({ success: false, message: 'Stylist is not available' });
 
-    const settings = await SlotSettings.findOne();
+    const shopId = doctor.shopId || 'SHOP001';
+    const settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
     if (!settings) return res.json({ success: false, message: 'Slot settings not configured' });
 
-    const blockedDates = await BlockedDate.find();
-    const recurringHols = await RecurringHoliday.find();
-    const specialDays = await SpecialWorkingDay.find();
+    const blockedDates = await BlockedDate.find({ shopId });
+    const recurringHols = await RecurringHoliday.find({ shopId });
+    const specialDays = await SpecialWorkingDay.find({ shopId });
 
     const toStr = (d) =>
       `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -222,13 +223,14 @@ export const getAvailableSlots = async (req, res) => {
     if (!date || !docId)
       return res.json({ success: false, message: 'Date and stylist ID are required' });
 
-    const doctor = await doctorModel.findById(docId).select('available leaveDates');
+    const doctor = await doctorModel.findById(docId).select('available leaveDates shopId');
     if (!doctor) return res.json({ success: false, message: 'Stylist not found' });
     if (!doctor.available) return res.json({ success: false, message: 'Stylist is not available' });
     if ((doctor.leaveDates || []).includes(date))
       return res.json({ success: true, slots: [], message: 'Stylist is on leave on this date' });
 
-    const settings = await SlotSettings.findOne();
+    const shopId = doctor.shopId || 'SHOP001';
+    const settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
     if (!settings) return res.json({ success: false, message: 'Slot settings not configured' });
 
     const { slots: allSlots, error } = await generateAvailableSlots(date, settings, docId);
@@ -327,6 +329,7 @@ export const bookAppointment = async (req, res) => {
       remainingAmount: finalRemaining,
       payment: finalPaid > 0,
       paymentMethod: paymentMethod || 'cash',
+      shopId: docData.shopId || 'SHOP001',
       date: Date.now(),
     }).save();
 
@@ -357,13 +360,13 @@ export const bookAppointment = async (req, res) => {
       },
     });
 
-    // ✅ Notify ADMIN — new booking alert
+    // ✅ Notify ADMIN — new booking alert (shop-aware)
     await AdminNotification.create({
       title: '🆕 New Booking',
       message: `${userData.name} booked an appointment with ${docData.name} on ${dateStr} at ${timeStr}.`,
       type: 'booking_confirmed',
       appointmentId: newAppointment._id,
-      meta: { userName: userData.name, stylistName: docData.name, slotDate, slotTime },
+      shopId: docData.shopId || 'SHOP001',
     });
 
     console.log('✅ Appointment booked:', newAppointment._id.toString());

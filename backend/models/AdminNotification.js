@@ -25,6 +25,9 @@ const adminNotificationSchema = new mongoose.Schema(
       ref: 'appointment',
       default: null,
     },
+
+    // Multi-tenant
+    shopId: { type: String, default: 'SHOP001' },
   },
   { timestamps: true }
 );

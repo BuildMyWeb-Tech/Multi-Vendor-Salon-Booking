@@ -25,6 +25,9 @@ const userSchema = new mongoose.Schema(
     otpExpiry: { type: Date, default: null },
     otpVerified: { type: Boolean, default: false },
 
+    // Multi-tenant: which shop this customer registered through
+    shopId: { type: String, default: 'SHOP001' },
+
     // ✅ NEW: In-app notifications array
     // Each notification is pushed when an event happens (e.g. leave cancellation)
     notifications: [

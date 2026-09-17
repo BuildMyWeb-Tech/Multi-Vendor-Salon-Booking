@@ -35,8 +35,9 @@ export const getAvailableSlots = async (req, res) => {
       console.log('✅ Doctor found:', doctor.name);
     }
 
-    // ✅ Load slot settings
-    const slotSettings = await SlotSettings.findOne();
+    // ✅ Load slot settings (shop-aware)
+    const shopId = doctor?.shopId || 'SHOP001';
+    const slotSettings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
 
     if (!slotSettings) {
       console.log('❌ Slot settings not found');

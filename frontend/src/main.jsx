@@ -3,29 +3,33 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
-import AppContextProvider from './context/AppContext.jsx'
 
-// ---- React App Mount ----
+import SuperAdminContextProvider from './context/SuperAdminContext.jsx'
+import SalonAdminContextProvider from './context/SalonAdminContext.jsx'
+import AdminContextProvider from './context/AdminContext.jsx'
+import DoctorContextProvider from './context/DoctorContext.jsx'
+import AppContextProvider from './context/AppContext.jsx'
+import ShopContextProvider from './context/ShopContext.jsx'
+import SlotManagementContextProvider from './context/SlotManagementContext.jsx'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AppContextProvider>
-        <App />
-      </AppContextProvider>
+      <SuperAdminContextProvider>
+        <SalonAdminContextProvider>
+          <AdminContextProvider>
+            <DoctorContextProvider>
+              <AppContextProvider>
+                <ShopContextProvider>
+                  <SlotManagementContextProvider>
+                    <App />
+                  </SlotManagementContextProvider>
+                </ShopContextProvider>
+              </AppContextProvider>
+            </DoctorContextProvider>
+          </AdminContextProvider>
+        </SalonAdminContextProvider>
+      </SuperAdminContextProvider>
     </BrowserRouter>
   </React.StrictMode>
 )
-
-// ---- Register Service Worker (Vite PWA Compatible) ----
-// if ('serviceWorker' in navigator) {
-//   window.addEventListener('load', () => {
-//     navigator.serviceWorker
-//       .register('/service-worker.js', { scope: '/' })
-//       .then(reg => {
-//         console.log('✅ Service Worker registered:', reg)
-//       })
-//       .catch(err => {
-//         console.error('❌ Service Worker failed:', err)
-//       })
-//   })
-// }

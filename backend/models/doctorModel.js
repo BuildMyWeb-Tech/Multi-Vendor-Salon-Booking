@@ -46,6 +46,9 @@ const doctorSchema = new mongoose.Schema(
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null },
     otpVerified: { type: Boolean, default: false },
+
+    // Multi-tenant: which shop this stylist belongs to
+    shopId: { type: String, default: 'SHOP001' },
   },
   { minimize: false }
 );

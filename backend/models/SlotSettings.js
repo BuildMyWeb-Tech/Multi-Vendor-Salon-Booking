@@ -89,7 +89,10 @@ const slotSettingsSchema = new mongoose.Schema({
     type: Number,
     enum: [10, 25, 30, 50, 75, 100],
     default: 100
-  }
+  },
+
+  // Multi-tenant
+  shopId: { type: String, default: 'SHOP001', unique: true }
 }, {
   timestamps: true
 });

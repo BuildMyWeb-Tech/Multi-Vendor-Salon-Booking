@@ -25,7 +25,10 @@ const serviceCategorySchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
-    }
+    },
+
+    // Multi-tenant
+    shopId: { type: String, default: 'SHOP001' }
   },
   {
     timestamps: true

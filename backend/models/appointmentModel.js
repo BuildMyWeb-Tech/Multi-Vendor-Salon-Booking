@@ -124,6 +124,9 @@ const appointmentSchema = new mongoose.Schema(
       speciality: String,
       price: Number,
     },
+
+    // Multi-tenant
+    shopId: { type: String, default: 'SHOP001' },
   },
   { timestamps: true }
 );
@@ -134,6 +137,5 @@ appointmentSchema.index({ doctorId: 1, slotDateTime: 1 }, { unique: true });
 // Indexes for efficient querying
 appointmentSchema.index({ userId: 1, isCompleted: 1 });
 appointmentSchema.index({ doctorId: 1, isCompleted: 1 });
-appointmentSchema.index({ slotDateTime: 1 });
 
 export default mongoose.model('appointment', appointmentSchema);
