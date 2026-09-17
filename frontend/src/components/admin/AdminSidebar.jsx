@@ -26,7 +26,7 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
     { to: `/${slug}/admin/services`, label: 'Services', icon: LayoutGrid },
     { to: `/${slug}/admin/slot-management`, label: 'Slots', icon: CalendarClock },
     { to: `/${slug}/admin/add-stylist`, label: 'Add Stylist', icon: UserPlus2 },
-    { to: `/${slug}/admin/my-profile`, label: 'My Profile', icon: User },
+    // { to: `/${slug}/admin/my-profile`, label: 'My Profile', icon: User },
   ];
 
   const stylistLinks = [
