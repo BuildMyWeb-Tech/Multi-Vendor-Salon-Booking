@@ -23,7 +23,7 @@ import {
   CalendarDays,
   CheckCircle2,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 // ─────────────────────────────────────────
@@ -291,6 +291,7 @@ const LeaveDateModal = ({ stylist, backendUrl, aToken, onClose }) => {
 // Main StylistsList Component
 // ─────────────────────────────────────────
 const StylistsList = () => {
+  const { shopSlug } = useParams();
   const {
     doctors: stylists,
     changeAvailability,
@@ -426,7 +427,7 @@ const StylistsList = () => {
               </p>
             </div>
             <Link
-              to="/add-stylist"
+              to={`/${shopSlug}/admin/add-stylist`}
               className="bg-primary text-white py-2.5 px-5 rounded-lg hover:bg-primary/90 transition-all flex items-center gap-2 shadow-sm hover:shadow transform hover:-translate-y-0.5"
             >
               <Plus size={18} />
@@ -546,7 +547,7 @@ const StylistsList = () => {
                 : 'Get started by adding your first stylist to the team.'}
             </p>
             <Link
-              to="/add-stylist"
+              to={`/${shopSlug}/admin/add-stylist`}
               className="inline-flex items-center gap-2 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition"
             >
               <Plus size={16} />
@@ -661,7 +662,7 @@ const StylistsList = () => {
                     {/* ACTION BUTTONS — Edit | Leave | Delete */}
                     <div className="flex gap-2 mt-4">
                       <Link
-                        to={`/edit-stylist/${stylist._id}`}
+                        to={`/${shopSlug}/admin/edit-stylist/${stylist._id}`}
                         className="flex-1 py-2.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"
                       >
                         <Pencil size={14} />

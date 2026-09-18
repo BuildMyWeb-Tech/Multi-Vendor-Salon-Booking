@@ -22,15 +22,15 @@ const Field = ({ label, required, children, hint }) => (
 const Input = ({ ...props }) => (
   <input
     {...props}
-    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all bg-white placeholder-gray-400"
+    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white placeholder-gray-400"
   />
 );
 
 const Section = ({ title, icon: Icon, children }) => (
   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
     <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-      <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-        <Icon size={16} className="text-purple-600" />
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+        <Icon size={16} className="text-primary" />
       </div>
       <h3 className="font-semibold text-gray-800">{title}</h3>
     </div>
@@ -119,7 +119,7 @@ const CreateSalon = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-xs text-gray-500">Shop ID</span>
-              <span className="text-sm font-mono font-bold text-purple-600">{success.salon.shopId}</span>
+              <span className="text-sm font-mono font-bold text-primary">{success.salon.shopId}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-xs text-gray-500">Customer URL</span>
@@ -127,7 +127,7 @@ const CreateSalon = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-xs text-gray-500">Admin URL</span>
-              <span className="text-sm font-medium text-purple-600">{success.salon.adminUrl}</span>
+              <span className="text-sm font-medium text-primary">{success.salon.adminUrl}</span>
             </div>
             <div className="pt-2 border-t border-gray-200">
               <span className="text-xs text-gray-500">Admin ID</span>
@@ -144,7 +144,7 @@ const CreateSalon = () => {
             </button>
             <button
               onClick={() => navigate('/super-admin/salons')}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all"
+              className="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-xl text-sm font-medium transition-all"
             >
               View All Salons
             </button>
@@ -173,7 +173,7 @@ const CreateSalon = () => {
           <div className="flex items-center gap-5">
             <div
               onClick={() => logoInputRef.current.click()}
-              className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 hover:border-purple-400 cursor-pointer flex items-center justify-center overflow-hidden transition-all group"
+              className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 hover:border-primary cursor-pointer flex items-center justify-center overflow-hidden transition-all group"
             >
               {logoPreview ? (
                 <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
@@ -205,7 +205,7 @@ const CreateSalon = () => {
           <Field label="URL Slug" required hint={`Customer URL: /${form.slug || 'your-slug'}`}>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">/</span>
-              <Input value={form.slug} onChange={set('slug')} placeholder="activate-salon" className="pl-6 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all bg-white placeholder-gray-400" />
+              <Input value={form.slug} onChange={set('slug')} placeholder="activate-salon" className="pl-6 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white placeholder-gray-400" />
             </div>
           </Field>
           <Field label="Address">
@@ -254,14 +254,14 @@ const CreateSalon = () => {
             <Input type="number" value={form.subscriptionAmount} onChange={set('subscriptionAmount')} placeholder="0" />
           </Field>
           <Field label="Billing Cycle">
-            <select value={form.billingCycle} onChange={set('billingCycle')} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400 bg-white">
+            <select value={form.billingCycle} onChange={set('billingCycle')} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary bg-white">
               <option value="monthly">Monthly</option>
               <option value="quarterly">Quarterly</option>
               <option value="yearly">Yearly</option>
             </select>
           </Field>
           <Field label="Payment Status">
-            <select value={form.paymentStatus} onChange={set('paymentStatus')} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400 bg-white">
+            <select value={form.paymentStatus} onChange={set('paymentStatus')} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary bg-white">
               <option value="pending">Pending</option>
               <option value="paid">Paid</option>
               <option value="overdue">Overdue</option>
@@ -287,7 +287,7 @@ const CreateSalon = () => {
                 value={form.password}
                 onChange={set('password')}
                 placeholder="Min 6 characters"
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-12 text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all bg-white placeholder-gray-400"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-12 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white placeholder-gray-400"
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -304,7 +304,7 @@ const CreateSalon = () => {
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white font-semibold px-8 py-3 rounded-xl transition-all shadow-md"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white font-semibold px-8 py-3 rounded-xl transition-all shadow-sm"
           >
             {loading ? (
               <>

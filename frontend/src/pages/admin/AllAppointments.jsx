@@ -545,6 +545,8 @@ const AllAppointments = () => {
       matchesStatus = appointment.isCompleted === true && !appointment.cancelled;
     } else if (filterStatus === 'cancelled') {
       matchesStatus = appointment.cancelled === true;
+    } else if (filterStatus === 'leave') {
+      matchesStatus = appointment.cancelled === true && appointment.cancelledBy === 'system';
     }
 
     const matchesPayment =
@@ -642,10 +644,33 @@ const AllAppointments = () => {
   }
 
   const StatusBadge = ({ appointment }) => {
-    const isPastAndUnhandled = !appointment.isCompleted && !appointment.cancelled && isAppointmentTimePast(appointment);
-    const isPaid = appointment.payment;
+    const isPastAndUnhandled = !appointment.isCompleted && !appointment.cancelled && isAppointmentTimePast(appointment)
 
     if (appointment.cancelled) {
+      if (appointment.cancelledBy === 'system') {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 rounded-full text-xs font-semibold shadow-sm border border-amber-200">
+            <AlertTriangle size={13} />
+            Leave
+          </span>
+        )
+      }
+      if (appointment.cancelledBy === 'admin') {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 rounded-full text-xs font-semibold shadow-sm border border-orange-200">
+            <XCircle size={13} />
+            Admin Cancelled
+          </span>
+        )
+      }
+      if (appointment.cancelledBy === 'user') {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-red-50 to-red-100 text-red-700 rounded-full text-xs font-semibold shadow-sm border border-red-200">
+            <XCircle size={13} />
+            User Cancelled
+          </span>
+        )
+      }
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-red-50 to-red-100 text-red-700 rounded-full text-xs font-semibold shadow-sm border border-red-200">
           <XCircle size={13} />
@@ -656,25 +681,21 @@ const AllAppointments = () => {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-full text-xs font-semibold shadow-sm border border-green-200">
           <CheckCircle size={13} />
-          Completed {isPaid && '• Paid'}
+          Completed
         </span>
       )
     } else if (isPastAndUnhandled) {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 rounded-full text-xs font-semibold shadow-sm border border-amber-200">
           <AlertCircle size={13} />
-          Overdue {isPaid ? '• Paid' : '• Unpaid'}
+          Overdue
         </span>
       )
     } else {
       return (
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border ${
-          isPaid
-            ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200'
-            : 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border-orange-200'
-        }`}>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 rounded-full text-xs font-semibold shadow-sm border border-purple-200">
           <Calendar size={13} />
-          Upcoming {isPaid ? '• Paid' : '• Unpaid'}
+          Upcoming
         </span>
       )
     }
@@ -921,6 +942,18 @@ const AllAppointments = () => {
                   }`}
                 >
                   Cancelled
+                </button>
+
+                {/* LEAVE */}
+                <button
+                  onClick={() => { setFilterStatus('leave'); setTodayFilter(false); setStartDate(''); setEndDate(''); setSelectedQuickFilter(null); }}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all shadow-sm ${
+                    filterStatus === 'leave' && !todayFilter
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg scale-105'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200'
+                  }`}
+                >
+                  Leave
                 </button>
               </div>
             </div>

@@ -9,6 +9,7 @@ import {
   getSalonById,
   createSalon,
   updateSalon,
+  deleteSalon,
   updateSalonStatus,
   getSalonStats,
 } from '../controllers/superAdminController.js';
@@ -26,6 +27,7 @@ superAdminRouter.get('/salons', authSuperAdmin, getAllSalons);
 superAdminRouter.post('/salons', authSuperAdmin, upload.single('logo'), createSalon);
 superAdminRouter.get('/salons/:shopId', authSuperAdmin, getSalonById);
 superAdminRouter.put('/salons/:shopId', authSuperAdmin, upload.single('logo'), updateSalon);
+superAdminRouter.delete('/salons/:shopId', authSuperAdmin, deleteSalon);
 superAdminRouter.patch('/salons/:shopId/status', authSuperAdmin, updateSalonStatus);
 superAdminRouter.get('/salons/:shopId/stats', authSuperAdmin, getSalonStats);
 

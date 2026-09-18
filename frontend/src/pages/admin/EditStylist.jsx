@@ -8,8 +8,9 @@ import { AppContext } from '../../context/AppContext';
 import { Pencil, User, Mail, Phone, Award, Hash, Instagram, Clock, FileText, ArrowLeft, Scissors, Loader2, Upload, Lock, Eye, EyeOff } from 'lucide-react';
 
 const EditStylist = () => {
-    const { id } = useParams();
+    const { id, shopSlug } = useParams();
     const navigate = useNavigate();
+    const stylistsRoute = shopSlug ? `/${shopSlug}/admin/stylists` : '/';
     const { getDoctorById, updateDoctor } = useContext(AdminContext);
     const { backendUrl } = useContext(AppContext);
     const { aToken } = useContext(AdminContext);
@@ -91,12 +92,12 @@ const EditStylist = () => {
                     setAvailable(stylist.available !== undefined ? stylist.available : true);
                 } else {
                     toast.error('Could not find stylist data');
-                    navigate('/stylist-list');
+                    navigate(stylistsRoute);
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
                 toast.error('Failed to load stylist data');
-                navigate('/stylist-list');
+                navigate(stylistsRoute);
             } finally {
                 setInitialLoading(false);
             }
@@ -158,7 +159,7 @@ const EditStylist = () => {
             const updatedStylist = await updateDoctor(id, formData);
 
             if (updatedStylist) {
-                navigate('/stylist-list');
+                navigate(stylistsRoute);
             }
         } catch (error) {
             toast.error(error.message || 'Failed to update stylist');
@@ -241,7 +242,7 @@ const EditStylist = () => {
                 <div className="flex items-center gap-3">
                     <button
                         type="button"
-                        onClick={() => navigate('/stylist-list')}
+                        onClick={() => navigate(stylistsRoute)}
                         className="text-gray-600 hover:text-primary transition-colors"
                     >
                         <ArrowLeft size={20} />
@@ -586,7 +587,7 @@ const EditStylist = () => {
                     <div className='flex justify-end gap-3'>
                         <button
                             type="button"
-                            onClick={() => navigate('/stylist-list')}
+                            onClick={() => navigate(stylistsRoute)}
                             disabled={isSubmitting}
                             className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >

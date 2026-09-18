@@ -13,6 +13,7 @@ import BlockedDate from '../models/BlockedDate.js';
 import RecurringHoliday from '../models/RecurringHoliday.js';
 import SpecialWorkingDay from '../models/SpecialWorkingDay.js';
 import AdminNotification from '../models/AdminNotification.js';
+import shopModel from '../models/shopModel.js';
 
 // ── Stripe (test mode — replace STRIPE_SECRET_KEY with live key when ready) ──
 const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
@@ -346,6 +347,11 @@ export const bookAppointment = async (req, res) => {
     // Format for notifications
     const { dateStr, timeStr } = formatDisplayDate(slotDate, slotTime);
 
+    // Resolve shop slug for deep-link
+    const shopDoc = await shopModel.findOne({ shopId: docData.shopId }).lean();
+    const shopSlug = shopDoc?.slug || '';
+    const myApptLink = shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments';
+
     // ✅ Notify USER — booking confirmation
     await userModel.findByIdAndUpdate(userId, {
       $push: {
@@ -354,7 +360,7 @@ export const bookAppointment = async (req, res) => {
           message: `Your appointment with ${docData.name} is confirmed for ${dateStr} at ${timeStr}. We look forward to seeing you!`,
           type: 'info',
           read: false,
-          link: '/my-appointments',
+          link: myApptLink,
           createdAt: new Date(),
         },
       },
@@ -441,6 +447,11 @@ export const cancelAppointment = async (req, res) => {
     const stylistName = appointment.docData?.name || 'your stylist';
     const userName = appointment.userData?.name || 'A customer';
 
+    // Resolve shop slug for deep-link
+    const cancelShopDoc = await shopModel.findOne({ shopId: appointment.shopId }).lean();
+    const cancelShopSlug = cancelShopDoc?.slug || '';
+    const cancelApptLink = cancelShopSlug ? `/${cancelShopSlug}/my-appointments` : '/my-appointments';
+
     // ✅ Notify USER — cancellation confirmation
     await userModel.findByIdAndUpdate(userId, {
       $push: {
@@ -449,24 +460,19 @@ export const cancelAppointment = async (req, res) => {
           message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled. You can rebook anytime.`,
           type: 'cancellation',
           read: false,
-          link: '/my-appointments',
+          link: cancelApptLink,
           createdAt: new Date(),
         },
       },
     });
 
-    // ✅ Notify ADMIN — cancellation alert
+    // ✅ Notify ADMIN — cancellation alert (shop-specific)
     await AdminNotification.create({
       title: '🚫 Booking Cancelled by User',
       message: `${userName} cancelled their appointment with ${stylistName} on ${dateStr} at ${timeStr}.`,
       type: 'booking_cancelled',
       appointmentId: appointment._id,
-      meta: {
-        userName,
-        stylistName,
-        slotDate: appointment.slotDate,
-        slotTime: appointment.slotTime,
-      },
+      shopId: appointment.shopId || 'SHOP001',
     });
 
     res.json({ success: true, message: 'Appointment cancelled successfully' });
@@ -721,6 +727,11 @@ export const rescheduleAppointment = async (req, res) => {
     const stylistName = appointment.docData?.name || 'your stylist';
     const userName = appointment.userData?.name || 'A customer';
 
+    // Resolve shop slug for deep-link
+    const reschedShopDoc = await shopModel.findOne({ shopId: appointment.shopId }).lean();
+    const reschedShopSlug = reschedShopDoc?.slug || '';
+    const reschedApptLink = reschedShopSlug ? `/${reschedShopSlug}/my-appointments` : '/my-appointments';
+
     // Notify USER
     await userModel.findByIdAndUpdate(userId, {
       $push: {
@@ -729,19 +740,19 @@ export const rescheduleAppointment = async (req, res) => {
           message: `Your appointment with ${stylistName} has been rescheduled to ${dateStr} at ${timeStr}.`,
           type: 'info',
           read: false,
-          link: '/my-appointments',
+          link: reschedApptLink,
           createdAt: new Date(),
         },
       },
     });
 
-    // Notify ADMIN
+    // Notify ADMIN (shop-specific)
     await AdminNotification.create({
       title: '🔄 Appointment Rescheduled',
       message: `${userName} rescheduled their appointment with ${stylistName} to ${dateStr} at ${timeStr}.`,
-      type: 'booking_confirmed',
+      type: 'booking_rescheduled',
       appointmentId: appointment._id,
-      meta: { userName, stylistName, slotDate, slotTime },
+      shopId: appointment.shopId || 'SHOP001',
     });
 
     res.json({ success: true, message: 'Appointment rescheduled successfully!' });

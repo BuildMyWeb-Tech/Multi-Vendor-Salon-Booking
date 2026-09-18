@@ -1,10 +1,9 @@
-// admin/src/components/SuperAdminSidebar.jsx
 import React, { useContext, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   ShieldCheck, LayoutDashboard, Store, Plus,
-  LogOut, MenuIcon, X, ChevronLeft, ChevronRight
+  LogOut, MenuIcon, X, ChevronLeft, ChevronRight, Scissors
 } from 'lucide-react';
 
 const navItems = [
@@ -26,29 +25,36 @@ const SuperAdminSidebar = () => {
   };
 
   const SidebarContent = ({ mobile = false }) => (
-    <div className={`flex flex-col h-full ${mobile ? '' : ''}`}>
-      {/* Logo */}
-      <div className="py-5 px-5 border-b border-white/10 flex items-center justify-between">
-        {!collapsed || mobile ? (
-          <div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={20} className="text-purple-400" />
-              <h2 className="font-bold text-white text-base">Super Admin</h2>
+    <div className="flex flex-col h-full">
+      {/* Brand */}
+      <div className="py-4 px-4 border-b border-gray-100 flex items-center justify-between min-h-[64px]">
+        {(!collapsed || mobile) ? (
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+              <Scissors size={15} className="text-white" />
             </div>
-            <p className="text-white/40 text-xs mt-0.5 ml-7">Platform Console</p>
+            <div>
+              <h2 className="font-bold text-gray-800 text-sm leading-none">Super Admin</h2>
+              <p className="text-gray-400 text-xs mt-0.5">Platform Console</p>
+            </div>
           </div>
         ) : (
-          <ShieldCheck size={22} className="text-purple-400 mx-auto" />
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
+            <Scissors size={15} className="text-white" />
+          </div>
         )}
         {!mobile && (
-          <button onClick={() => setCollapsed(!collapsed)} className="text-white/40 hover:text-white/70 p-1 rounded-md transition-colors">
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-gray-400 hover:text-gray-600 p-1 rounded-md transition-colors flex-shrink-0"
+          >
+            {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           </button>
         )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -58,8 +64,8 @@ const SuperAdminSidebar = () => {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all font-medium ${
                 isActive
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                  : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               } ${collapsed && !mobile ? 'justify-center' : ''}`
             }
           >
@@ -69,13 +75,23 @@ const SuperAdminSidebar = () => {
         ))}
       </nav>
 
+      {/* Super Admin Badge */}
+      {(!collapsed || mobile) && (
+        <div className="mx-2 mb-2 px-3 py-2.5 bg-primary/5 rounded-xl border border-primary/10">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={15} className="text-primary" />
+            <span className="text-xs font-medium text-primary">Super Admin</span>
+          </div>
+        </div>
+      )}
+
       {/* Logout */}
-      <div className="p-3 border-t border-white/10">
+      <div className="p-2 border-t border-gray-100">
         <button
           onClick={logout}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 hover:bg-red-500/20 hover:text-red-400 transition-all ${collapsed && !mobile ? 'justify-center' : ''}`}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all ${collapsed && !mobile ? 'justify-center' : ''}`}
         >
-          <LogOut size={18} className="flex-shrink-0" />
+          <LogOut size={17} className="flex-shrink-0" />
           {(!collapsed || mobile) && <span>Logout</span>}
         </button>
       </div>
@@ -85,21 +101,21 @@ const SuperAdminSidebar = () => {
   return (
     <>
       {/* Mobile toggle */}
-      <div className="fixed top-2 left-2 z-50 md:hidden">
+      <div className="fixed top-3 left-3 z-50 md:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          className="bg-slate-800 p-2 rounded-xl shadow-lg text-purple-400 hover:bg-slate-700 transition-all"
+          className="bg-white border border-gray-200 p-2 rounded-xl shadow-sm text-primary"
         >
-          {!mobileOpen && <MenuIcon size={22} />}
+          {!mobileOpen && <MenuIcon size={20} />}
         </button>
       </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="relative w-64 h-full bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl">
-            <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 text-white/50 hover:text-white">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="relative w-64 h-full bg-white shadow-2xl border-r border-gray-200">
+            <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
               <X size={20} />
             </button>
             <SidebarContent mobile />
@@ -109,7 +125,7 @@ const SuperAdminSidebar = () => {
 
       {/* Desktop sidebar */}
       <div
-        className={`hidden md:flex flex-col h-screen bg-gradient-to-b from-slate-900 to-slate-800 fixed z-40 transition-all duration-300 shadow-2xl ${collapsed ? 'w-16' : 'w-64'}`}
+        className={`hidden md:flex flex-col h-screen bg-white border-r border-gray-200 fixed z-40 transition-all duration-300 shadow-sm ${collapsed ? 'w-16' : 'w-64'}`}
       >
         <SidebarContent />
       </div>

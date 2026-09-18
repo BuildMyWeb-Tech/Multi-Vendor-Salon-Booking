@@ -2,6 +2,7 @@
 import React, { useCallback, useContext, useEffect, useState, useMemo, memo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import { ShopContext } from '../context/ShopContext';
 import { assets } from '../assets/assets';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -189,8 +190,9 @@ const filterPastTimeSlots = (slots, selectedDate) => {
 
 // Main component with CRITICAL performance fixes
 const Appointment = () => {
-  const { docId } = useParams();
+  const { docId, shopSlug } = useParams();
   const { doctors: stylists, currencySymbol, backendUrl, token, getDoctosData: getStylesData } = useContext(AppContext);
+  const { currentShop } = useContext(ShopContext);
 
   const razorpayKeyId = 'rzp_test_8NBbBv2vkvuTtj';
 
@@ -227,9 +229,9 @@ const Appointment = () => {
     if (!token && !hasCheckedAuth.current) {
       hasCheckedAuth.current = true;
       toast.warning('Please login to book an appointment');
-      navigate('/login');
+      navigate(shopSlug ? `/${shopSlug}/login` : '/login');
     }
-  }, [token, navigate]);
+  }, [token, navigate, shopSlug]);
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -242,6 +244,19 @@ const Appointment = () => {
       });
     }
   }, [token, docId, stylistInfo, slotSettings]);
+
+  // Fast-load: fetch the specific doctor directly without waiting for AppContext list
+  useEffect(() => {
+    if (!docId || !backendUrl || stylistInfo) return;
+    axios.get(`${backendUrl}/api/doctor/list`)
+      .then(({ data }) => {
+        if (data.success) {
+          const found = data.doctors.find(d => d._id === docId);
+          if (found) setStylistInfo(found);
+        }
+      })
+      .catch(() => {});
+  }, [docId, backendUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Helpers
   const loadRazorpayScript = useCallback(() => {
@@ -491,7 +506,7 @@ const Appointment = () => {
         await fetchSlots(selectedDate);
         setSelectedSlotISO('');
         setSelectedServices([]);
-        navigate('/my-appointments');
+        navigate(shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments');
       } else {
         toast.error(data.message);
       }
@@ -531,9 +546,9 @@ const Appointment = () => {
           key: razorpayKeyId,
           amount: paymentAmount * 100,
           currency: "INR",
-          name: "Salon Stylist",
+          name: currentShop?.shopName || "Salon Booking",
           description: `Booking with ${stylistInfo?.name || 'stylist'}`,
-          image: assets.logo || "https://example.com/your_logo.png",
+          image: currentShop?.logo || assets.logo || "",
           handler: function() {
             setPaymentLoading(false);
             setPaymentSuccess(true);

@@ -207,6 +207,29 @@ export const cancelSalonAppointment = async (req, res) => {
     appointment.cancellationReason = cancellationReason || 'Cancelled by salon admin';
     await appointment.save();
 
+    // Notify customer
+    const { dateStr, timeStr } = formatDisplayDate(appointment.slotDate, appointment.slotTime);
+    const stylistName = appointment.docData?.name || 'your stylist';
+    if (appointment.userId) {
+      // Resolve shopSlug for deep-link
+      const shopDoc = await shopModel.findOne({ shopId }).lean();
+      const shopSlug = shopDoc?.slug || '';
+      const apptLink = shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments';
+
+      await userModel.findByIdAndUpdate(appointment.userId, {
+        $push: {
+          notifications: {
+            title: '❌ Appointment Cancelled by Salon',
+            message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled by the salon. Please contact us for details.`,
+            type: 'cancellation',
+            read: false,
+            link: apptLink,
+            createdAt: new Date(),
+          },
+        },
+      });
+    }
+
     res.json({ success: true, message: 'Appointment cancelled.' });
   } catch (error) {
     res.json({ success: false, message: error.message });
@@ -413,9 +436,74 @@ export const updateSalonStylistLeaveDates = async (req, res) => {
     const { leaveDates } = req.body;
     const doctor = await doctorModel.findOne({ _id: req.params.id, shopId });
     if (!doctor) return res.status(403).json({ success: false, message: 'Access denied.' });
-    doctor.leaveDates = leaveDates || [];
+
+    // Find appointments on the new leave dates that are not yet cancelled/completed
+    const newLeaveDates = leaveDates || [];
+    const affectedAppointments = await appointmentModel.find({
+      doctorId: doctor._id,
+      shopId,
+      slotDate: { $in: newLeaveDates },
+      cancelled: false,
+      isCompleted: false,
+    });
+
+    // Cancel each affected appointment and remove from slots_booked
+    let cancelledCount = 0;
+    for (const appt of affectedAppointments) {
+      appt.cancelled = true;
+      appt.cancelledBy = 'system';
+      appt.cancellationReason = `${doctor.name} is on leave on this date.`;
+      await appt.save();
+
+      // Notify the customer
+      if (appt.userId) {
+        const { dateStr, timeStr } = formatDisplayDate(appt.slotDate, appt.slotTime);
+        const leaveShopDoc = await shopModel.findOne({ shopId }).lean();
+        const leaveShopSlug = leaveShopDoc?.slug || '';
+        const leaveApptLink = leaveShopSlug ? `/${leaveShopSlug}/my-appointments` : '/my-appointments';
+
+        await userModel.findByIdAndUpdate(appt.userId, {
+          $push: {
+            notifications: {
+              title: '🗓️ Appointment Cancelled – Stylist on Leave',
+              message: `Your appointment with ${doctor.name} on ${dateStr} at ${timeStr} has been cancelled because the stylist is on leave. We apologise for the inconvenience. Please rebook at your convenience.`,
+              type: 'cancellation',
+              read: false,
+              link: leaveApptLink,
+              createdAt: new Date(),
+            },
+          },
+        });
+      }
+
+      // Remove slot from doctor's slots_booked map
+      if (doctor.slots_booked && doctor.slots_booked.get) {
+        const dateSlots = doctor.slots_booked.get(appt.slotDate) || [];
+        // Convert display time back to HH:mm for removal
+        const to24hr = (t) => {
+          if (/^\d{2}:\d{2}$/.test(t)) return t;
+          const [time, period] = t.split(' ');
+          let [h, m] = time.split(':').map(Number);
+          if (period === 'PM' && h !== 12) h += 12;
+          if (period === 'AM' && h === 12) h = 0;
+          return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        };
+        const slotTime24 = to24hr(appt.slotTime);
+        const updated = dateSlots.filter(s => s !== slotTime24);
+        doctor.slots_booked.set(appt.slotDate, updated);
+      }
+      cancelledCount++;
+    }
+
+    doctor.leaveDates = newLeaveDates;
     await doctor.save();
-    res.json({ success: true, message: 'Leave dates updated.', leaveDates: doctor.leaveDates });
+
+    res.json({
+      success: true,
+      message: `Leave dates updated.${cancelledCount > 0 ? ` ${cancelledCount} appointment(s) auto-cancelled.` : ''}`,
+      leaveDates: doctor.leaveDates,
+      cancelledCount,
+    });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

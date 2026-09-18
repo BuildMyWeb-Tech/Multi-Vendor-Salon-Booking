@@ -8,11 +8,14 @@ import doctorModel from '../models/doctorModel.js';
 import userModel from '../models/userModel.js';
 import { v2 as cloudinary } from 'cloudinary';
 
-// ── Helper: generate sequential shopId ───────────────────────────────────────
+// ── Helper: generate sequential shopId (collision-safe) ──────────────────────
 const generateShopId = async () => {
-  const count = await shopModel.countDocuments();
-  const num = String(count + 1).padStart(3, '0');
-  return `SHOP${num}`;
+  const shops = await shopModel.find({}, 'shopId').lean();
+  const nums = shops
+    .map(s => parseInt((s.shopId || '').replace('SHOP', ''), 10))
+    .filter(n => !isNaN(n));
+  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return `SHOP${String(next).padStart(3, '0')}`;
 };
 
 // ── Helper: slugify ───────────────────────────────────────────────────────────
@@ -185,13 +188,12 @@ export const createSalon = async (req, res) => {
 
     const shopId = await generateShopId();
 
-    // Handle logo upload
+    // Handle logo upload (memory storage — use buffer)
     let logoUrl = '';
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'salon_logos',
-        resource_type: 'image',
-      });
+      const b64 = req.file.buffer.toString('base64');
+      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataUri, { folder: 'salon_logos', resource_type: 'image' });
       logoUrl = result.secure_url;
     }
 
@@ -267,10 +269,9 @@ export const updateSalon = async (req, res) => {
     });
 
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'salon_logos',
-        resource_type: 'image',
-      });
+      const b64 = req.file.buffer.toString('base64');
+      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataUri, { folder: 'salon_logos', resource_type: 'image' });
       shop.logo = result.secure_url;
     }
 
@@ -281,11 +282,23 @@ export const updateSalon = async (req, res) => {
   }
 };
 
+// ── DELETE /api/super-admin/salons/:shopId ────────────────────────────────────
+export const deleteSalon = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    const shop = await shopModel.findOneAndDelete({ shopId });
+    if (!shop) return res.json({ success: false, message: 'Salon not found.' });
+    res.json({ success: true, message: 'Salon deleted.' });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 // ── PATCH /api/super-admin/salons/:shopId/status ─ Change Status ──────────────
 export const updateSalonStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    if (!['active', 'inactive', 'suspended'].includes(status)) {
+    if (!['active', 'inactive'].includes(status)) {
       return res.json({ success: false, message: 'Invalid status.' });
     }
 

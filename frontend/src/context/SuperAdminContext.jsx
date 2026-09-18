@@ -88,11 +88,56 @@ const SuperAdminContextProvider = ({ children }) => {
     }
   };
 
+  const getSalonById = async (shopId) => {
+    try {
+      const { data } = await axios.get(
+        `${backendUrl}/api/super-admin/salons/${shopId}`,
+        { headers: { superadmintoken: saToken } }
+      );
+      return data;
+    } catch {
+      return { success: false };
+    }
+  };
+
+  const updateSalon = async (shopId, formData) => {
+    try {
+      const { data } = await axios.put(
+        `${backendUrl}/api/super-admin/salons/${shopId}`,
+        formData,
+        { headers: { superadmintoken: saToken, 'Content-Type': 'multipart/form-data' } }
+      );
+      if (data.success) {
+        setSalons((prev) => prev.map((s) => (s.shopId === shopId ? { ...s, ...data.salon } : s)));
+        toast.success('Salon updated successfully');
+      }
+      return data;
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const deleteSalon = async (shopId) => {
+    try {
+      const { data } = await axios.delete(
+        `${backendUrl}/api/super-admin/salons/${shopId}`,
+        { headers: { superadmintoken: saToken } }
+      );
+      if (data.success) {
+        setSalons((prev) => prev.filter((s) => s.shopId !== shopId));
+        toast.success('Salon deleted');
+      }
+      return data;
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
   const value = {
     saToken, setSaToken, backendUrl, loading,
     salons, dashData,
     getDashboard, getAllSalons, createSalon,
-    updateSalonStatus, getSalonStats,
+    updateSalonStatus, getSalonStats, getSalonById, updateSalon, deleteSalon,
   };
 
   return <SuperAdminContext.Provider value={value}>{children}</SuperAdminContext.Provider>;

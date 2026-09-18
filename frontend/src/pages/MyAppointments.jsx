@@ -1,6 +1,6 @@
 // frontend/src/pages/MyAppointments.jsx
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -48,6 +48,7 @@ const to12Hr = (time24) => {
 const MyAppointments = () => {
   const { backendUrl, token, currencySymbol = '₹' } = useContext(AppContext);
   const navigate = useNavigate();
+  const { shopSlug } = useParams();
 
   const [appointments, setAppointments] = useState([]);
   const [rescheduleModal, setRescheduleModal] = useState(false);
@@ -55,6 +56,7 @@ const MyAppointments = () => {
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
   const [appointmentToReschedule, setAppointmentToReschedule] = useState(null);
   const [canReschedule, setCanReschedule] = useState(true);
+  const [availableDates, setAvailableDates] = useState([]); // valid dates from backend
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -79,11 +81,9 @@ const MyAppointments = () => {
 
   const slotDateFormat = (slotDate) => {
     if (!slotDate) return '';
-    const dateObj = new Date(slotDate);
-    const day = dateObj.getDate();
-    const month = dateObj.getMonth();
-    const year = dateObj.getFullYear();
-    return `${day} ${months[month]} ${year}`;
+    // Parse YYYY-MM-DD as local date to avoid UTC timezone shift
+    const [y, m, d] = slotDate.split('-').map(Number);
+    return `${d} ${months[m - 1]} ${y}`;
   };
 
   const getUserAppointments = async () => {
@@ -202,19 +202,53 @@ const MyAppointments = () => {
     return diffHours > 3;
   };
 
-  const openRescheduleModal = (appointment) => {
+  const fetchAvailableDates = async (doctorId) => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/user/available-dates/${doctorId}`, {
+        headers: { token },
+      });
+      if (data.success) {
+        setAvailableDates(data.dates || []);
+        return data.dates || [];
+      }
+    } catch (e) {
+      console.error('Failed to fetch available dates', e);
+    }
+    return [];
+  };
+
+  const openRescheduleModal = async (appointment) => {
     const eligible = appointment.cancelled || checkRescheduleEligibility(appointment);
     setCanReschedule(eligible);
     setAppointmentToReschedule(appointment);
+    setAvailableDates([]);
 
     if (eligible) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setCurrentMonth(tomorrow);
-      const tomorrowStr = tomorrow.toISOString().split('T')[0];
-      setSelectedDate(tomorrowStr);
+
+      // Build YYYY-MM-DD without toISOString (avoids UTC timezone shift)
+      const y = tomorrow.getFullYear();
+      const m = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const d = String(tomorrow.getDate()).padStart(2, '0');
+      const tomorrowStr = `${y}-${m}-${d}`;
+
       setSelectedCalendarDate(tomorrow);
-      getAvailableSlots(appointment.doctorId, tomorrowStr);
+
+      // Fetch available dates from backend first
+      const dates = await fetchAvailableDates(appointment.doctorId);
+
+      // Pick first available date >= tomorrow as default
+      const firstAvail = dates.find(dt => dt >= tomorrowStr) || tomorrowStr;
+      setSelectedDate(firstAvail);
+
+      // Set calendar to the month of firstAvail
+      const [fy, fm, fd] = firstAvail.split('-').map(Number);
+      setCurrentMonth(new Date(fy, fm - 1, fd));
+      setSelectedCalendarDate(new Date(fy, fm - 1, fd));
+
+      getAvailableSlots(appointment.doctorId, firstAvail);
     }
     setRescheduleModal(true);
   };
@@ -314,8 +348,13 @@ const MyAppointments = () => {
     today.setHours(0, 0, 0, 0);
     if (clickedDate < today) return;
 
+    // Build YYYY-MM-DD without toISOString to avoid UTC timezone shift
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    // Only allow clicking dates that are in the availableDates list (or if list not loaded yet)
+    if (availableDates.length > 0 && !availableDates.includes(dateStr)) return;
+
     setSelectedCalendarDate(clickedDate);
-    const dateStr = clickedDate.toISOString().split('T')[0];
     setSelectedDate(dateStr);
     setSelectedTime('');
 
@@ -335,7 +374,13 @@ const MyAppointments = () => {
     const date = new Date(year, month, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date < today;
+    if (date < today) return true;
+    // Grey out dates not returned by the backend availability API
+    if (availableDates.length > 0) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      return !availableDates.includes(dateStr);
+    }
+    return false;
   };
 
   const isDateSelected = (day) => {
