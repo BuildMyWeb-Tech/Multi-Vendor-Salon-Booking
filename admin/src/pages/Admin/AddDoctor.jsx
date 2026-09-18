@@ -185,8 +185,8 @@ const AddStylist = () => {
         <form onSubmit={onSubmitHandler} className='m-5 w-full'>
 
             {/* ✅ FIX 2: Reset Form now has icon+border (visible on mobile too), X close button added */}
-            <div className='flex justify-between items-center mb-5 gap-2'>
-                <h1 className='text-2xl font-bold text-gray-800'>Add New Stylist</h1>
+            {/*<div className='flex justify-between items-center mb-5 gap-2'>
+                 <h1 className='text-2xl font-bold text-gray-800'>Add New Stylist</h1>
                 <div className='flex items-center gap-2'>
                     <button 
                         type="button"
@@ -205,7 +205,7 @@ const AddStylist = () => {
                         <X size={18} />
                     </button>
                 </div>
-            </div>
+            </div> */}
 
             <div className='bg-white px-6 py-8 sm:p-8 border rounded-lg shadow-sm w-full max-w-5xl max-h-[85vh] overflow-y-auto'>
                 {/* Profile Image Upload Section */}

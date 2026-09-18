@@ -546,9 +546,9 @@ const Appointment = () => {
           key: razorpayKeyId,
           amount: paymentAmount * 100,
           currency: "INR",
-          name: currentShop?.shopName || "Salon Booking",
-          description: `Booking with ${stylistInfo?.name || 'stylist'}`,
-          image: currentShop?.logo || assets.logo || "",
+          name: currentShop?.shopName || "StyleSlot",
+          description: `Booking with ${stylistInfo?.name || 'stylist'} at ${currentShop?.shopName || 'our salon'}`,
+          image: currentShop?.logo || "",
           handler: function() {
             setPaymentLoading(false);
             setPaymentSuccess(true);

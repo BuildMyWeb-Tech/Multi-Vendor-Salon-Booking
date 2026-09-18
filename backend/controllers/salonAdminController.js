@@ -8,6 +8,7 @@ import appointmentModel from '../models/appointmentModel.js';
 import doctorModel from '../models/doctorModel.js';
 import userModel from '../models/userModel.js';
 import SlotSettings from '../models/SlotSettings.js';
+import { emitToUser } from '../config/socket.js';
 import BlockedDate from '../models/BlockedDate.js';
 import RecurringHoliday from '../models/RecurringHoliday.js';
 import SpecialWorkingDay from '../models/SpecialWorkingDay.js';
@@ -216,18 +217,16 @@ export const cancelSalonAppointment = async (req, res) => {
       const shopSlug = shopDoc?.slug || '';
       const apptLink = shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments';
 
-      await userModel.findByIdAndUpdate(appointment.userId, {
-        $push: {
-          notifications: {
-            title: '❌ Appointment Cancelled by Salon',
-            message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled by the salon. Please contact us for details.`,
-            type: 'cancellation',
-            read: false,
-            link: apptLink,
-            createdAt: new Date(),
-          },
-        },
-      });
+      const userNotifAdmin = {
+        title: 'Appointment Cancelled by Salon',
+        message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled by the salon. Please contact us for details.`,
+        type: 'cancellation',
+        read: false,
+        link: apptLink,
+        createdAt: new Date(),
+      };
+      await userModel.findByIdAndUpdate(appointment.userId, { $push: { notifications: userNotifAdmin } });
+      emitToUser(appointment.userId.toString(), userNotifAdmin);
     }
 
     res.json({ success: true, message: 'Appointment cancelled.' });
@@ -462,18 +461,16 @@ export const updateSalonStylistLeaveDates = async (req, res) => {
         const leaveShopSlug = leaveShopDoc?.slug || '';
         const leaveApptLink = leaveShopSlug ? `/${leaveShopSlug}/my-appointments` : '/my-appointments';
 
-        await userModel.findByIdAndUpdate(appt.userId, {
-          $push: {
-            notifications: {
-              title: '🗓️ Appointment Cancelled – Stylist on Leave',
-              message: `Your appointment with ${doctor.name} on ${dateStr} at ${timeStr} has been cancelled because the stylist is on leave. We apologise for the inconvenience. Please rebook at your convenience.`,
-              type: 'cancellation',
-              read: false,
-              link: leaveApptLink,
-              createdAt: new Date(),
-            },
-          },
-        });
+        const leaveUserNotif = {
+          title: 'Appointment Cancelled – Stylist on Leave',
+          message: `Your appointment with ${doctor.name} on ${dateStr} at ${timeStr} has been cancelled because the stylist is on leave. We apologise for the inconvenience. Please rebook at your convenience.`,
+          type: 'cancellation',
+          read: false,
+          link: leaveApptLink,
+          createdAt: new Date(),
+        };
+        await userModel.findByIdAndUpdate(appt.userId, { $push: { notifications: leaveUserNotif } });
+        emitToUser(appt.userId.toString(), leaveUserNotif);
       }
 
       // Remove slot from doctor's slots_booked map

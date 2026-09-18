@@ -137,7 +137,7 @@ const ShopFooter = () => {
       <div className="py-5 border-t text-center sm:flex sm:justify-between sm:items-center">
         <p className="text-sm text-gray-500">© {new Date().getFullYear()} {shopName}. All Rights Reserved.</p>
         <p className="text-sm text-gray-500 mt-2 sm:mt-0">
-          Powered by{' '}
+          Design and Developed by{' '}
           <a href="https://buildmyweb.info/" target="_blank" rel="noopener noreferrer"
             className="text-primary font-medium hover:underline">
             BuildMyWeb

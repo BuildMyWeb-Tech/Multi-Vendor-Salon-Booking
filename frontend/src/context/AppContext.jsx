@@ -6,6 +6,7 @@
 import { createContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { getSocket, joinUserRoom } from '../utils/socket';
 
 export const AppContext = createContext();
 
@@ -18,6 +19,8 @@ const AppContextProvider = (props) => {
   const [doctors, setDoctors] = useState([]);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [userData, setUserData] = useState(false);
+  const [userNotifications, setUserNotifications] = useState([]);
+  const [userUnreadCount, setUserUnreadCount] = useState(0);
 
   // ── Get all doctors ─────────────────────────────────────────────────────
   const getDoctosData = async () => {
@@ -82,8 +85,55 @@ const AppContextProvider = (props) => {
       loadUserProfileData(token);
     } else {
       setUserData(false);
+      setUserNotifications([]);
+      setUserUnreadCount(0);
     }
   }, [token]);
+
+  // ── Socket.IO: join user room and listen for real-time notifications ──────
+  useEffect(() => {
+    if (!userData?._id) return;
+    joinUserRoom(userData._id.toString());
+
+    const sock = getSocket();
+    const handler = (notif) => {
+      setUserNotifications((prev) => [{ ...notif, read: false, _id: Date.now() + Math.random() }, ...prev]);
+      setUserUnreadCount((prev) => prev + 1);
+    };
+    sock.on('user_notification', handler);
+    return () => sock.off('user_notification', handler);
+  }, [userData?._id]);
+
+  // ── Sync notifications from server-stored userData.notifications ──────────
+  useEffect(() => {
+    if (userData?.notifications) {
+      const stored = [...userData.notifications].reverse();
+      setUserNotifications((prev) => {
+        // Merge: keep real-time ones not yet in DB, plus all DB ones
+        const dbIds = new Set(stored.map(n => n._id?.toString()));
+        const rtOnly = prev.filter(n => !dbIds.has(n._id?.toString()) && typeof n._id === 'number');
+        return [...rtOnly, ...stored];
+      });
+      setUserUnreadCount(stored.filter(n => !n.read).length);
+    }
+  }, [userData?.notifications?.length]);
+
+  const markUserNotificationsRead = async (notifId = null) => {
+    try {
+      await axios.post(
+        backendUrl + '/api/user/notifications/mark-read',
+        notifId ? { notifId } : {},
+        { headers: { token } }
+      );
+      if (notifId) {
+        setUserNotifications(prev => prev.map(n => n._id?.toString() === notifId?.toString() ? { ...n, read: true } : n));
+        setUserUnreadCount(prev => Math.max(0, prev - 1));
+      } else {
+        setUserNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUserUnreadCount(0);
+      }
+    } catch {}
+  };
 
   const value = {
     doctors,
@@ -95,6 +145,9 @@ const AppContextProvider = (props) => {
     userData,
     setUserData,
     loadUserProfileData,
+    userNotifications,
+    userUnreadCount,
+    markUserNotificationsRead,
   };
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

@@ -14,6 +14,7 @@ import RecurringHoliday from '../models/RecurringHoliday.js';
 import SpecialWorkingDay from '../models/SpecialWorkingDay.js';
 import AdminNotification from '../models/AdminNotification.js';
 import shopModel from '../models/shopModel.js';
+import { emitToShop, emitToUser } from '../config/socket.js';
 
 // ── Stripe (test mode — replace STRIPE_SECRET_KEY with live key when ready) ──
 const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
@@ -353,27 +354,26 @@ export const bookAppointment = async (req, res) => {
     const myApptLink = shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments';
 
     // ✅ Notify USER — booking confirmation
-    await userModel.findByIdAndUpdate(userId, {
-      $push: {
-        notifications: {
-          title: '✅ Booking Confirmed!',
-          message: `Your appointment with ${docData.name} is confirmed for ${dateStr} at ${timeStr}. We look forward to seeing you!`,
-          type: 'info',
-          read: false,
-          link: myApptLink,
-          createdAt: new Date(),
-        },
-      },
-    });
+    const userNotifBook = {
+      title: 'Booking Confirmed!',
+      message: `Your appointment with ${docData.name} is confirmed for ${dateStr} at ${timeStr}. We look forward to seeing you!`,
+      type: 'info',
+      read: false,
+      link: myApptLink,
+      createdAt: new Date(),
+    };
+    await userModel.findByIdAndUpdate(userId, { $push: { notifications: userNotifBook } });
+    emitToUser(userId.toString(), userNotifBook);
 
     // ✅ Notify ADMIN — new booking alert (shop-aware)
-    await AdminNotification.create({
-      title: '🆕 New Booking',
+    const adminNotifBook = await AdminNotification.create({
+      title: 'New Booking',
       message: `${userData.name} booked an appointment with ${docData.name} on ${dateStr} at ${timeStr}.`,
       type: 'booking_confirmed',
       appointmentId: newAppointment._id,
       shopId: docData.shopId || 'SHOP001',
     });
+    emitToShop(docData.shopId || 'SHOP001', { ...adminNotifBook.toObject() });
 
     console.log('✅ Appointment booked:', newAppointment._id.toString());
     res.json({ success: true, message: 'Appointment Booked Successfully' });
@@ -467,13 +467,14 @@ export const cancelAppointment = async (req, res) => {
     });
 
     // ✅ Notify ADMIN — cancellation alert (shop-specific)
-    await AdminNotification.create({
-      title: '🚫 Booking Cancelled by User',
+    const adminNotifCancel = await AdminNotification.create({
+      title: 'Booking Cancelled by User',
       message: `${userName} cancelled their appointment with ${stylistName} on ${dateStr} at ${timeStr}.`,
       type: 'booking_cancelled',
       appointmentId: appointment._id,
       shopId: appointment.shopId || 'SHOP001',
     });
+    emitToShop(appointment.shopId || 'SHOP001', { ...adminNotifCancel.toObject() });
 
     res.json({ success: true, message: 'Appointment cancelled successfully' });
   } catch (error) {
@@ -747,13 +748,14 @@ export const rescheduleAppointment = async (req, res) => {
     });
 
     // Notify ADMIN (shop-specific)
-    await AdminNotification.create({
-      title: '🔄 Appointment Rescheduled',
+    const adminNotifReschedule = await AdminNotification.create({
+      title: 'Appointment Rescheduled',
       message: `${userName} rescheduled their appointment with ${stylistName} to ${dateStr} at ${timeStr}.`,
       type: 'booking_rescheduled',
       appointmentId: appointment._id,
       shopId: appointment.shopId || 'SHOP001',
     });
+    emitToShop(appointment.shopId || 'SHOP001', { ...adminNotifReschedule.toObject() });
 
     res.json({ success: true, message: 'Appointment rescheduled successfully!' });
   } catch (error) {

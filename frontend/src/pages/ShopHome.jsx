@@ -7,7 +7,8 @@ import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import {
   MapPin, Phone, Mail, Clock, Scissors, Star,
-  Calendar, ArrowRight, AlertCircle, Loader2, Store
+  Calendar, ArrowRight, AlertCircle, Loader2, Store,
+  Sparkles, Users, Award, ChevronRight, CheckCircle2, Zap
 } from 'lucide-react';
 
 const ShopHome = () => {
@@ -95,55 +96,98 @@ const ShopHome = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
-      <div className="bg-gradient-to-br from-primary to-purple-600 text-white">
-        <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+      <div className="bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden">
+        {/* Decorative circles */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto px-4 py-14 sm:py-20 relative">
+          {/* Logo + Name row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6">
             {shop.logo ? (
               <img
                 src={shop.logo}
                 alt={shop.shopName}
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-white/30 shadow-lg flex-shrink-0"
+                className="w-20 h-20 rounded-2xl object-cover border-2 border-white/30 shadow-xl flex-shrink-0"
               />
             ) : (
-              <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
                 <Scissors size={32} className="text-white" />
               </div>
             )}
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold">{shop.shopName}</h1>
-              {(shop.address || shop.city) && (
-                <p className="flex items-center gap-1.5 text-white/70 mt-2 text-sm">
-                  <MapPin size={15} />
-                  {[shop.address, shop.city, shop.state].filter(Boolean).join(', ')}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-4 mt-3">
-                {shop.phone && (
-                  <a href={`tel:${shop.phone}`} className="flex items-center gap-1.5 text-white/80 hover:text-white text-sm">
-                    <Phone size={14} />
-                    {shop.phone}
-                  </a>
-                )}
-                {shop.email && (
-                  <a href={`mailto:${shop.email}`} className="flex items-center gap-1.5 text-white/80 hover:text-white text-sm">
-                    <Mail size={14} />
-                    {shop.email}
-                  </a>
-                )}
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex items-center gap-1 bg-white/20 text-white/90 text-xs font-medium px-3 py-1 rounded-full border border-white/20">
+                  <CheckCircle2 size={11} /> Verified Salon
+                </span>
               </div>
+              <h1 className="text-3xl sm:text-5xl font-extrabold leading-tight">{shop.shopName}</h1>
+              <p className="text-white/70 mt-1 text-sm sm:text-base">
+                {shop.tagline || 'Your style, your story — crafted with care.'}
+              </p>
             </div>
           </div>
 
-          {/* CTA */}
-          <div className="mt-8">
+          {/* Contact pills */}
+          <div className="flex flex-wrap gap-3 mb-8">
+            {(shop.address || shop.city) && (
+              <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm text-white/90 text-xs px-3 py-1.5 rounded-full border border-white/15">
+                <MapPin size={13} />
+                {[shop.address, shop.city, shop.state].filter(Boolean).join(', ')}
+              </span>
+            )}
+            {shop.phone && (
+              <a href={`tel:${shop.phone}`} className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm text-white/90 hover:bg-white/20 text-xs px-3 py-1.5 rounded-full border border-white/15 transition-colors">
+                <Phone size={13} /> {shop.phone}
+              </a>
+            )}
+            {shop.email && (
+              <a href={`mailto:${shop.email}`} className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm text-white/90 hover:bg-white/20 text-xs px-3 py-1.5 rounded-full border border-white/15 transition-colors">
+                <Mail size={13} /> {shop.email}
+              </a>
+            )}
+          </div>
+
+          {/* CTAs */}
+          <div className="flex flex-wrap gap-3">
             <Link
               to={`/${shopSlug}/stylists`}
-              className="inline-flex items-center gap-2 bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-all shadow-md"
+              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3 rounded-xl hover:bg-white/90 transition-all shadow-lg shadow-black/20 text-sm"
             >
-              <Calendar size={18} />
+              <Calendar size={17} />
               Book Appointment
-              <ArrowRight size={16} />
+              <ArrowRight size={15} />
             </Link>
+            <Link
+              to={`/${shopSlug}/services`}
+              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/25 text-white font-semibold px-6 py-3 rounded-xl hover:bg-white/25 transition-all text-sm"
+            >
+              <Sparkles size={16} /> Our Services
+            </Link>
+          </div>
+
+          {/* Stats row */}
+          <div className="mt-10 flex flex-wrap gap-6">
+            {doctors.length > 0 && (
+              <div className="flex items-center gap-2 text-white/80">
+                <Users size={16} className="text-white/60" />
+                <span className="text-sm"><span className="font-bold text-white text-lg">{doctors.length}</span> Stylists</span>
+              </div>
+            )}
+            {services.length > 0 && (
+              <div className="flex items-center gap-2 text-white/80">
+                <Scissors size={16} className="text-white/60" />
+                <span className="text-sm"><span className="font-bold text-white text-lg">{services.length}</span> Services</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-white/80">
+              <Zap size={16} className="text-white/60" />
+              <span className="text-sm font-medium">Instant Booking</span>
+            </div>
+            <div className="flex items-center gap-2 text-white/80">
+              <Award size={16} className="text-white/60" />
+              <span className="text-sm font-medium">Expert Professionals</span>
+            </div>
           </div>
         </div>
       </div>
@@ -234,6 +278,65 @@ const ShopHome = () => {
             <Scissors size={48} className="mx-auto text-gray-200 mb-4" />
             <p className="text-gray-400">No services or stylists added yet.</p>
           </div>
+        )}
+
+        {/* Why choose us */}
+        <section className="bg-gradient-to-br from-primary/5 to-blue-50 rounded-3xl p-8 sm:p-10">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-800">Why Choose {shop.shopName}?</h2>
+            <p className="text-gray-500 text-sm mt-1">Experience the difference with our expert team</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {[
+              { icon: <Award size={22} className="text-primary" />, title: 'Expert Stylists', desc: 'Our team of skilled professionals brings years of experience in the latest trends and techniques.' },
+              { icon: <Zap size={22} className="text-primary" />, title: 'Easy Booking', desc: 'Book your appointment online in minutes — no phone calls, no waiting in queues.' },
+              { icon: <Star size={22} className="text-primary" />, title: 'Premium Products', desc: 'We only use high-quality, trusted products to give your hair and skin the care it deserves.' },
+              { icon: <Calendar size={22} className="text-primary" />, title: 'Flexible Timing', desc: 'Choose appointment slots that fit your schedule with our flexible booking system.' },
+              { icon: <Sparkles size={22} className="text-primary" />, title: 'Personalised Care', desc: 'Every client gets a tailored experience designed to bring out their best look.' },
+              { icon: <CheckCircle2 size={22} className="text-primary" />, title: 'Satisfaction Guaranteed', desc: 'Your happiness is our priority — we go the extra mile to make sure you leave smiling.' },
+            ].map(f => (
+              <div key={f.title} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
+                  {f.icon}
+                </div>
+                <h3 className="font-semibold text-gray-800 text-sm mb-1">{f.title}</h3>
+                <p className="text-gray-500 text-xs leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Contact info footer card */}
+        {(shop.address || shop.phone || shop.email) && (
+          <section className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 mb-1">Visit Us</h2>
+              <div className="space-y-2 mt-3">
+                {(shop.address || shop.city) && (
+                  <p className="flex items-center gap-2 text-gray-600 text-sm">
+                    <MapPin size={15} className="text-primary flex-shrink-0" />
+                    {[shop.address, shop.city, shop.state, shop.pincode].filter(Boolean).join(', ')}
+                  </p>
+                )}
+                {shop.phone && (
+                  <a href={`tel:${shop.phone}`} className="flex items-center gap-2 text-gray-600 hover:text-primary text-sm">
+                    <Phone size={15} className="text-primary flex-shrink-0" /> {shop.phone}
+                  </a>
+                )}
+                {shop.email && (
+                  <a href={`mailto:${shop.email}`} className="flex items-center gap-2 text-gray-600 hover:text-primary text-sm">
+                    <Mail size={15} className="text-primary flex-shrink-0" /> {shop.email}
+                  </a>
+                )}
+              </div>
+            </div>
+            <Link
+              to={`/${shopSlug}/stylists`}
+              className="flex-shrink-0 inline-flex items-center gap-2 bg-primary text-white font-semibold px-6 py-3 rounded-xl hover:bg-primary/90 transition-all shadow-sm text-sm"
+            >
+              <Calendar size={16} /> Book Now <ChevronRight size={15} />
+            </Link>
+          </section>
         )}
       </div>
     </div>

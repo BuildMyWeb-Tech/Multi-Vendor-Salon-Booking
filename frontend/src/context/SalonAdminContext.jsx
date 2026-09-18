@@ -1,7 +1,8 @@
 // admin/src/context/SalonAdminContext.jsx
 import axios from 'axios';
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
+import { getSocket, joinAdminRoom } from '../utils/socket';
 
 export const SalonAdminContext = createContext();
 
@@ -40,15 +41,29 @@ const SalonAdminContextProvider = ({ children }) => {
     return () => axios.interceptors.request.eject(interceptor);
   }, [saAdminToken]);
 
+  // Socket.IO — real-time admin notifications
+  const shopIdRef = useRef(null);
   useEffect(() => {
-    if (saAdminToken) {
-      fetchShopInfo();
-      getAllAppointments();
-      getAdminNotifications();
-      const interval = setInterval(getAdminNotifications, 60000);
-      return () => clearInterval(interval);
-    }
+    if (!saAdminToken) return;
+    fetchShopInfo();
+    getAllAppointments();
+    getAdminNotifications();
   }, [saAdminToken]);
+
+  // Join admin socket room once shopInfo is available
+  useEffect(() => {
+    if (!shopInfo?.shopId) return;
+    shopIdRef.current = shopInfo.shopId;
+    joinAdminRoom(shopInfo.shopId);
+
+    const sock = getSocket();
+    const handler = (notif) => {
+      setAdminNotifications((prev) => [notif, ...prev]);
+      setAdminUnreadCount((prev) => prev + 1);
+    };
+    sock.on('admin_notification', handler);
+    return () => sock.off('admin_notification', handler);
+  }, [shopInfo?.shopId]);
 
   const fetchShopInfo = async () => {
     try {

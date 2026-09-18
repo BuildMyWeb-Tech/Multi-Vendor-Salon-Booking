@@ -131,8 +131,11 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Prevent double booking
-appointmentSchema.index({ doctorId: 1, slotDateTime: 1 }, { unique: true });
+// Prevent double booking — only for non-cancelled appointments so freed slots can be re-booked
+appointmentSchema.index(
+  { doctorId: 1, slotDateTime: 1 },
+  { unique: true, partialFilterExpression: { cancelled: false } }
+);
 
 // Indexes for efficient querying
 appointmentSchema.index({ userId: 1, isCompleted: 1 });

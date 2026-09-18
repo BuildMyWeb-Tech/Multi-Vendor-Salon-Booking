@@ -2,12 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import path from 'path';
+import http from 'http';
 import { fileURLToPath } from 'url';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
 import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudinary.js';
+import { initSocket } from './config/socket.js';
 
 import userRouter from './routes/userRoute.js';
 import doctorRouter from './routes/doctorRoute.js';
@@ -26,6 +28,7 @@ const __dirname = path.dirname(__filename);
 
 // ── APP CONFIG ──────────────────────────────────────────────────────────────
 const app = express();
+const httpServer = http.createServer(app);
 const port = process.env.PORT || 4000;
 
 // ── DATABASE ────────────────────────────────────────────────────────────────
@@ -117,7 +120,10 @@ app.get('/', (req, res) => {
   res.send('✅ Salon Booking API is running');
 });
 
+// ── SOCKET.IO ────────────────────────────────────────────────────────────────
+initSocket(httpServer, allowedOrigins);
+
 // ── START SERVER ─────────────────────────────────────────────────────────────
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`🚀 Server started on PORT: ${port}`);
 });

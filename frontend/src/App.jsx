@@ -2,6 +2,11 @@ import React, { useContext, useEffect } from 'react'
 import { Routes, Route, useParams, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import {
+  Scissors, Calendar, Bell, Star, MapPin, Clock,
+  Sparkles, Users, Award, Zap, Shield, ArrowRight,
+  CheckCircle, ChevronRight, Store, Phone, Search
+} from 'lucide-react'
 
 import ScrollToTop from './components/ScrollToTop'
 
@@ -201,26 +206,244 @@ const ShopCustomerSection = () => {
 
 // ── PLATFORM ROOT ───────────────────────────────────────────────────────────
 const PlatformRoot = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-primary/10">
-    <div className="text-center p-8 max-w-md">
-      <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/30">
-        <span className="text-white text-3xl">✂</span>
+  <div className="min-h-screen bg-white flex flex-col">
+    {/* ── Navbar ─────────────────────────────────────────────────────────── */}
+    <header className="w-full px-6 sm:px-10 py-4 flex items-center justify-between border-b border-gray-100 bg-white sticky top-0 z-20 shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-md shadow-primary/30">
+          <Scissors size={17} className="text-white" />
+        </div>
+        <span className="text-xl font-extrabold text-gray-900 tracking-tight">StyleSlot</span>
       </div>
-      <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent mb-3">
-        Salon Booking Platform
-      </h1>
-      <p className="text-gray-500 mb-6">
-        Visit your salon's URL to book appointments.
-      </p>
-      <p className="text-sm text-gray-400 bg-gray-100 px-4 py-2 rounded-lg">
-        Example: <code>/your-salon-name</code>
-      </p>
-      <a href="/super-admin" className="mt-6 inline-block text-primary text-sm hover:underline font-medium">
-        Super Admin Portal →
+      <a
+        href="/super-admin"
+        className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-sm shadow-primary/20"
+      >
+        <Shield size={14} />
+        Admin Portal
+        <ChevronRight size={14} />
       </a>
-    </div>
+    </header>
+
+    {/* ── Hero ───────────────────────────────────────────────────────────── */}
+    <section className="bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+        <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+      </div>
+      <div className="max-w-5xl mx-auto px-6 py-20 sm:py-28 text-center relative">
+        <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white/90 text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
+          <Star size={11} fill="currentColor" /> Multi-Vendor Salon Booking Platform
+        </div>
+        <h1 className="text-4xl sm:text-6xl font-extrabold leading-tight mb-5">
+          Book Your <span className="text-yellow-300">Perfect Style</span>
+          <br className="hidden sm:block" /> at Any Salon, Anytime
+        </h1>
+        <p className="text-white/70 text-lg max-w-xl mx-auto mb-10">
+          StyleSlot connects you with top salons. Browse stylists, pick a slot and book — all from
+          one seamless platform.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+          <div className="flex items-center gap-3 bg-white/10 border border-white/20 backdrop-blur-sm rounded-xl px-5 py-3 text-sm text-white/80 w-full sm:w-auto">
+            <Search size={15} className="text-white/60" />
+            Visit: <code className="text-yellow-300 font-bold ml-1">/your-salon-name</code>
+          </div>
+          <a
+            href="/super-admin"
+            className="inline-flex items-center gap-2 bg-white text-primary font-bold px-6 py-3 rounded-xl hover:bg-white/90 transition-all shadow-lg shadow-black/20 text-sm w-full sm:w-auto justify-center"
+          >
+            <Store size={15} /> Open Admin Portal <ArrowRight size={14} />
+          </a>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-6 text-white/70 text-sm">
+          {[
+            { icon: <Users size={14} />, text: 'Multiple Salons' },
+            { icon: <Calendar size={14} />, text: 'Easy Booking' },
+            { icon: <Bell size={14} />, text: 'Instant Notifications' },
+            { icon: <Shield size={14} />, text: 'Secure Payments' },
+          ].map((s) => (
+            <div key={s.text} className="flex items-center gap-1.5">
+              {s.icon}
+              {s.text}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ── Features ───────────────────────────────────────────────────────── */}
+    <section className="max-w-6xl mx-auto w-full px-6 py-16">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Everything You Need</h2>
+        <p className="text-gray-500">
+          A complete salon booking experience — for customers and salon owners alike
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {[
+          {
+            icon: Calendar,
+            color: 'bg-blue-50 text-blue-600',
+            title: 'Easy Scheduling',
+            desc: 'Pick your date, time and stylist in seconds. No waiting, no phone calls required.',
+          },
+          {
+            icon: Users,
+            color: 'bg-violet-50 text-violet-600',
+            title: 'Expert Stylists',
+            desc: 'Browse experienced professionals at each salon and choose the one that fits your style.',
+          },
+          {
+            icon: Sparkles,
+            color: 'bg-amber-50 text-amber-600',
+            title: 'All Services',
+            desc: 'Haircuts, colour, treatments, bridal — find every service in one place.',
+          },
+          {
+            icon: Bell,
+            color: 'bg-rose-50 text-rose-600',
+            title: 'Instant Alerts',
+            desc: 'Real-time notifications for bookings, cancellations and reschedules.',
+          },
+          {
+            icon: Zap,
+            color: 'bg-emerald-50 text-emerald-600',
+            title: 'Quick Payment',
+            desc: 'Secure online payments via Razorpay — pay partial or full, hassle-free.',
+          },
+          {
+            icon: Award,
+            color: 'bg-primary/5 text-primary',
+            title: 'Multi-Vendor',
+            desc: 'Each salon gets its own branded page, admin panel and customer URL.',
+          },
+        ].map(({ icon: Icon, color, title, desc }) => (
+          <div
+            key={title}
+            className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default"
+          >
+            <div
+              className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}
+            >
+              <Icon size={20} />
+            </div>
+            <h3 className="font-semibold text-gray-800 mb-1.5">{title}</h3>
+            <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ── How It Works ───────────────────────────────────────────────────── */}
+    <section className="bg-gray-50 py-16">
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">How It Works</h2>
+          <p className="text-gray-500">Three simple steps to your perfect salon experience</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          {[
+            {
+              icon: Search,
+              step: '01',
+              title: 'Find Your Salon',
+              desc: "Navigate to your salon's URL (e.g. /unique-salon) to see their services and stylists.",
+            },
+            {
+              icon: Calendar,
+              step: '02',
+              title: 'Pick a Slot',
+              desc: 'Choose your preferred stylist, date and time from available slots.',
+            },
+            {
+              icon: CheckCircle,
+              step: '03',
+              title: 'Confirm & Go',
+              desc: 'Pay online or at the salon, receive instant confirmation and show up relaxed.',
+            },
+          ].map(({ icon: Icon, step, title, desc }) => (
+            <div key={step} className="group text-center">
+              <div className="relative inline-flex mb-5">
+                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-md shadow-primary/25 group-hover:scale-105 transition-transform duration-200 mx-auto">
+                  <Icon size={26} className="text-white" />
+                </div>
+                <span className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 text-gray-900 text-xs font-black rounded-full flex items-center justify-center">
+                  {step.slice(1)}
+                </span>
+              </div>
+              <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ── Salon Types ────────────────────────────────────────────────────── */}
+    <section className="max-w-6xl mx-auto w-full px-6 py-16">
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Services We Cover</h2>
+        <p className="text-gray-500">From haircuts to bridal looks — every service, every salon</p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { icon: Scissors, label: 'Haircuts & Styling' },
+          { icon: Sparkles, label: 'Colour & Highlights' },
+          { icon: Star, label: 'Bridal & Makeup' },
+          { icon: Award, label: 'Spa & Treatments' },
+          { icon: Zap, label: 'Beard & Grooming' },
+          { icon: Clock, label: 'Express Services' },
+          { icon: Users, label: 'Group Bookings' },
+          { icon: MapPin, label: 'Walk-in Salons' },
+        ].map(({ icon: Icon, label }) => (
+          <div
+            key={label}
+            className="group flex flex-col items-center gap-3 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 cursor-default text-center"
+          >
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-200">
+              <Icon size={18} className="text-primary group-hover:text-white transition-colors" />
+            </div>
+            <span className="text-sm font-medium text-gray-700 group-hover:text-primary transition-colors">
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ── CTA Banner ─────────────────────────────────────────────────────── */}
+    <section className="mx-6 sm:mx-10 mb-16 bg-gradient-to-r from-primary to-blue-600 rounded-3xl p-10 text-white text-center shadow-xl shadow-primary/20">
+      <Scissors size={36} className="mx-auto mb-4 opacity-80" />
+      <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Own a Salon?</h2>
+      <p className="text-white/75 mb-6 max-w-md mx-auto">
+        Get your own branded booking page, manage stylists, appointments and payments — all from one
+        dashboard.
+      </p>
+      <a
+        href="/super-admin"
+        className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3 rounded-xl hover:bg-white/90 transition-all shadow-md text-sm"
+      >
+        <Store size={16} /> Get Started as Admin <ArrowRight size={15} />
+      </a>
+    </section>
+
+    {/* ── Footer ─────────────────────────────────────────────────────────── */}
+    <footer className="border-t border-gray-100 py-6 px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
+          <Scissors size={12} className="text-white" />
+        </div>
+        <span className="font-semibold text-gray-600">StyleSlot</span>
+      </div>
+      <span>© {new Date().getFullYear()} StyleSlot · Design and Developed By <a href="https://buildmyweb.info/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+        BuildMyWeb
+      </a>
+      </span>
+      
+    </footer>
   </div>
-)
+);
 
 // ── MAIN APP ────────────────────────────────────────────────────────────────
 const App = () => (

@@ -11,16 +11,18 @@ import {
 const ShopNavbar = () => {
   const navigate = useNavigate();
   const { shopSlug } = useParams();
-  const { token, setToken, userData, backendUrl } = useContext(AppContext);
+  const { token, setToken, userData, backendUrl, userNotifications, userUnreadCount, markUserNotificationsRead } = useContext(AppContext);
   const { currentShop } = useContext(ShopContext);
 
   const [showMenu, setShowMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
+
+  // Use context-managed notifications (real-time via socket)
+  const notifications = userNotifications;
+  const unreadCount = userUnreadCount;
 
   const shopName = currentShop?.shopName || (shopSlug ? shopSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Salon');
   const s = shopSlug || '';
@@ -48,24 +50,6 @@ const ShopNavbar = () => {
     return () => document.removeEventListener('mousedown', close);
   }, [showUserDropdown, showNotifications]);
 
-  const fetchNotifications = async () => {
-    if (!token || !backendUrl) return;
-    try {
-      const { data } = await axios.get(`${backendUrl}/api/user/notifications`, { headers: { token } });
-      if (data.success) {
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      }
-    } catch {}
-  };
-
-  useEffect(() => {
-    if (!token) { setNotifications([]); setUnreadCount(0); return; }
-    fetchNotifications();
-    const id = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(id);
-  }, [token]);
-
   const logout = () => {
     localStorage.removeItem('token');
     setToken(false);
@@ -73,12 +57,7 @@ const ShopNavbar = () => {
     navigate(`/${s}/login`);
   };
 
-  const markAllRead = async () => {
-    try {
-      await axios.post(`${backendUrl}/api/user/notifications/mark-read`, {}, { headers: { token } });
-      setUnreadCount(0);
-    } catch {}
-  };
+  const markAllRead = () => markUserNotificationsRead();
 
   const navLinks = [
     { to: `/${s}`, label: 'HOME', icon: Home },

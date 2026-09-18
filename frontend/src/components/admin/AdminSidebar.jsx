@@ -23,9 +23,10 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
     { to: `/${slug}/admin/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
     { to: `/${slug}/admin/appointments`, label: 'Appointments', icon: Calendar },
     { to: `/${slug}/admin/stylists`, label: 'Stylists', icon: UserCog },
+    { to: `/${slug}/admin/add-stylist`, label: 'Add Stylist', icon: UserPlus2 },
     { to: `/${slug}/admin/services`, label: 'Services', icon: LayoutGrid },
     { to: `/${slug}/admin/slot-management`, label: 'Slots', icon: CalendarClock },
-    { to: `/${slug}/admin/add-stylist`, label: 'Add Stylist', icon: UserPlus2 },
+
     // { to: `/${slug}/admin/my-profile`, label: 'My Profile', icon: User },
   ];
 

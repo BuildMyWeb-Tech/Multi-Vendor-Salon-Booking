@@ -84,11 +84,11 @@ const AdminNavbar = ({ shopSlug: shopSlugProp }) => {
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
               <Scissors size={16} className="text-primary" />
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Right */}
