@@ -212,15 +212,15 @@ const SuperAdminSalons = () => {
                     </td>
                     {/* Status toggle */}
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleToggleStatus(salon)}
-                          className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${salon.status === 'active' ? 'bg-primary' : 'bg-gray-300'}`}
+                          className={`relative flex-shrink-0 w-14 h-7 rounded-full transition-colors duration-200 focus:outline-none ${salon.status === 'active' ? 'bg-primary' : 'bg-gray-300'}`}
                           title={salon.status === 'active' ? 'Click to deactivate' : 'Click to activate'}
                         >
-                          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${salon.status === 'active' ? 'translate-x-6' : 'translate-x-1'}`} />
+                          <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${salon.status === 'active' ? 'translate-x-8' : 'translate-x-1'}`} />
                         </button>
-                        <span className={`text-xs font-semibold whitespace-nowrap ${salon.status === 'active' ? 'text-primary' : 'text-gray-400'}`}>
+                        <span className={`text-sm font-semibold whitespace-nowrap ${salon.status === 'active' ? 'text-primary' : 'text-gray-400'}`}>
                           {salon.status === 'active' ? 'Active' : 'Inactive'}
                         </span>
                       </div>

@@ -88,12 +88,6 @@ const AdminNavbar = ({ shopSlug: shopSlugProp }) => {
             <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
               <Scissors size={16} className="text-primary" />
             </div>
-            <div>
-              <h1 className="font-semibold text-gray-800 hidden sm:block text-sm leading-none">
-                {shopDisplayName}
-              </h1>
-              <p className="text-xs text-gray-400">Admin Portal</p>
-            </div>
           </div>
         </div>
 

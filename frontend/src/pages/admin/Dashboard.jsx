@@ -1,29 +1,16 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AdminContext } from '../../context/AdminContext';
 import { AppContext } from '../../context/AppContext';
+import { useParams } from 'react-router-dom';
 import {
   Users,
   Calendar,
   UserCircle,
   IndianRupee,
   Scissors,
-  ArrowUpRight,
-  Clock,
-  CheckCircle,
-  XCircle,
-  MoreHorizontal,
-  RefreshCw,
   TrendingUp,
-  TrendingDown,
   Sparkles,
   Award,
-  Star,
-  Gem,
-  UserCheck,
-  ShoppingBag,
-  Heart,
-  Bell,
-  X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -50,20 +37,18 @@ const Dashboard = () => {
     dashData,
     getAllAppointments,
     appointments,
-    adminNotifications,
-    adminUnreadCount,
-    markAdminNotificationsRead,
-    getAdminNotifications,
   } = useContext(AdminContext);
   const { slotDateFormat } = useContext(AppContext);
+  const { shopSlug } = useParams();
+  const shopDisplayName = shopSlug
+    ? shopSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    : 'Salon';
   const [isLoading, setIsLoading] = useState(true);
   const [bookingTrends, setBookingTrends] = useState([]);
   const [servicePopularity, setServicePopularity] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
   const [stylistPerformance, setStylistPerformance] = useState([]);
   const [customerRetention, setCustomerRetention] = useState([]);
-  // ✅ Notification panel state
-  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     if (aToken) {
@@ -276,78 +261,9 @@ const Dashboard = () => {
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
             <Scissors className="text-primary" size={28} />
-            StyleStudio Dashboard
+            {shopDisplayName} Dashboard
           </h1>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <p className="text-gray-600">Manage your salon performance and appointments</p>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setShowNotifications(!showNotifications);
-                    if (!showNotifications && adminUnreadCount > 0) markAdminNotificationsRead();
-                  }}
-                  className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-200 transition-colors bg-white border border-gray-200 shadow-sm"
-                >
-                  <Bell size={18} className="text-gray-600" />
-                  {adminUnreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                      {adminUnreadCount > 9 ? '9+' : adminUnreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {showNotifications && (
-                  <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-                      <span className="font-semibold text-gray-800 text-sm">Notifications</span>
-                      <div className="flex items-center gap-3">
-                        {adminNotifications.some((n) => !n.read) && (
-                          <button onClick={() => markAdminNotificationsRead()} className="text-xs text-primary hover:underline">
-                            Mark all read
-                          </button>
-                        )}
-                        <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto">
-                      {adminNotifications.length === 0 ? (
-                        <div className="px-4 py-8 text-center text-gray-400 text-sm">
-                          <Bell size={28} className="mx-auto mb-2 opacity-30" />
-                          No notifications yet
-                        </div>
-                      ) : (
-                        adminNotifications.map((n) => (
-                          <div key={n._id} className={`px-4 py-3 border-b last:border-0 transition-colors ${!n.read ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}>
-                            <div className="flex items-start gap-2">
-                              {!n.read && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
-                              <div className={!n.read ? '' : 'ml-4'}>
-                                <p className="text-xs font-semibold text-gray-800 mb-0.5">{n.title}</p>
-                                <p className="text-xs text-gray-600 leading-relaxed">{n.message}</p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                  {new Date(n.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => { setIsLoading(true); Promise.all([getDashData(), getAllAppointments()]).finally(() => setIsLoading(false)); }}
-                className="flex items-center gap-1 text-sm text-gray-600 hover:text-primary transition-colors"
-              >
-                <RefreshCw size={14} />
-                <span>Refresh Data</span>
-              </button>
-            </div>
-          </div>
+          <p className="text-gray-600">Manage your salon performance and appointments</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
