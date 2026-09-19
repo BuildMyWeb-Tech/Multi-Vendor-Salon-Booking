@@ -12,7 +12,12 @@ import {
   Shield, AlertTriangle, Loader2, Clock, Calendar, Award, User, Scissors
 } from "lucide-react";
 
-const stripePromise = loadStripe('pk_test_51NpjZGSJQz3QA6GnHyUmwbQtcYfeTHfQdl0i7YpeCor7Vl6qXn2nKUDRdx6AldHDhxnRUiUJRuAdBECFIwE0QQGy00Ys6rUGi8');
+// Lazy: only init Stripe when payment step is reached
+let stripePromise = null;
+const getStripe = () => {
+  if (!stripePromise) stripePromise = loadStripe('pk_test_51NpjZGSJQz3QA6GnHyUmwbQtcYfeTHfQdl0i7YpeCor7Vl6qXn2nKUDRdx6AldHDhxnRUiUJRuAdBECFIwE0QQGy00Ys6rUGi8');
+  return stripePromise;
+};
 
 // Memoized components remain the same
 const StylistProfile = memo(({ stylistInfo, slotSettings }) => {
@@ -233,29 +238,25 @@ const Appointment = () => {
     }
   }, [token, navigate, shopSlug]);
 
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 DEBUG - Current State:', {
-        token: token ? 'EXISTS' : 'MISSING',
-        docId,
-        stylistInfo: stylistInfo ? 'LOADED' : 'NULL',
-        slotSettings: slotSettings ? 'LOADED' : 'NULL',
-        availableDates: availableDates.length
-      });
-    }
-  }, [token, docId, stylistInfo, slotSettings]);
 
-  // Fast-load: fetch the specific doctor directly without waiting for AppContext list
+  // Fast-load: fetch THIS doctor directly by ID — no need to wait for the full list
   useEffect(() => {
     if (!docId || !backendUrl || stylistInfo) return;
-    axios.get(`${backendUrl}/api/doctor/list`)
+    axios.get(`${backendUrl}/api/doctor/${docId}`)
       .then(({ data }) => {
-        if (data.success) {
-          const found = data.doctors.find(d => d._id === docId);
-          if (found) setStylistInfo(found);
-        }
+        if (data.success && data.doctor) setStylistInfo(data.doctor);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback: search in full list if single-doctor endpoint unavailable
+        axios.get(`${backendUrl}/api/doctor/list`)
+          .then(({ data }) => {
+            if (data.success) {
+              const found = data.doctors.find(d => d._id === docId);
+              if (found) setStylistInfo(found);
+            }
+          })
+          .catch(() => {});
+      });
   }, [docId, backendUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Helpers
@@ -279,10 +280,7 @@ const Appointment = () => {
     try {
       hasFetchedServices.current = true;
       const { data } = await axios.get(`${backendUrl}/api/user/services`);
-      if (data.success) {
-        console.log('📦 Services fetched:', data.services.length);
-        setAllServices(data.services);
-      }
+      if (data.success) setAllServices(data.services);
     } catch (error) {
       hasFetchedServices.current = false;
       console.error("Error fetching services:", error);
@@ -292,10 +290,9 @@ const Appointment = () => {
 
   const filterStylistServices = useCallback(() => {
     if (!stylistInfo || !allServices.length) return;
-    const filtered = allServices.filter(service => 
+    const filtered = allServices.filter(service =>
       stylistInfo.specialty.includes(service.name)
     );
-    console.log('🔍 Filtered stylist services:', filtered.length);
     setStylistServices(filtered);
   }, [stylistInfo, allServices]);
 
@@ -306,11 +303,6 @@ const Appointment = () => {
       hasFetchedSettings.current = true;
       const { data } = await axios.get(backendUrl + '/api/admin/public/slot-settings');
       if (data.success) {
-        console.log('⚙️ Slot settings loaded - Times:', {
-          start: data.slotStartTime,
-          end: data.slotEndTime,
-          duration: data.slotDuration
-        });
         setSlotSettings(data);
       } else {
         setSlotSettings({
@@ -334,9 +326,8 @@ const Appointment = () => {
   }, [backendUrl]);
 
   const fetchStylistInfo = useCallback(() => {
-    const stylistInfo = stylists.find((stylist) => stylist._id === docId);
-    console.log('💇 Stylist info:', stylistInfo?.name || 'Not found');
-    setStylistInfo(stylistInfo);
+    const found = stylists.find((stylist) => stylist._id === docId);
+    if (found) setStylistInfo(found);
   }, [stylists, docId]);
 
   const generateAvailableDates = useCallback(async () => {
@@ -607,9 +598,9 @@ const Appointment = () => {
     processPayment(paymentMethod);
   }, [selectedSlotISO, selectedServices, paymentMethod, processPayment]);
 
+  // Fire both in parallel on mount — don't wait for one before the other
   useEffect(() => {
-    fetchSlotSettings();
-    fetchAllServices();
+    Promise.all([fetchSlotSettings(), fetchAllServices()]);
   }, []);
 
   useEffect(() => {
@@ -649,31 +640,61 @@ const Appointment = () => {
     }
   }, [selectedServices, slotSettings, getTotalPrice]);
 
-  if (!stylistInfo || !slotSettings) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
         <div className="mb-8 flex items-center">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors mr-4"
           >
             <ChevronLeft size={24} className="text-gray-500" />
           </button>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Book Your Appointment</h1>
         </div>
-        
+
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <StylistProfile stylistInfo={stylistInfo} slotSettings={slotSettings} />
+          {/* Show skeleton until stylist loads, then show profile immediately */}
+          {!stylistInfo ? (
+            <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-6 sm:p-8 animate-pulse">
+              <div className="flex flex-col md:flex-row gap-8">
+                <div className="md:w-1/4 lg:w-1/5">
+                  <div className="w-full aspect-square rounded-2xl bg-gray-200" />
+                </div>
+                <div className="md:w-3/4 flex-1 space-y-4 py-2">
+                  <div className="h-8 bg-gray-200 rounded w-1/3" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  <div className="h-20 bg-gray-200 rounded mt-4" />
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="h-20 bg-gray-200 rounded-xl" />
+                    <div className="h-20 bg-gray-200 rounded-xl" />
+                    <div className="h-20 bg-gray-200 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <StylistProfile stylistInfo={stylistInfo} slotSettings={slotSettings || { slotStartTime: '--', slotEndTime: '--' }} />
+          )}
           
-          {/* Booking Steps Indicator */}
+          {/* Show booking section skeleton until both stylist and settings are ready */}
+          {(!stylistInfo || !slotSettings) && (
+            <div className="p-6 sm:p-8 animate-pulse space-y-4">
+              <div className="flex gap-4 items-center justify-between max-w-xs mx-auto">
+                <div className="w-10 h-10 rounded-full bg-gray-200" />
+                <div className="flex-1 h-1 bg-gray-200" />
+                <div className="w-10 h-10 rounded-full bg-gray-200" />
+                <div className="flex-1 h-1 bg-gray-200" />
+                <div className="w-10 h-10 rounded-full bg-gray-200" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+                {[1,2,3].map(i => <div key={i} className="h-36 bg-gray-100 rounded-2xl" />)}
+              </div>
+            </div>
+          )}
+
+          {/* Booking Steps + Content: only render once both are ready */}
+          {stylistInfo && slotSettings && <>
           <div className="px-6 sm:px-8 py-6 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between max-w-3xl mx-auto">
               <div className="flex items-center flex-1">
@@ -1061,9 +1082,10 @@ const Appointment = () => {
               </div>
             )}
           </div>
+          </>}
         </div>
 
-        <div className="max-w-2xl mx-auto mt-8 bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-md">
+        {slotSettings && <div className="max-w-2xl mx-auto mt-8 bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-md">
           <div className="flex items-start gap-4">
             <AlertTriangle size={24} className="text-yellow-600 mt-0.5 flex-shrink-0" />
             <div>
@@ -1087,33 +1109,18 @@ const Appointment = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </div>}
 
-      <style>
-        {`
-        @keyframes slideDown {
-          from { 
-            opacity: 0; 
-            transform: translateY(-20px); 
+        <style>{`
+          @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
           }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
-          }
-        }
-        .animate-slideDown {
-          animation: slideDown 0.4s ease-out;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        `}
-      </style>
+          .animate-slideDown { animation: slideDown 0.4s ease-out; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+        `}</style>
+      </div>
     </div>
   );
 };
