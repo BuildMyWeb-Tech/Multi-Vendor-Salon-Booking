@@ -58,18 +58,18 @@ const AppContextProvider = (props) => {
       if (data.success) {
         setUserData(data.userData);
       } else {
-        toast.error(data.message);
+        localStorage.removeItem('token');
+        setToken('');
+        setUserData(false);
+        toast.error('Session expired. Please login again.');
       }
     } catch (error) {
       console.error('loadUserProfileData error:', error);
-      // ✅ If token is invalid/expired, clear it so user is prompted to login
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         setToken('');
         setUserData(false);
         toast.error('Session expired. Please login again.');
-      } else {
-        toast.error(error.message);
       }
     }
   };

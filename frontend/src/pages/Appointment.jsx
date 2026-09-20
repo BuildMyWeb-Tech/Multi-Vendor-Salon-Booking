@@ -202,7 +202,6 @@ const Appointment = () => {
   const razorpayKeyId = 'rzp_test_8NBbBv2vkvuTtj';
 
   const hasFetchedSettings = useRef(false);
-  const hasFetchedServices = useRef(false);
   const hasFetchedDates = useRef(false);
   const lastDocId = useRef(null);
   const hasCheckedAuth = useRef(false);
@@ -221,7 +220,6 @@ const Appointment = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [slotSettings, setSlotSettings] = useState(null);
   const [allServices, setAllServices] = useState([]);
-  const [stylistServices, setStylistServices] = useState([]);
   const [availableDates, setAvailableDates] = useState([]);
   const [dateLoading, setDateLoading] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
@@ -275,25 +273,20 @@ const Appointment = () => {
   }, [selectedServices]);
 
   const fetchAllServices = useCallback(async () => {
-    if (hasFetchedServices.current) return;
-    
     try {
-      hasFetchedServices.current = true;
       const { data } = await axios.get(`${backendUrl}/api/user/services`);
       if (data.success) setAllServices(data.services);
     } catch (error) {
-      hasFetchedServices.current = false;
       console.error("Error fetching services:", error);
-      toast.error("Failed to load services");
     }
   }, [backendUrl]);
 
-  const filterStylistServices = useCallback(() => {
-    if (!stylistInfo || !allServices.length) return;
+  const stylistServices = useMemo(() => {
+    if (!stylistInfo || !allServices.length) return [];
     const filtered = allServices.filter(service =>
       stylistInfo.specialty.includes(service.name)
     );
-    setStylistServices(filtered);
+    return filtered.length > 0 ? filtered : allServices;
   }, [stylistInfo, allServices]);
 
   const fetchSlotSettings = useCallback(async () => {
@@ -610,16 +603,10 @@ const Appointment = () => {
   }, [stylists, fetchStylistInfo]);
 
   useEffect(() => {
-    if (stylistInfo && allServices.length > 0) {
-      filterStylistServices();
-    }
-  }, [stylistInfo, allServices, filterStylistServices]);
-
-  useEffect(() => {
-    if (slotSettings && docId && token) {
+    if (docId && token) {
       generateAvailableDates();
     }
-  }, [slotSettings, docId, token, generateAvailableDates]);
+  }, [docId, token, generateAvailableDates]);
 
   useEffect(() => {
     if (selectedServices.length > 0 && slotSettings) {
@@ -677,8 +664,8 @@ const Appointment = () => {
             <StylistProfile stylistInfo={stylistInfo} slotSettings={slotSettings || { slotStartTime: '--', slotEndTime: '--' }} />
           )}
           
-          {/* Show booking section skeleton until both stylist and settings are ready */}
-          {(!stylistInfo || !slotSettings) && (
+          {/* Show booking section skeleton until stylist is ready */}
+          {!stylistInfo && (
             <div className="p-6 sm:p-8 animate-pulse space-y-4">
               <div className="flex gap-4 items-center justify-between max-w-xs mx-auto">
                 <div className="w-10 h-10 rounded-full bg-gray-200" />
@@ -693,8 +680,8 @@ const Appointment = () => {
             </div>
           )}
 
-          {/* Booking Steps + Content: only render once both are ready */}
-          {stylistInfo && slotSettings && <>
+          {/* Booking Steps + Content: render as soon as stylist is ready */}
+          {stylistInfo && <>
           <div className="px-6 sm:px-8 py-6 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between max-w-3xl mx-auto">
               <div className="flex items-center flex-1">
@@ -771,7 +758,7 @@ const Appointment = () => {
                       <div>
                         <p className="text-sm text-gray-700 mb-1">{selectedServices.length} service(s) selected</p>
                         <p className="text-2xl font-bold text-gray-900">Total: {currencySymbol}{getTotalPrice()}</p>
-                        {slotSettings.advancePaymentRequired && slotSettings.advancePaymentPercentage < 100 && (
+                        {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100 && (
                           <p className="text-sm text-blue-700 mt-1">
                             Pay {slotSettings.advancePaymentPercentage}% now ({currencySymbol}{Math.round((getTotalPrice() * slotSettings.advancePaymentPercentage) / 100)})
                           </p>
@@ -968,7 +955,7 @@ const Appointment = () => {
                         <span className="font-bold text-gray-900 text-xl">{currencySymbol}{getTotalPrice()}</span>
                       </div>
                       
-                      {slotSettings.advancePaymentRequired && slotSettings.advancePaymentPercentage < 100 && (
+                      {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100 && (
                         <>
                           <div className="flex justify-between items-center bg-blue-100 px-4 py-3 rounded-lg">
                             <span className="font-semibold text-blue-900">
@@ -986,14 +973,14 @@ const Appointment = () => {
                   </div>
                 </div>
                 
-                {slotSettings.advancePaymentRequired && slotSettings.advancePaymentPercentage < 100 && (
+                {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100 && (
                   <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                       <Shield size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
                       <div>
                         <h4 className="font-semibold text-blue-900 mb-1">Advance Payment Required</h4>
                         <p className="text-sm text-blue-800">
-                          You'll pay {slotSettings.advancePaymentPercentage}% ({currencySymbol}{paymentAmount}) now to confirm your booking. 
+                          You'll pay {slotSettings.advancePaymentPercentage}% ({currencySymbol}{paymentAmount}) now to confirm your booking.
                           The remaining {currencySymbol}{remainingAmount} will be paid at the salon.
                         </p>
                       </div>
@@ -1065,8 +1052,8 @@ const Appointment = () => {
                         <CreditCard size={24} />
                         <span>
                           Pay & Confirm {currencySymbol}
-                          {slotSettings.advancePaymentRequired && slotSettings.advancePaymentPercentage < 100 
-                            ? paymentAmount 
+                          {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100
+                            ? paymentAmount
                             : getTotalPrice()
                           }
                         </span>
