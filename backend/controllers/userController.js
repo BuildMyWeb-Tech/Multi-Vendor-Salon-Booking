@@ -163,8 +163,24 @@ export const getAvailableDates = async (req, res) => {
     if (!doctor.available) return res.json({ success: false, message: 'Stylist is not available' });
 
     const shopId = doctor.shopId || 'SHOP001';
-    const settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
-    if (!settings) return res.json({ success: false, message: 'Slot settings not configured' });
+    let settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
+
+    // Auto-seed default settings if none exist in the database
+    if (!settings) {
+      settings = await SlotSettings.create({
+        shopId,
+        slotStartTime: '09:00',
+        slotEndTime: '18:00',
+        slotDuration: 30,
+        breakTime: false,
+        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        maxAdvanceBookingDays: 30,
+        minBookingTimeBeforeSlot: 1,
+        advancePaymentRequired: false,
+        advancePaymentPercentage: 100,
+      });
+      console.log('✅ Auto-seeded SlotSettings for shopId:', shopId);
+    }
 
     const blockedDates = await BlockedDate.find({ shopId });
     const recurringHols = await RecurringHoliday.find({ shopId });
@@ -233,8 +249,21 @@ export const getAvailableSlots = async (req, res) => {
       return res.json({ success: true, slots: [], message: 'Stylist is on leave on this date' });
 
     const shopId = doctor.shopId || 'SHOP001';
-    const settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
-    if (!settings) return res.json({ success: false, message: 'Slot settings not configured' });
+    let settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
+    if (!settings) {
+      settings = await SlotSettings.create({
+        shopId,
+        slotStartTime: '09:00',
+        slotEndTime: '18:00',
+        slotDuration: 30,
+        breakTime: false,
+        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        maxAdvanceBookingDays: 30,
+        minBookingTimeBeforeSlot: 1,
+        advancePaymentRequired: false,
+        advancePaymentPercentage: 100,
+      });
+    }
 
     const { slots: allSlots, error } = await generateAvailableSlots(date, settings, docId);
     if (error && allSlots.length === 0) return res.json({ success: false, message: error });

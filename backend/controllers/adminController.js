@@ -616,8 +616,21 @@ export const removeSpecialWorkingDay = async (req, res) => {
 
 export const getPublicSlotSettings = async (req, res) => {
   try {
-    const settings = await SlotSettings.findOne();
-    if (!settings) return res.json({ success: false, message: 'Settings not configured' });
+    let settings = await SlotSettings.findOne();
+    if (!settings) {
+      settings = await SlotSettings.create({
+        shopId: 'SHOP001',
+        slotStartTime: '09:00',
+        slotEndTime: '18:00',
+        slotDuration: 30,
+        breakTime: false,
+        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        maxAdvanceBookingDays: 30,
+        minBookingTimeBeforeSlot: 1,
+        advancePaymentRequired: false,
+        advancePaymentPercentage: 100,
+      });
+    }
 
     const blockedDates = await BlockedDate.find();
     const recurringHolidays = await RecurringHoliday.find();
