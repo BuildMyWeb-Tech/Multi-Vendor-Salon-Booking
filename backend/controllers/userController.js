@@ -14,6 +14,7 @@ import RecurringHoliday from '../models/RecurringHoliday.js';
 import SpecialWorkingDay from '../models/SpecialWorkingDay.js';
 import AdminNotification from '../models/AdminNotification.js';
 import shopModel from '../models/shopModel.js';
+import UtrRecord from '../models/UtrRecord.js';
 import { emitToShop, emitToUser } from '../config/socket.js';
 
 // ── Stripe (test mode — replace STRIPE_SECRET_KEY with live key when ready) ──
@@ -257,8 +258,9 @@ export const getAvailableSlots = async (req, res) => {
 
 export const bookAppointment = async (req, res) => {
   try {
+    // req.userId is set by authUser BEFORE multer resets req.body
+    const userId = req.userId || req.body.userId;
     const {
-      userId,
       docId,
       slotDate,
       slotTime,
@@ -267,6 +269,7 @@ export const bookAppointment = async (req, res) => {
       paidAmount,
       remainingAmount,
       paymentMethod,
+      utrNumber,
     } = req.body;
 
     console.log('📋 Booking attempt:', { userId, docId, slotDate, slotTime });
@@ -302,6 +305,41 @@ export const bookAppointment = async (req, res) => {
     const finalPaid = Number(paidAmount) || 0;
     const finalRemaining = Number(remainingAmount) || 0;
 
+    // ── UPI payment verification pipeline ────────────────────────────────────────
+    let paymentScreenshotUrl = '';
+    let paymentVerified = false;
+
+    if (paymentMethod === 'upi') {
+      // 1. Basic UTR validation
+      if (!utrNumber || utrNumber.trim().length < 6) {
+        return res.json({ success: false, message: 'Please enter a valid UTR / Transaction ID (minimum 6 characters).' });
+      }
+      const normalizedUtr = utrNumber.trim().toUpperCase();
+
+      // 2. Duplicate UTR check
+      const existingUtr = await UtrRecord.findOne({ utrNumber: normalizedUtr });
+      if (existingUtr) {
+        return res.json({ success: false, message: 'This UTR / Transaction ID has already been used for another booking.' });
+      }
+
+      // 3. Screenshot required
+      if (!req.file) {
+        return res.json({ success: false, message: 'Payment screenshot is required to confirm UPI booking.' });
+      }
+
+      // 4. Upload screenshot to Cloudinary
+      const b64 = req.file.buffer.toString('base64');
+      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+      const uploadResult = await cloudinary.uploader.upload(dataUri, {
+        folder: 'payment_screenshots',
+        resource_type: 'image',
+      });
+      paymentScreenshotUrl = uploadResult.secure_url;
+
+      // 5. Mark payment as verified (UTR + screenshot submitted — admin reviews manually)
+      paymentVerified = true;
+    }
+
     const [sYear, sMonth, sDay] = slotDate.split('-').map(Number);
     const [sHour, sMinute] = slotTime.split(':').map(Number);
     const slotDateTime = new Date(sYear, sMonth - 1, sDay, sHour, sMinute, 0, 0);
@@ -329,11 +367,24 @@ export const bookAppointment = async (req, res) => {
       amount: finalAmount,
       paidAmount: finalPaid,
       remainingAmount: finalRemaining,
-      payment: finalPaid > 0,
+      payment: paymentMethod === 'upi' ? true : finalPaid > 0,
       paymentMethod: paymentMethod || 'cash',
+      paymentScreenshot: paymentScreenshotUrl,
+      utrNumber: utrNumber ? utrNumber.trim().toUpperCase() : '',
+      paymentVerified,
       shopId: docData.shopId || 'SHOP001',
       date: Date.now(),
     }).save();
+
+    // Register UTR to prevent duplicate use
+    if (paymentMethod === 'upi' && utrNumber) {
+      await UtrRecord.create({
+        utrNumber: utrNumber.trim().toUpperCase(),
+        shopId: docData.shopId || 'SHOP001',
+        appointmentId: newAppointment._id,
+        amount: finalAmount,
+      });
+    }
 
     // Mark slot booked in doctor's map
     const slots_booked =

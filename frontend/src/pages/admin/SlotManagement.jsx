@@ -188,7 +188,7 @@ const SlotManagement = () => {
 
       <div className="mb-6 border-b border-gray-200">
         <div className="flex overflow-x-auto">
-          {['basic', 'dates', 'booking', 'payment'].map(tab => (
+          {['basic', 'dates', 'booking'].map(tab => (
             <button
               key={tab}
               className={`py-3 px-2 border-b-2 font-medium text-sm ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-gray-500'}`}
@@ -197,7 +197,6 @@ const SlotManagement = () => {
               {tab === 'basic' && 'Basic Settings'}
               {tab === 'dates' && 'Date Controls'}
               {tab === 'booking' && 'Booking Rules'}
-              {tab === 'payment' && 'Payment Settings'}
             </button>
           ))}
         </div>
@@ -501,50 +500,6 @@ const SlotManagement = () => {
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'payment' && (
-          <div className="bg-white border rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-6 flex items-center gap-2">
-              <CreditCard size={20} />
-              Payment Settings
-            </h2>
-            <div className="mb-6">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="advancePaymentRequired"
-                  checked={localSettings.advancePaymentRequired}
-                  onChange={handleCheckboxChange}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium text-gray-700">Require Advance Payment</span>
-              </label>
-            </div>
-            {localSettings.advancePaymentRequired && (
-              <div className="ml-6 pl-4 border-l-2 border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Advance Payment Percentage
-                </label>
-                <select
-                  name="advancePaymentPercentage"
-                  value={localSettings.advancePaymentPercentage}
-                  onChange={handleInputChange}
-                  className="w-full max-w-xs px-3 py-2.5 border rounded-md"
-                >
-                  <option value={10}>10% - Token Amount</option>
-                  <option value={25}>25% - Quarter Payment</option>
-                  <option value={30}>30% - Partial Payment</option>
-                  <option value={50}>50% - Half Payment</option>
-                  <option value={75}>75% - Major Payment</option>
-                  <option value={100}>100% - Full Payment</option>
-                </select>
-                <p className="mt-2 text-sm text-gray-500">
-                  Customers will pay {localSettings.advancePaymentPercentage}% of the total service amount
-                </p>
-              </div>
-            )}
           </div>
         )}
 

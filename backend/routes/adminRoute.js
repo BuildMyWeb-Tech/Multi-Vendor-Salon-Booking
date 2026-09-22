@@ -25,6 +25,7 @@ import {
   updateStylistLeaveDates,
   getAdminNotifications,
   markAdminNotificationsRead,
+  getShopPaymentInfo,
 } from '../controllers/adminController.js';
 
 import {
@@ -70,6 +71,7 @@ adminRouter.get('/dashboard', authAdmin, adminDashboard);
 adminRouter.get('/notifications', authAdmin, getAdminNotifications);
 // POST — mark one ({ notificationId }) or all (empty body) as read
 adminRouter.post('/notifications/read', authAdmin, markAdminNotificationsRead);
+adminRouter.get('/shop-payment-info', authAdmin, getShopPaymentInfo);
 
 /* ===================== SLOT SETTINGS ===================== */
 adminRouter.get('/slot-settings', authAdmin, getSlotSettings);

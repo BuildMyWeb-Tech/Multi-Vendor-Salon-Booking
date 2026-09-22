@@ -34,7 +34,7 @@ userRouter.get('/get-profile', authUser, getProfile);
 userRouter.post('/update-profile', authUser, upload.single('image'), updateProfile);
 
 /* ===================== APPOINTMENTS ===================== */
-userRouter.post('/book-appointment', authUser, bookAppointment);
+userRouter.post('/book-appointment', authUser, upload.single('paymentScreenshot'), bookAppointment);
 userRouter.get('/appointments', authUser, listAppointment);
 userRouter.post('/cancel-appointment', authUser, cancelAppointment);
 userRouter.post('/reschedule-appointment', authUser, rescheduleAppointment);

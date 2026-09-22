@@ -11,6 +11,7 @@ import BlockedDate from '../models/BlockedDate.js';
 import RecurringHoliday from '../models/RecurringHoliday.js';
 import SpecialWorkingDay from '../models/SpecialWorkingDay.js';
 import AdminNotification from '../models/AdminNotification.js';
+import shopModel from '../models/shopModel.js';
 
 // ─── Helper: format slotDate + slotTime for human-readable display ────────────
 const formatDisplayDate = (slotDate, slotTime) => {
@@ -637,29 +638,35 @@ export const getPublicSlotSettings = async (req, res) => {
 
 export const cancelAppointment = async (req, res) => {
   try {
-    const { appointmentId } = req.body;
+    const { appointmentId, cancellationReason } = req.body;
     const appointment = await appointmentModel.findById(appointmentId);
     if (!appointment) return res.json({ success: false, message: 'Appointment not found' });
     if (appointment.cancelled) return res.json({ success: false, message: 'Appointment already cancelled' });
     if (appointment.isCompleted) return res.json({ success: false, message: 'Cannot cancel completed appointment' });
 
+    const finalReason = cancellationReason?.trim() || 'No reason provided.';
     appointment.cancelled = true;
     appointment.cancelledBy = 'admin';
-    appointment.cancellationReason = 'Cancelled by salon admin.';
+    appointment.cancellationReason = finalReason;
     await appointment.save();
 
     const { dateStr, timeStr } = formatDisplayDate(appointment.slotDate, appointment.slotTime);
     const stylistName = appointment.docData?.name || 'your stylist';
     const userName = appointment.userData?.name || 'The customer';
 
+    // Resolve salon slug for correct My Appointments link
+    const shopDoc = await shopModel.findOne({ shopId: appointment.shopId }).lean();
+    const shopSlug = shopDoc?.slug || '';
+    const myApptLink = shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments';
+
     await userModel.findByIdAndUpdate(appointment.userId, {
       $push: {
         notifications: {
-          title: '❌ Appointment Cancelled by Salon',
-          message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled by the salon. Please contact us or rebook at your convenience.`,
+          title: 'Appointment Cancelled by Salon Admin',
+          message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled. Reason: ${finalReason}`,
           type: 'cancellation',
           read: false,
-          link: '/my-appointments',
+          link: myApptLink,
           createdAt: new Date(),
         },
       },
@@ -735,6 +742,19 @@ export const markAdminNotificationsRead = async (req, res) => {
     res.json({ success: true, message: 'Admin notifications marked as read' });
   } catch (error) {
     console.error('markAdminNotificationsRead error:', error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const getShopPaymentInfo = async (req, res) => {
+  try {
+    const { shopId } = req.query;
+    if (!shopId) return res.json({ success: false, message: 'shopId required' });
+    const shop = await shopModel.findOne({ shopId }).select('paymentIntegrationEnabled').lean();
+    if (!shop) return res.json({ success: false, message: 'Shop not found' });
+    res.json({ success: true, paymentIntegrationEnabled: !!shop.paymentIntegrationEnabled });
+  } catch (error) {
+    console.error('getShopPaymentInfo error:', error);
     res.json({ success: false, message: error.message });
   }
 };

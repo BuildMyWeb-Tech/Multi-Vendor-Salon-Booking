@@ -424,7 +424,7 @@ const MyAppointments = () => {
           >
             <div className="flex">
               {[
-                { id: 'upcoming', icon: <CalendarCheck size={18} />, label: 'Upcoming', count: upcomingCount },
+                { id: 'upcoming', icon: <CalendarCheck size={18} />, label: 'Confirmed', count: upcomingCount },
                 { id: 'completed', icon: <CheckCircle size={18} />, label: 'Completed', count: completedCount },
                 { id: 'cancelled', icon: <CalendarX size={18} />, label: 'Cancelled', count: cancelledCount },
               ].map((tab) => (
@@ -494,10 +494,10 @@ const MyAppointments = () => {
                 <CalendarX size={30} className="text-gray-400" />
               )}
             </div>
-            <h3 className="text-lg font-medium text-gray-800 mb-2">No {activeTab} appointments</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-2">No {activeTab === 'upcoming' ? 'confirmed' : activeTab} appointments</h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               {activeTab === 'upcoming'
-                ? "You don't have any upcoming appointments scheduled."
+                ? "You don't have any confirmed appointments scheduled."
                 : activeTab === 'completed'
                   ? "You don't have any completed appointments yet."
                   : "You don't have any cancelled appointments."}
@@ -601,15 +601,10 @@ const MyAppointments = () => {
                                 <RefreshCw size={12} />
                                 Rescheduled
                               </div>
-                            ) : item.payment ? (
+                            ) : (
                               <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
                                 <BadgeCheck size={12} />
                                 Confirmed
-                              </div>
-                            ) : (
-                              <div className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
-                                <Clock size={12} />
-                                Pending
                               </div>
                             )}
                           </div>
@@ -695,44 +690,49 @@ const MyAppointments = () => {
                           </div>
                         </div>
 
-                        {/* Payment Information */}
+                        {/* Booking Status Banner */}
                         <div className="mb-4 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-100">
                           <div className="flex items-center gap-2 mb-3">
-                            <h4 className="font-semibold text-gray-800">Payment Details</h4>
+                            <h4 className="font-semibold text-gray-800">Booking Details</h4>
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-600">Total Amount:</span>
-                              <span className="font-bold text-gray-900">
-                                {currencySymbol}{totalAmount}
-                              </span>
+                              <span className="font-bold text-gray-900">{currencySymbol}{totalAmount}</span>
                             </div>
 
                             {hasPartialPayment && (
                               <>
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600">Paid Amount:</span>
-                                  <span className="font-semibold text-green-600">
-                                    {currencySymbol}{paidAmount}
-                                  </span>
+                                  <span className="font-semibold text-green-600">{currencySymbol}{paidAmount}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600">Remaining (Pay at Salon):</span>
-                                  <span className="font-semibold text-orange-600">
-                                    {currencySymbol}{remainingAmount}
-                                  </span>
+                                  <span className="font-semibold text-orange-600">{currencySymbol}{remainingAmount}</span>
                                 </div>
                               </>
                             )}
 
-                            {item.payment && (
-                              <div className="mt-2 pt-2 border-t border-blue-200">
-                                <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
+                            {/* Booking status — always Confirmed, never Pending */}
+                            <div className="mt-2 pt-2 border-t border-blue-200 flex items-center justify-between flex-wrap gap-2">
+                              <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-semibold">
+                                <BadgeCheck size={13} />
+                                {item.isCompleted ? 'Completed' : item.cancelled ? 'Cancelled' : 'Confirmed'}
+                              </span>
+                              {/* UPI payment badge — only if payment method is UPI */}
+                              {item.paymentMethod === 'upi' && item.utrNumber && (
+                                <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-semibold">
                                   <Check size={12} />
-                                  {hasPartialPayment ? 'Advance payment completed' : 'Payment completed'}
+                                  UPI Paid · UTR: {item.utrNumber}
                                 </span>
-                              </div>
-                            )}
+                              )}
+                              {item.paymentMethod !== 'upi' && item.paymentMethod && (
+                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">
+                                  Pay at Salon
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -788,27 +788,32 @@ const MyAppointments = () => {
                       <div
                         className={`mt-4 border rounded-lg p-3 flex items-start gap-2 text-sm animate-slideDown ${
                           item.cancelledBy === 'system'
-                            ? 'bg-orange-50 border-orange-100'
-                            : 'bg-red-50 border-red-100'
+                            ? 'bg-orange-50 border-orange-200 border-l-4 border-l-orange-400'
+                            : item.cancelledBy === 'admin'
+                              ? 'bg-red-50 border-red-200 border-l-4 border-l-red-500'
+                              : 'bg-yellow-50 border-yellow-200 border-l-4 border-l-yellow-400'
                         }`}
                       >
                         <AlertCircle
                           size={18}
                           className={`mt-0.5 flex-shrink-0 ${
-                            item.cancelledBy === 'system' ? 'text-orange-500' : 'text-red-500'
+                            item.cancelledBy === 'system' ? 'text-orange-500' : item.cancelledBy === 'admin' ? 'text-red-500' : 'text-yellow-500'
                           }`}
                         />
-                        <span
-                          className={
-                            item.cancelledBy === 'system' ? 'text-orange-800' : 'text-red-800'
-                          }
-                        >
-                          {item.cancellationReason
-                            ? item.cancellationReason
-                            : item.cancelledBy === 'admin'
-                              ? 'Cancelled by Admin — You can reschedule to a new time slot'
-                              : 'Cancelled by You — You may reschedule if payment was made'}
-                        </span>
+                        <div className="flex-1">
+                          {item.cancelledBy === 'admin' ? (
+                            <>
+                              <p className="font-bold text-red-700">Cancelled by Salon Admin</p>
+                              <p className="mt-1 text-sm text-red-600">
+                                Reason: <span className="font-medium">{item.cancellationReason || 'No reason provided'}</span>
+                              </p>
+                            </>
+                          ) : item.cancelledBy === 'system' ? (
+                            <p className="text-orange-800">{item.cancellationReason || 'Stylist on leave — please reschedule'}</p>
+                          ) : (
+                            <p className="text-red-800">{item.cancellationReason || 'Cancelled by You — You may reschedule if payment was made'}</p>
+                          )}
+                        </div>
                       </div>
                     )}
 

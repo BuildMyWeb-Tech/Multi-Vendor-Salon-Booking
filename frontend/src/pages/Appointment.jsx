@@ -7,9 +7,10 @@ import { assets } from '../assets/assets';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { loadStripe } from '@stripe/stripe-js';
-import { 
+import {
   ChevronLeft, CreditCard, CheckCircle, CheckCircle2, ArrowRight,
-  Shield, AlertTriangle, Loader2, Clock, Calendar, Award, User, Scissors
+  Shield, AlertTriangle, Loader2, Clock, Calendar, Award, User, Scissors,
+  QrCode, Smartphone, Upload, X, ImageIcon
 } from "lucide-react";
 
 // Lazy: only init Stripe when payment step is reached
@@ -224,6 +225,11 @@ const Appointment = () => {
   const [dateLoading, setDateLoading] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [remainingAmount, setRemainingAmount] = useState(0);
+  const [shopPaymentInfo, setShopPaymentInfo] = useState(null);
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+  const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState(null);
+  const [utrNumber, setUtrNumber] = useState('');
+  const screenshotInputRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -458,7 +464,7 @@ const Appointment = () => {
     fetchSlots(date);
   }, [fetchSlots]);
 
-  const completeBooking = useCallback(async (paymentMethod) => {
+  const completeBooking = useCallback(async (paymentMethod, screenshotFile) => {
     if (!selectedDate) return;
 
     setBookingLoading(true);
@@ -470,32 +476,55 @@ const Appointment = () => {
         price: s.basePrice
       }));
 
-      const { data } = await axios.post(
-        backendUrl + '/api/user/book-appointment',
-        {
-          docId,
-          slotDate,
-          slotTime: selectedSlotISO,
-          services: servicesData,
-          totalAmount: getTotalPrice(),
-          paidAmount: paymentAmount,
-          remainingAmount: remainingAmount,
-          paymentMethod
-        },
-        { headers: { token } }
-      );
+      let data;
+      if (screenshotFile) {
+        // UPI payment — send as FormData (do NOT manually set Content-Type; axios adds boundary)
+        const fd = new FormData();
+        fd.append('docId', docId);
+        fd.append('slotDate', slotDate);
+        fd.append('slotTime', selectedSlotISO);
+        fd.append('services', JSON.stringify(servicesData));
+        fd.append('totalAmount', getTotalPrice());
+        fd.append('paidAmount', getTotalPrice());
+        fd.append('remainingAmount', 0);
+        fd.append('paymentMethod', 'upi');
+        fd.append('utrNumber', utrNumber.trim());
+        fd.append('paymentScreenshot', screenshotFile);
+        const res = await axios.post(backendUrl + '/api/user/book-appointment', fd, {
+          headers: { token }, // No Content-Type — axios sets it with boundary automatically
+        });
+        data = res.data;
+      } else {
+        const res = await axios.post(
+          backendUrl + '/api/user/book-appointment',
+          {
+            docId,
+            slotDate,
+            slotTime: selectedSlotISO,
+            services: servicesData,
+            totalAmount: getTotalPrice(),
+            paidAmount: paymentAmount,
+            remainingAmount: remainingAmount,
+            paymentMethod,
+          },
+          { headers: { token } }
+        );
+        data = res.data;
+      }
 
       if (data.success) {
-        toast.success(data.message);
-        await fetchSlots(selectedDate);
+        toast.success(data.message || 'Appointment booked successfully!');
         setSelectedSlotISO('');
         setSelectedServices([]);
+        setPaymentScreenshot(null);
+        setPaymentScreenshotPreview(null);
+        setUtrNumber('');
         navigate(shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments');
       } else {
-        toast.error(data.message);
+        toast.error(data.message || 'Booking failed.');
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Booking failed');
+      toast.error(error.response?.data?.message || 'Booking failed. Please try again.');
     } finally {
       setBookingLoading(false);
     }
@@ -509,8 +538,9 @@ const Appointment = () => {
     paymentAmount,
     remainingAmount,
     token,
-    fetchSlots,
-    navigate
+    navigate,
+    shopSlug,
+    utrNumber,
   ]);
 
   const processPayment = useCallback(async (method) => {
@@ -591,9 +621,14 @@ const Appointment = () => {
     processPayment(paymentMethod);
   }, [selectedSlotISO, selectedServices, paymentMethod, processPayment]);
 
-  // Fire both in parallel on mount — don't wait for one before the other
+  // Fire all on mount in parallel
   useEffect(() => {
     Promise.all([fetchSlotSettings(), fetchAllServices()]);
+    if (shopSlug) {
+      axios.get(`${backendUrl}/api/shop/${shopSlug}/payment-info`)
+        .then(({ data }) => { if (data.success) setShopPaymentInfo(data); })
+        .catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -896,176 +931,216 @@ const Appointment = () => {
             {currentStep === 3 && (
               <div className="animate-slideDown max-w-2xl mx-auto">
                 <div className="mb-6">
-                  <button 
-                    onClick={() => setCurrentStep(2)} 
+                  <button
+                    onClick={() => setCurrentStep(2)}
                     className="flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium"
                   >
                     <ChevronLeft size={20} />
                     <span>Back to Schedule</span>
                   </button>
                 </div>
-                
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Review and Pay</h2>
-                
-                <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-8 rounded-2xl border-2 border-blue-200 mb-8 shadow-lg">
-                  <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 text-lg">
-                    <CheckCircle2 size={22} className="text-blue-600" />
+
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  {shopPaymentInfo?.paymentIntegrationEnabled ? 'Review & Pay via UPI' : 'Confirm Booking'}
+                </h2>
+
+                {/* Appointment Summary */}
+                <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-6 rounded-2xl border-2 border-blue-200 mb-6 shadow-sm">
+                  <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                    <CheckCircle2 size={20} className="text-blue-600" />
                     Appointment Summary
                   </h3>
-                  
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-start pb-5 border-b-2 border-blue-200">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center pb-4 border-b border-blue-200">
                       <div>
-                        <span className="text-gray-600 text-sm font-medium">Stylist</span>
-                        <p className="font-bold text-gray-900 text-lg">{stylistInfo.name}</p>
+                        <p className="text-xs text-gray-500">Stylist</p>
+                        <p className="font-bold text-gray-900">{stylistInfo.name}</p>
                       </div>
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-white shadow-lg">
-                        <img src={stylistInfo.image} alt={stylistInfo.name} className="w-full h-full object-cover" />
-                      </div>
+                      <img src={stylistInfo.image} alt={stylistInfo.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow" />
                     </div>
-                    
-                    <div className="pb-5 border-b-2 border-blue-200">
-                      <span className="text-gray-600 text-sm font-medium">Services</span>
-                      <div className="space-y-3 mt-3">
-                        {selectedServices.map(service => (
-                          <div key={service._id} className="flex justify-between items-center bg-white p-3 rounded-lg">
-                            <p className="font-semibold text-gray-900">{service.name}</p>
-                            <p className="font-bold text-blue-600">{currencySymbol}{service.basePrice}</p>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="pb-4 border-b border-blue-200">
+                      <p className="text-xs text-gray-500 mb-2">Services</p>
+                      {selectedServices.map(service => (
+                        <div key={service._id} className="flex justify-between items-center bg-white px-3 py-2 rounded-lg mb-1">
+                          <span className="text-sm font-medium text-gray-800">{service.name}</span>
+                          <span className="text-sm font-bold text-blue-600">{currencySymbol}{service.basePrice}</span>
+                        </div>
+                      ))}
                     </div>
-                    
-                    <div className="pb-5 border-b-2 border-blue-200">
-                      <span className="text-gray-600 text-sm font-medium">Date & Time</span>
-                      <p className="font-bold text-gray-900 text-lg mt-1">
-                        {selectedDate?.toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          month: 'long', 
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </p>                    
-                      <p className="text-blue-600 font-semibold mt-1">{formatTime(selectedSlotISO)}</p>
+                    <div className="pb-4 border-b border-blue-200">
+                      <p className="text-xs text-gray-500">Date & Time</p>
+                      <p className="font-bold text-gray-900">
+                        {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                      </p>
+                      <p className="text-blue-600 font-semibold text-sm">{formatTime(selectedSlotISO)}</p>
                     </div>
-                    
-                    <div className="space-y-3 pt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-gray-700">Total Amount</span>
-                        <span className="font-bold text-gray-900 text-xl">{currencySymbol}{getTotalPrice()}</span>
-                      </div>
-                      
-                      {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100 && (
-                        <>
-                          <div className="flex justify-between items-center bg-blue-100 px-4 py-3 rounded-lg">
-                            <span className="font-semibold text-blue-900">
-                              Pay Now ({slotSettings.advancePaymentPercentage}%)
-                            </span>
-                            <span className="font-bold text-blue-900 text-xl">{currencySymbol}{paymentAmount}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-gray-600">
-                            <span className="text-sm">Pay at Salon</span>
-                            <span className="font-semibold">{currencySymbol}{remainingAmount}</span>
-                          </div>
-                        </>
-                      )}
+                    <div className="flex justify-between items-center font-bold text-lg">
+                      <span className="text-gray-700">Total Amount</span>
+                      <span className="text-gray-900">{currencySymbol}{getTotalPrice()}</span>
                     </div>
                   </div>
                 </div>
-                
-                {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100 && (
-                  <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      <Shield size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-blue-900 mb-1">Advance Payment Required</h4>
-                        <p className="text-sm text-blue-800">
-                          You'll pay {slotSettings.advancePaymentPercentage}% ({currencySymbol}{paymentAmount}) now to confirm your booking.
-                          The remaining {currencySymbol}{remainingAmount} will be paid at the salon.
-                        </p>
+
+                {/* ── UPI Payment (when enabled for this salon) ── */}
+                {shopPaymentInfo?.paymentIntegrationEnabled ? (
+                  <div className="space-y-5">
+                    {/* UPI Payment Details — Name, Mobile, QR only */}
+                    <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm">
+                      <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <QrCode size={18} className="text-blue-600" />
+                        Scan & Pay via UPI
+                      </h3>
+                      <div className="flex flex-col sm:flex-row gap-6 items-start">
+                        {shopPaymentInfo.upiQrCode && (
+                          <div className="flex-shrink-0 text-center">
+                            <img
+                              src={shopPaymentInfo.upiQrCode}
+                              alt="UPI QR Code"
+                              className="w-44 h-44 object-contain border-2 border-gray-200 rounded-xl p-2 bg-white shadow"
+                            />
+                            <p className="text-xs text-gray-400 mt-1">Scan to pay</p>
+                          </div>
+                        )}
+                        <div className="flex-1 space-y-3">
+                          {shopPaymentInfo.upiName && (
+                            <div className="bg-blue-50 rounded-xl px-4 py-3">
+                              <p className="text-xs text-gray-500 mb-0.5">Pay To</p>
+                              <p className="font-bold text-blue-700 text-base">{shopPaymentInfo.upiName}</p>
+                            </div>
+                          )}
+                          {shopPaymentInfo.upiMobileNumber && (
+                            <div className="bg-blue-50 rounded-xl px-4 py-3">
+                              <p className="text-xs text-gray-500 mb-0.5">Mobile Number</p>
+                              <p className="font-bold text-blue-700 text-base flex items-center gap-2">
+                                <Smartphone size={15} />
+                                {shopPaymentInfo.upiMobileNumber}
+                              </p>
+                            </div>
+                          )}
+                          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                            <p className="text-xs text-gray-500 mb-0.5">Amount to Pay</p>
+                            <p className="font-bold text-green-700 text-2xl">{currencySymbol}{getTotalPrice()}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
+
+                    {/* UTR / Transaction ID Input */}
+                    <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm">
+                      <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <CheckCircle2 size={17} className="text-blue-600" />
+                        Enter Transaction ID / UTR Number
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-3">
+                        After paying, find the UTR / Transaction ID in your UPI app payment receipt and enter it below.
+                      </p>
+                      <input
+                        type="text"
+                        value={utrNumber}
+                        onChange={(e) => setUtrNumber(e.target.value)}
+                        placeholder="e.g. 123456789012 or T2309281234567"
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:border-blue-500 focus:outline-none transition-colors uppercase"
+                        maxLength={30}
+                      />
+                      <p className="text-xs text-gray-400 mt-1.5">This unique ID verifies your payment and prevents duplicate submissions.</p>
+                    </div>
+
+                    {/* Screenshot Upload */}
+                    <div className="bg-white border-2 border-dashed border-blue-200 rounded-2xl p-6">
+                      <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <Upload size={17} className="text-blue-600" />
+                        Upload Payment Screenshot
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">Upload a screenshot of your completed UPI payment as proof.</p>
+
+                      {paymentScreenshotPreview ? (
+                        <div className="relative inline-block">
+                          <img src={paymentScreenshotPreview} alt="Payment proof" className="max-h-52 rounded-xl border border-gray-200 shadow" />
+                          <button
+                            type="button"
+                            onClick={() => { setPaymentScreenshot(null); setPaymentScreenshotPreview(null); }}
+                            className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow"
+                          >
+                            <X size={14} />
+                          </button>
+                          <p className="text-xs text-green-600 font-medium mt-2 flex items-center gap-1">
+                            <CheckCircle size={13} /> Screenshot uploaded
+                          </p>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => screenshotInputRef.current?.click()}
+                          className="w-full border-2 border-dashed border-gray-200 rounded-xl py-10 flex flex-col items-center gap-2 text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+                        >
+                          <ImageIcon size={32} />
+                          <span className="text-sm font-medium">Click to upload screenshot</span>
+                          <span className="text-xs">PNG, JPG up to 5MB</span>
+                        </button>
+                      )}
+                      <input
+                        ref={screenshotInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5MB'); return; }
+                          setPaymentScreenshot(file);
+                          const reader = new FileReader();
+                          reader.onload = () => setPaymentScreenshotPreview(reader.result);
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </div>
+
+                    {/* Confirm Button */}
+                    <button
+                      onClick={() => {
+                        if (!utrNumber.trim() || utrNumber.trim().length < 6) {
+                          toast.warning('Please enter your UTR / Transaction ID');
+                          return;
+                        }
+                        if (!paymentScreenshot) {
+                          toast.warning('Please upload your payment screenshot');
+                          return;
+                        }
+                        completeBooking('upi', paymentScreenshot);
+                      }}
+                      disabled={bookingLoading || !paymentScreenshot || !utrNumber.trim()}
+                      className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      {bookingLoading ? (
+                        <><Loader2 className="w-5 h-5 animate-spin" /><span>Verifying & Confirming...</span></>
+                      ) : (
+                        <><CheckCircle2 size={22} /><span>Confirm Booking — {currencySymbol}{getTotalPrice()}</span></>
+                      )}
+                    </button>
+                    <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
+                      <Shield size={12} /> Booking confirmed only after UTR verification
+                    </p>
+                  </div>
+                ) : (
+                  /* ── No payment integration — direct booking ── */
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+                      <Shield size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-blue-800">Your appointment will be confirmed instantly. Payment can be made at the salon.</p>
+                    </div>
+                    <button
+                      onClick={() => completeBooking('cash', null)}
+                      disabled={bookingLoading}
+                      className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {bookingLoading ? (
+                        <><Loader2 className="w-5 h-5 animate-spin" /><span>Confirming...</span></>
+                      ) : (
+                        <><CheckCircle2 size={22} /><span>Book Appointment</span></>
+                      )}
+                    </button>
                   </div>
                 )}
-                
-                <div className="space-y-5">
-                  <h3 className="font-bold text-gray-900 text-lg">Select Payment Method</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button
-                      onClick={() => setPaymentMethod('stripe')}
-                      className={`flex items-center justify-between p-5 border-2 rounded-2xl transition-all ${
-                        paymentMethod === 'stripe'
-                          ? 'border-blue-600 bg-blue-50 shadow-lg'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                      }`}
-                      disabled={paymentLoading}
-                    >
-                      <div className="flex items-center gap-4">
-                        <img src={assets.stripe_logo} alt="Stripe" className="h-8 w-auto" />
-                        <span className="font-semibold text-gray-900">Pay with Stripe</span>
-                      </div>
-                      {paymentMethod === 'stripe' && !paymentLoading && <CheckCircle2 size={24} className="text-blue-600" />}
-                    </button>
-                    
-                    <button
-                      onClick={() => setPaymentMethod('razorpay')}
-                      className={`flex items-center justify-between p-5 border-2 rounded-2xl transition-all ${
-                        paymentMethod === 'razorpay'
-                          ? 'border-blue-600 bg-blue-50 shadow-lg'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                      }`}
-                      disabled={paymentLoading}
-                    >
-                      <div className="flex items-center gap-4">
-                        <img src={assets.razorpay_logo} alt="Razorpay" className="h-8 w-auto" />
-                        <span className="font-semibold text-gray-900">Pay with Razorpay</span>
-                      </div>
-                      {paymentMethod === 'razorpay' && !paymentLoading && <CheckCircle2 size={24} className="text-blue-600" />}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="mt-8">
-                  <button 
-                    onClick={initiateBooking}
-                    disabled={paymentLoading || bookingLoading}
-                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 disabled:bg-gray-400 disabled:cursor-not-allowed transform hover:scale-105"
-                  >
-                    {paymentLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Processing Payment...</span>
-                      </>
-                    ) : bookingLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Confirming Booking...</span>
-                      </>
-                    ) : paymentSuccess ? (
-                      <>
-                        <CheckCircle2 size={24} />
-                        <span>Payment Successful!</span>
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard size={24} />
-                        <span>
-                          Pay & Confirm {currencySymbol}
-                          {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100
-                            ? paymentAmount
-                            : getTotalPrice()
-                          }
-                        </span>
-                      </>
-                    )}
-                  </button>
-                  
-                  <p className="text-sm text-gray-600 text-center mt-4 flex items-center justify-center gap-2">
-                    <Shield size={16} />
-                    Your payment information is securely processed
-                  </p>
-                </div>
               </div>
             )}
           </div>

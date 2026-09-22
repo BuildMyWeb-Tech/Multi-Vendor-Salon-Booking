@@ -80,9 +80,14 @@ const appointmentSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ['razorpay', 'stripe', 'cash', null],
+      enum: ['razorpay', 'stripe', 'cash', 'upi', null],
       default: null,
     },
+
+    paymentScreenshot: { type: String, default: '' },
+    utrNumber: { type: String, default: '' },
+    paymentVerified: { type: Boolean, default: false },
+    ocrData: { type: mongoose.Schema.Types.Mixed, default: null },
 
     cancelled: {
       type: Boolean,

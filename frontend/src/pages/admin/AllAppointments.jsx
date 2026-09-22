@@ -23,15 +23,205 @@ import {
   ChevronsRight,
   RefreshCcw,
   FileText,
-  Phone ,
-  FileSpreadsheet
+  Phone,
+  FileSpreadsheet,
+  Eye,
+  User,
+  Clock,
+  CreditCard,
+  QrCode,
+  Image,
+  BadgeCheck,
+  Hash,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "react-toastify";
 
+
+const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimePast, slotDateFormat, formatTime12hr }) => {
+  // Show payment details whenever the appointment has a UTR (customer paid), regardless of current shop config
+  const hasUpi = !!(appt.utrNumber && appt.utrNumber.length > 0);
+
+  let statusLabel, statusColor;
+  if (appt.cancelled) {
+    statusLabel = appt.cancelledBy === 'system' ? 'Leave Cancellation' : appt.cancelledBy === 'user' ? 'User Cancelled' : 'Admin Cancelled';
+    statusColor = 'red';
+  } else if (appt.isCompleted) {
+    statusLabel = 'Completed'; statusColor = 'green';
+  } else if (isTimePast(appt)) {
+    statusLabel = 'Overdue'; statusColor = 'amber';
+  } else {
+    statusLabel = 'Confirmed'; statusColor = 'blue';
+  }
+
+  const bannerClass = statusColor === 'green' ? 'bg-green-50 border-green-200 text-green-700'
+    : statusColor === 'red' ? 'bg-red-50 border-red-200 text-red-700'
+    : statusColor === 'amber' ? 'bg-amber-50 border-amber-200 text-amber-700'
+    : 'bg-blue-50 border-blue-200 text-blue-700';
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: 'spring', duration: 0.3 }}
+        className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-2xl flex-shrink-0">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <Eye size={20} className="text-blue-600" /> Appointment Details
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-white/70 rounded-full transition-colors">
+            <X size={20} className="text-gray-500" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 p-6 space-y-5">
+          {/* Status */}
+          <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border font-semibold text-sm ${bannerClass}`}>
+            <BadgeCheck size={18} />
+            Status: {statusLabel}
+            {appt.cancelled && appt.cancellationReason && (
+              <span className="ml-2 font-normal text-xs opacity-80">— {appt.cancellationReason}</span>
+            )}
+          </div>
+
+          {/* Customer + Stylist */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-1"><User size={13} /> Customer</p>
+              <div className="flex items-center gap-3">
+                {appt.userData?.image
+                  ? <img src={appt.userData.image} className="w-10 h-10 rounded-full object-cover" alt="" />
+                  : <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-base">{appt.userData?.name?.charAt(0) || '?'}</div>
+                }
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{appt.userData?.name || '—'}</p>
+                  <p className="text-xs text-gray-500 flex items-center gap-1"><Phone size={11} /> {appt.userData?.phone || '—'}</p>
+                  {appt.userData?.email && <p className="text-xs text-gray-400">{appt.userData.email}</p>}
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-1"><Scissors size={13} /> Stylist</p>
+              <div className="flex items-center gap-3">
+                {appt.docData?.image
+                  ? <img src={appt.docData.image} className="w-10 h-10 rounded-full object-cover" alt="" />
+                  : <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><Scissors size={16} /></div>
+                }
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{appt.docData?.name || '—'}</p>
+                  <p className="text-xs text-gray-500">{appt.docData?.specialty || appt.docData?.speciality || '—'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Date / Time / Amount */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-blue-50 rounded-xl p-3 text-center">
+              <Calendar size={16} className="text-blue-600 mx-auto mb-1" />
+              <p className="text-xs text-gray-500">Date</p>
+              <p className="font-semibold text-gray-800 text-sm">{slotDateFormat(appt.slotDate)}</p>
+            </div>
+            <div className="bg-purple-50 rounded-xl p-3 text-center">
+              <Clock size={16} className="text-purple-600 mx-auto mb-1" />
+              <p className="text-xs text-gray-500">Time</p>
+              <p className="font-semibold text-gray-800 text-sm">{formatTime12hr(appt.slotTime)}</p>
+            </div>
+            <div className="bg-pink-50 rounded-xl p-3 text-center">
+              <Scissors size={16} className="text-pink-600 mx-auto mb-1" />
+              <p className="text-xs text-gray-500">Amount</p>
+              <p className="font-semibold text-gray-800 text-sm">₹{appt.amount || 0}</p>
+            </div>
+          </div>
+
+          {/* Services */}
+          {appt.services && appt.services.length > 0 && (
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Services</p>
+              <div className="space-y-1">
+                {appt.services.map((svc, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span className="text-gray-800">{svc.name}</span>
+                    <span className="font-semibold text-gray-700">₹{svc.price}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Payment section — always show if customer paid (has UTR), else show salon payment status */}
+          {hasUpi ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-green-700 uppercase mb-3 flex items-center gap-1">
+                <CreditCard size={13} /> UPI Payment Details
+              </p>
+              <div className="space-y-2.5 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-gray-500 flex items-center gap-1 flex-shrink-0"><Hash size={12} /> UTR / Transaction ID</span>
+                  <span className="font-mono font-bold text-gray-900 text-right break-all">{appt.utrNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Payment Method</span>
+                  <span className="font-semibold text-green-700">UPI</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Payment Status</span>
+                  <span className="font-semibold text-green-700 flex items-center gap-1">
+                    <BadgeCheck size={14} /> Paid
+                  </span>
+                </div>
+                {appt.paymentScreenshot && (
+                  <div className="mt-2 pt-3 border-t border-green-200">
+                    <p className="text-xs text-gray-500 mb-2 flex items-center gap-1"><Image size={12} /> Payment Screenshot</p>
+                    <a href={appt.paymentScreenshot} target="_blank" rel="noopener noreferrer" title="Click to open full size">
+                      <img
+                        src={appt.paymentScreenshot}
+                        alt="Payment proof"
+                        className="max-h-52 rounded-xl border border-green-200 shadow-sm hover:opacity-90 transition-opacity cursor-zoom-in object-contain"
+                      />
+                    </a>
+                    <p className="text-xs text-gray-400 mt-1">Click to open full size</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : paymentEnabled ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 flex items-center gap-2">
+              <Check size={15} className="text-amber-400" />
+              UPI payment enabled for this salon — this appointment has no online payment recorded (pay at salon).
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-500 flex items-center gap-2">
+              <Check size={15} className="text-gray-400" />
+              Pay at salon — no online payment integration configured for this salon.
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 flex gap-3 flex-shrink-0 bg-gray-50 rounded-b-2xl">
+          {!appt.cancelled && !appt.isCompleted && (
+            <button onClick={() => onCancel(appt)} className="flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-all text-sm font-semibold">
+              <Trash2 size={16} /> Cancel Appointment
+            </button>
+          )}
+          <button onClick={onClose} className="ml-auto px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all text-sm font-semibold">
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const AllAppointments = () => {
   const {
@@ -44,7 +234,7 @@ const AllAppointments = () => {
     markAppointmentIncomplete
   } = useContext(AdminContext)
 
-  const { currency } = useContext(AppContext)
+  const { currency, backendUrl } = useContext(AppContext)
 
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPayment, setFilterPayment] = useState('all')
@@ -54,6 +244,10 @@ const AllAppointments = () => {
   const [endDate, setEndDate] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [appointmentToDelete, setAppointmentToDelete] = useState(null)
+  const [deleteReason, setDeleteReason] = useState('')
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [appointmentToView, setAppointmentToView] = useState(null)
+  const [shopPaymentCache, setShopPaymentCache] = useState({}) // shopId → paymentIntegrationEnabled
   const [localAppointments, setLocalAppointments] = useState([])
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [todayFilter, setTodayFilter] = useState(false)
@@ -88,6 +282,21 @@ const AllAppointments = () => {
   useEffect(() => {
     setLocalAppointments(appointments);
   }, [appointments]);
+
+  // Pre-fetch shop payment info as soon as appointments are loaded
+  // All appointments in admin view belong to the same salon
+  useEffect(() => {
+    const shopId = appointments.find(a => a.shopId)?.shopId;
+    if (shopId && shopPaymentCache[shopId] === undefined && aToken && backendUrl) {
+      axios.get(`${backendUrl}/api/admin/shop-payment-info`, { headers: { aToken }, params: { shopId } })
+        .then(({ data }) => {
+          setShopPaymentCache(prev => ({ ...prev, [shopId]: data?.paymentIntegrationEnabled ?? false }));
+        })
+        .catch(() => {
+          setShopPaymentCache(prev => ({ ...prev, [shopId]: false }));
+        });
+    }
+  }, [appointments, aToken, backendUrl]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -629,17 +838,42 @@ const AllAppointments = () => {
 
   const handleDeleteConfirmation = (appointment) => {
     setAppointmentToDelete(appointment);
+    setDeleteReason('');
     setShowDeleteModal(true);
   }
 
   const handleDeleteConfirmed = () => {
-    if (appointmentToDelete) {
+    if (appointmentToDelete && deleteReason.trim()) {
       setLocalAppointments(prev =>
-        prev.filter(app => app._id !== appointmentToDelete._id)
+        prev.map(app =>
+          app._id === appointmentToDelete._id
+            ? { ...app, cancelled: true, cancelledBy: 'admin', cancellationReason: deleteReason.trim() }
+            : app
+        )
       );
-      cancelAppointment(appointmentToDelete._id);
+      cancelAppointment(appointmentToDelete._id, deleteReason.trim());
       setShowDeleteModal(false);
+      setShowViewModal(false);
       setAppointmentToDelete(null);
+      setDeleteReason('');
+    }
+  }
+
+  const handleViewAppointment = async (appointment) => {
+    setAppointmentToView(appointment);
+    setShowViewModal(true);
+    // Fetch shop payment settings if not cached
+    const shopId = appointment.shopId;
+    if (shopId && shopPaymentCache[shopId] === undefined) {
+      try {
+        const { data } = await axios.get(
+          `${backendUrl}/api/admin/shop-payment-info`,
+          { headers: { aToken }, params: { shopId } }
+        );
+        setShopPaymentCache(prev => ({ ...prev, [shopId]: data?.paymentIntegrationEnabled ?? false }));
+      } catch {
+        setShopPaymentCache(prev => ({ ...prev, [shopId]: false }));
+      }
     }
   }
 
@@ -1120,7 +1354,10 @@ const AllAppointments = () => {
                             </button>
                           )
                         )}
-                        <button onClick={() => handleDeleteConfirmation(appointment)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md" title="Delete permanently">
+                        <button onClick={() => handleViewAppointment(appointment)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md" title="View details">
+                          <Eye size={18} />
+                        </button>
+                        <button onClick={() => handleDeleteConfirmation(appointment)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md" title="Cancel appointment">
                           <Trash2 size={18} />
                         </button>
                       </div>
@@ -1211,7 +1448,7 @@ const AllAppointments = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete / Cancel with Reason Modal */}
       <AnimatePresence>
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -1222,29 +1459,59 @@ const AllAppointments = () => {
               transition={{ type: "spring", duration: 0.3 }}
               className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-100"
             >
-              <div className="mb-6 text-center">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gradient-to-br from-red-100 to-red-200 mb-5 shadow-lg">
-                  <AlertTriangle size={32} className="sm:w-10 sm:h-10 text-red-600" />
+              <div className="mb-5 text-center">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-red-100 to-red-200 mb-4 shadow-lg">
+                  <AlertTriangle size={30} className="text-red-600" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">Delete Appointment Permanently?</h3>
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                  This will permanently delete the appointment for <span className="font-bold text-gray-900">{appointmentToDelete?.userData?.name}</span> on <span className="font-bold text-gray-900">{slotDateFormat(appointmentToDelete?.slotDate)}</span> at <span className="font-bold text-gray-900">{appointmentToDelete?.slotTime}</span>.
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Cancel Appointment</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Cancelling appointment for <span className="font-bold text-gray-900">{appointmentToDelete?.userData?.name}</span> on <span className="font-bold text-gray-900">{slotDateFormat(appointmentToDelete?.slotDate)}</span> at <span className="font-bold text-gray-900">{formatTime12hr(appointmentToDelete?.slotTime)}</span>.
                 </p>
-                <p className="text-xs sm:text-sm text-red-600 font-semibold mt-2">This action cannot be undone!</p>
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Cancellation Reason <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Enter the reason for cancellation (required)..."
+                  rows={3}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none transition-all"
+                />
+                {!deleteReason.trim() && (
+                  <p className="text-xs text-red-500 mt-1">A reason is required before cancelling.</p>
+                )}
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setShowDeleteModal(false)} className="flex-1 px-5 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all font-semibold shadow-md hover:shadow-lg text-sm sm:text-base">
-                  Cancel
+                <button onClick={() => { setShowDeleteModal(false); setDeleteReason(''); }} className="flex-1 px-5 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm">
+                  Back
                 </button>
-                <button onClick={handleDeleteConfirmed} className="flex-1 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all font-semibold shadow-lg hover:shadow-xl text-sm sm:text-base">
-                  Yes, Delete
+                <button
+                  onClick={handleDeleteConfirmed}
+                  disabled={!deleteReason.trim()}
+                  className="flex-1 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all font-semibold shadow-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Confirm Cancellation
                 </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* View Appointment Details Modal */}
+      {showViewModal && appointmentToView && <ViewAppointmentModal
+        appt={appointmentToView}
+        paymentEnabled={shopPaymentCache[appointmentToView.shopId]}
+        onClose={() => setShowViewModal(false)}
+        onCancel={(appt) => { setShowViewModal(false); handleDeleteConfirmation(appt); }}
+        isTimePast={isAppointmentTimePast}
+        slotDateFormat={slotDateFormat}
+        formatTime12hr={formatTime12hr}
+      />}
 
       {/* Calendar Modal */}
       <AnimatePresence>

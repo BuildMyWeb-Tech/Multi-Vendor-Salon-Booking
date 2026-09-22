@@ -236,11 +236,11 @@ const AdminContextProvider = (props) => {
   };
 
   // ✅ FIXED: No longer calls getAllAppointments() — updates state locally instead
-  const cancelAppointment = async (appointmentId) => {
+  const cancelAppointment = async (appointmentId, reason = '') => {
     try {
       const { data } = await axios.post(
         backendUrl + '/api/admin/cancel-appointment',
-        { appointmentId },
+        { appointmentId, cancellationReason: reason },
         { headers: { aToken } }
       );
       if (data.success) {

@@ -155,6 +155,11 @@ export const createSalon = async (req, res) => {
       subscriptionAmount,
       billingCycle,
       paymentStatus,
+      paymentIntegrationEnabled,
+      upiName,
+      upiMobileNumber,
+      upiId,
+      bankName,
       adminName,
       adminId,
       adminEmail,
@@ -188,13 +193,24 @@ export const createSalon = async (req, res) => {
 
     const shopId = await generateShopId();
 
-    // Handle logo upload (memory storage — use buffer)
+    // Handle logo upload
     let logoUrl = '';
-    if (req.file) {
-      const b64 = req.file.buffer.toString('base64');
-      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+    const logoFile = req.files?.logo?.[0] || req.file;
+    if (logoFile) {
+      const b64 = logoFile.buffer.toString('base64');
+      const dataUri = `data:${logoFile.mimetype};base64,${b64}`;
       const result = await cloudinary.uploader.upload(dataUri, { folder: 'salon_logos', resource_type: 'image' });
       logoUrl = result.secure_url;
+    }
+
+    // Handle QR code upload
+    let qrCodeUrl = '';
+    const qrFile = req.files?.qrCode?.[0];
+    if (qrFile) {
+      const b64 = qrFile.buffer.toString('base64');
+      const dataUri = `data:${qrFile.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataUri, { folder: 'salon_qr_codes', resource_type: 'image' });
+      qrCodeUrl = result.secure_url;
     }
 
     // Create shop
@@ -216,6 +232,12 @@ export const createSalon = async (req, res) => {
       subscriptionAmount: parseFloat(subscriptionAmount) || 0,
       billingCycle: billingCycle || 'monthly',
       paymentStatus: paymentStatus || 'pending',
+      paymentIntegrationEnabled: paymentIntegrationEnabled === 'true' || paymentIntegrationEnabled === true,
+      upiName: upiName || '',
+      upiMobileNumber: upiMobileNumber || '',
+      upiId: upiId || '',
+      bankName: bankName || '',
+      upiQrCode: qrCodeUrl,
     });
 
     // Hash password
@@ -263,16 +285,34 @@ export const updateSalon = async (req, res) => {
       'shopName', 'address', 'city', 'state', 'pincode', 'phone',
       'email', 'whatsapp', 'businessName', 'gstNumber',
       'setupAmount', 'subscriptionAmount', 'billingCycle', 'paymentStatus',
+      'upiName', 'upiMobileNumber', 'upiId', 'bankName',
     ];
     allowed.forEach((key) => {
       if (req.body[key] !== undefined) shop[key] = req.body[key];
     });
 
-    if (req.file) {
-      const b64 = req.file.buffer.toString('base64');
-      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+    // Handle boolean paymentIntegrationEnabled from FormData (arrives as string)
+    if (req.body.paymentIntegrationEnabled !== undefined) {
+      shop.paymentIntegrationEnabled =
+        req.body.paymentIntegrationEnabled === 'true' || req.body.paymentIntegrationEnabled === true;
+    }
+
+    // Handle logo upload
+    const logoFile = req.files?.logo?.[0] || (!req.files && req.file);
+    if (logoFile) {
+      const b64 = logoFile.buffer.toString('base64');
+      const dataUri = `data:${logoFile.mimetype};base64,${b64}`;
       const result = await cloudinary.uploader.upload(dataUri, { folder: 'salon_logos', resource_type: 'image' });
       shop.logo = result.secure_url;
+    }
+
+    // Handle QR code upload
+    const qrFile = req.files?.qrCode?.[0];
+    if (qrFile) {
+      const b64 = qrFile.buffer.toString('base64');
+      const dataUri = `data:${qrFile.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataUri, { folder: 'salon_qr_codes', resource_type: 'image' });
+      shop.upiQrCode = result.secure_url;
     }
 
     await shop.save();

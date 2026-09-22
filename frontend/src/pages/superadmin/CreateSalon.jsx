@@ -3,8 +3,8 @@ import React, { useContext, useState, useRef } from 'react';
 import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, User, Phone, Mail, MapPin, Building2,
-  CreditCard, Eye, EyeOff, Upload, Check, X,
-  ArrowLeft, Sparkles, Globe
+  Smartphone, Eye, EyeOff, Upload, Check, X,
+  ArrowLeft, Sparkles, QrCode
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
@@ -48,11 +48,16 @@ const CreateSalon = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  const [qrFile, setQrFile] = useState(null);
+  const [qrPreview, setQrPreview] = useState(null);
+  const qrInputRef = useRef(null);
+
   const [form, setForm] = useState({
     shopName: '', slug: '', address: '', city: '', state: '', pincode: '',
     phone: '', email: '', whatsapp: '',
     businessName: '', gstNumber: '',
-    setupAmount: '', subscriptionAmount: '', billingCycle: 'monthly', paymentStatus: 'pending',
+    paymentIntegrationEnabled: false,
+    upiName: '', upiMobileNumber: '', upiId: '', bankName: '',
     adminName: '', adminId: '', adminEmail: '', password: '',
   });
 
@@ -78,6 +83,16 @@ const CreateSalon = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleQrChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('QR image must be under 5MB'); return; }
+    setQrFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setQrPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const required = ['shopName', 'adminName', 'adminId', 'adminEmail', 'password'];
@@ -90,6 +105,7 @@ const CreateSalon = () => {
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
     if (logoFile) fd.append('logo', logoFile);
+    if (qrFile) fd.append('qrCode', qrFile);
 
     const result = await createSalon(fd);
     setLoading(false);
@@ -137,7 +153,7 @@ const CreateSalon = () => {
 
           <div className="flex gap-3">
             <button
-              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',setupAmount:'',subscriptionAmount:'',billingCycle:'monthly',paymentStatus:'pending',adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); }}
+              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); setQrPreview(null); setQrFile(null); }}
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all"
             >
               Create Another
@@ -158,7 +174,10 @@ const CreateSalon = () => {
     <div className="p-6 max-w-4xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/super-admin/salons" className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-all">
+        <Link
+          to="/super-admin/salons"
+          className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-all"
+        >
           <ArrowLeft size={18} />
         </Link>
         <div>
@@ -184,12 +203,25 @@ const CreateSalon = () => {
                 </div>
               )}
             </div>
-            <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoChange}
+              className="hidden"
+            />
             <div>
               <p className="font-medium text-gray-800 text-sm">Salon Logo</p>
               <p className="text-xs text-gray-400 mt-0.5">PNG, JPG up to 5MB. Click to upload.</p>
               {logoPreview && (
-                <button type="button" onClick={() => { setLogoPreview(null); setLogoFile(null); }} className="flex items-center gap-1 text-xs text-red-400 hover:text-red-500 mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLogoPreview(null);
+                    setLogoFile(null);
+                  }}
+                  className="flex items-center gap-1 text-xs text-red-400 hover:text-red-500 mt-1"
+                >
                   <X size={12} /> Remove
                 </button>
               )}
@@ -200,12 +232,23 @@ const CreateSalon = () => {
         {/* Salon Information */}
         <Section title="Salon Information" icon={Store}>
           <Field label="Salon Name" required>
-            <Input value={form.shopName} onChange={set('shopName')} placeholder="e.g. Activate Salon" />
+            <Input
+              value={form.shopName}
+              onChange={set('shopName')}
+              placeholder="e.g. Activate Salon"
+            />
           </Field>
           <Field label="URL Slug" required hint={`Customer URL: /${form.slug || 'your-slug'}`}>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">/</span>
-              <Input value={form.slug} onChange={set('slug')} placeholder="activate-salon" className="pl-6 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white placeholder-gray-400" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                /
+              </span>
+              <Input
+                value={form.slug}
+                onChange={set('slug')}
+                placeholder="activate-salon"
+                className="pl-6 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white placeholder-gray-400"
+              />
             </div>
           </Field>
           <Field label="Address">
@@ -228,7 +271,12 @@ const CreateSalon = () => {
             <Input value={form.phone} onChange={set('phone')} placeholder="+91 9876543210" />
           </Field>
           <Field label="Email">
-            <Input type="email" value={form.email} onChange={set('email')} placeholder="salon@example.com" />
+            <Input
+              type="email"
+              value={form.email}
+              onChange={set('email')}
+              placeholder="salon@example.com"
+            />
           </Field>
           <Field label="WhatsApp">
             <Input value={form.whatsapp} onChange={set('whatsapp')} placeholder="+91 9876543210" />
@@ -238,34 +286,18 @@ const CreateSalon = () => {
         {/* Business */}
         <Section title="Business Details" icon={Building2}>
           <Field label="Business Name">
-            <Input value={form.businessName} onChange={set('businessName')} placeholder="Registered business name" />
+            <Input
+              value={form.businessName}
+              onChange={set('businessName')}
+              placeholder="Registered business name"
+            />
           </Field>
           <Field label="GST Number">
-            <Input value={form.gstNumber} onChange={set('gstNumber')} placeholder="GSTIN (optional)" />
-          </Field>
-        </Section>
-
-        {/* Payment */}
-        <Section title="Subscription & Payment" icon={CreditCard}>
-          <Field label="Setup Amount (₹)">
-            <Input type="number" value={form.setupAmount} onChange={set('setupAmount')} placeholder="0" />
-          </Field>
-          <Field label="Monthly Subscription (₹)">
-            <Input type="number" value={form.subscriptionAmount} onChange={set('subscriptionAmount')} placeholder="0" />
-          </Field>
-          <Field label="Billing Cycle">
-            <select value={form.billingCycle} onChange={set('billingCycle')} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary bg-white">
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </Field>
-          <Field label="Payment Status">
-            <select value={form.paymentStatus} onChange={set('paymentStatus')} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary bg-white">
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="overdue">Overdue</option>
-            </select>
+            <Input
+              value={form.gstNumber}
+              onChange={set('gstNumber')}
+              placeholder="GSTIN (optional)"
+            />
           </Field>
         </Section>
 
@@ -278,7 +310,12 @@ const CreateSalon = () => {
             <Input value={form.adminId} onChange={set('adminId')} placeholder="activateadmin" />
           </Field>
           <Field label="Admin Email" required>
-            <Input type="email" value={form.adminEmail} onChange={set('adminEmail')} placeholder="admin@salon.com" />
+            <Input
+              type="email"
+              value={form.adminEmail}
+              onChange={set('adminEmail')}
+              placeholder="admin@salon.com"
+            />
           </Field>
           <Field label="Password" required>
             <div className="relative">
@@ -289,16 +326,116 @@ const CreateSalon = () => {
                 placeholder="Min 6 characters"
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-12 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white placeholder-gray-400"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </Field>
         </Section>
 
+        {/* Payment Integration */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <QrCode size={16} className="text-primary" />
+            </div>
+            <h3 className="font-semibold text-gray-800">Payment Integration</h3>
+          </div>
+          <div className="p-6 space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <div
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    paymentIntegrationEnabled: !f.paymentIntegrationEnabled,
+                  }))
+                }
+                className={`relative w-11 h-6 rounded-full transition-colors ${form.paymentIntegrationEnabled ? 'bg-primary' : 'bg-gray-200'}`}
+              >
+                <div
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.paymentIntegrationEnabled ? 'translate-x-5' : ''}`}
+                />
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                Enable Payment Integration (UPI)
+              </span>
+            </label>
+
+            {form.paymentIntegrationEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-gray-100">
+                <Field label="Name" hint="Account holder name shown to customers">
+                  <Input value={form.upiName} onChange={set('upiName')} placeholder="e.g. Walter Salon" />
+                </Field>
+                <Field label="Mobile Number" hint="UPI-linked mobile number">
+                  <Input
+                    value={form.upiMobileNumber}
+                    onChange={set('upiMobileNumber')}
+                    placeholder="9876543210"
+                  />
+                </Field>
+                <Field label="UPI ID" hint="e.g. salon@okaxis (internal, not shown to customers)">
+                  <Input value={form.upiId} onChange={set('upiId')} placeholder="yourname@bank" />
+                </Field>
+                <Field label="Bank Name" hint="e.g. HDFC Bank (internal reference)">
+                  <Input value={form.bankName} onChange={set('bankName')} placeholder="HDFC Bank" />
+                </Field>
+                <div className="sm:col-span-2">
+                  <Field label="UPI QR Code Image">
+                    <div className="flex items-start gap-4">
+                      <div
+                        onClick={() => qrInputRef.current.click()}
+                        className="w-28 h-28 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary cursor-pointer flex items-center justify-center overflow-hidden transition-all group flex-shrink-0"
+                      >
+                        {qrPreview ? (
+                          <img src={qrPreview} alt="QR" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-center text-gray-400 group-hover:text-primary transition-colors p-2">
+                            <QrCode size={28} className="mx-auto mb-1" />
+                            <p className="text-xs">Upload QR</p>
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        ref={qrInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleQrChange}
+                        className="hidden"
+                      />
+                      <div className="text-sm text-gray-500 pt-2">
+                        <p className="font-medium text-gray-700 mb-1">Upload your UPI QR code</p>
+                        <p>PNG or JPG, max 5MB.</p>
+                        {qrPreview && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setQrPreview(null);
+                              setQrFile(null);
+                            }}
+                            className="flex items-center gap-1 text-xs text-red-400 hover:text-red-500 mt-2"
+                          >
+                            <X size={12} /> Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </Field>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Submit */}
         <div className="flex gap-3 pb-6">
-          <Link to="/super-admin/salons" className="flex-1 sm:flex-none border border-gray-200 text-gray-600 px-6 py-3 rounded-xl text-sm hover:bg-gray-50 transition-all text-center">
+          <Link
+            to="/super-admin/salons"
+            className="flex-1 sm:flex-none border border-gray-200 text-gray-600 px-6 py-3 rounded-xl text-sm hover:bg-gray-50 transition-all text-center"
+          >
             Cancel
           </Link>
           <button

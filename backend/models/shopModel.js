@@ -43,6 +43,14 @@ const shopSchema = new mongoose.Schema(
       default: 'pending',
     },
 
+    // UPI Payment Integration (customer-facing, per-salon)
+    paymentIntegrationEnabled: { type: Boolean, default: false },
+    upiName: { type: String, default: '' },
+    upiMobileNumber: { type: String, default: '' },
+    upiId: { type: String, default: '' },
+    bankName: { type: String, default: '' },
+    upiQrCode: { type: String, default: '' },
+
     status: {
       type: String,
       enum: ['active', 'inactive', 'suspended'],

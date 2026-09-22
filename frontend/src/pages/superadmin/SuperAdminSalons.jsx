@@ -3,7 +3,7 @@ import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, Search, Plus, CheckCircle, Clock, Filter, RefreshCw,
   Eye, Pencil, Trash2, X, ExternalLink, Phone, Mail, MapPin,
-  Building2, CreditCard, User, Upload, Globe, Loader2, AlertTriangle
+  Building2, User, Upload, Globe, Loader2, AlertTriangle, QrCode, CreditCard
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -22,7 +22,10 @@ const SuperAdminSalons = () => {
   const [editForm, setEditForm] = useState({});
   const [editLogoFile, setEditLogoFile] = useState(null);
   const [editLogoPreview, setEditLogoPreview] = useState(null);
+  const [editQrFile, setEditQrFile] = useState(null);
+  const [editQrPreview, setEditQrPreview] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
+  const qrInputRef = useRef(null);
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -53,13 +56,19 @@ const SuperAdminSalons = () => {
       whatsapp: salon.whatsapp || '',
       businessName: salon.businessName || '',
       gstNumber: salon.gstNumber || '',
-      setupAmount: salon.setupAmount ?? '',
       subscriptionAmount: salon.subscriptionAmount ?? '',
       billingCycle: salon.billingCycle || 'monthly',
       paymentStatus: salon.paymentStatus || 'pending',
+      paymentIntegrationEnabled: salon.paymentIntegrationEnabled || false,
+      upiName: salon.upiName || '',
+      upiMobileNumber: salon.upiMobileNumber || '',
+      upiId: salon.upiId || '',
+      bankName: salon.bankName || '',
     });
     setEditLogoFile(null);
     setEditLogoPreview(salon.logo || null);
+    setEditQrFile(null);
+    setEditQrPreview(salon.upiQrCode || null);
   };
 
   const handleEditLogoChange = (e) => {
@@ -72,12 +81,23 @@ const SuperAdminSalons = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleEditQrChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('QR image must be under 5MB'); return; }
+    setEditQrFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setEditQrPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
   const handleEditSave = async () => {
     if (!editForm.shopName) { toast.error('Salon name is required'); return; }
     setEditSaving(true);
     const fd = new FormData();
     Object.entries(editForm).forEach(([k, v]) => fd.append(k, v));
     if (editLogoFile) fd.append('logo', editLogoFile);
+    if (editQrFile) fd.append('qrCode', editQrFile);
     const result = await updateSalon(editSalon.shopId, fd);
     setEditSaving(false);
     if (result?.success) {
@@ -298,6 +318,26 @@ const SuperAdminSalons = () => {
               <Row icon={CreditCard} label="Subscription" value={viewSalon.subscriptionAmount ? `₹${viewSalon.subscriptionAmount} / ${viewSalon.billingCycle}` : undefined} />
               <Row icon={User} label="Admin" value={viewSalon.admin ? `${viewSalon.admin.name} (${viewSalon.admin.adminId})` : undefined} />
 
+              {/* UPI Payment Info */}
+              {viewSalon.paymentIntegrationEnabled && (
+                <div className="border border-green-100 bg-green-50 rounded-xl p-4 space-y-2">
+                  <p className="text-xs font-semibold text-green-700 uppercase flex items-center gap-1.5">
+                    <QrCode size={13} /> UPI Payment Integration
+                  </p>
+                  <div className="space-y-1.5 text-sm">
+                    {viewSalon.upiName && <div className="flex justify-between"><span className="text-gray-500">Name</span><span className="font-medium text-gray-800">{viewSalon.upiName}</span></div>}
+                    {viewSalon.upiMobileNumber && <div className="flex justify-between"><span className="text-gray-500">Mobile</span><span className="font-medium text-gray-800">{viewSalon.upiMobileNumber}</span></div>}
+                    {viewSalon.upiId && <div className="flex justify-between"><span className="text-gray-500">UPI ID</span><span className="font-mono font-medium text-gray-800">{viewSalon.upiId}</span></div>}
+                    {viewSalon.bankName && <div className="flex justify-between"><span className="text-gray-500">Bank</span><span className="font-medium text-gray-800">{viewSalon.bankName}</span></div>}
+                    {viewSalon.upiQrCode && (
+                      <div className="pt-2"><p className="text-xs text-gray-400 mb-1">QR Code</p>
+                        <img src={viewSalon.upiQrCode} alt="QR" className="w-28 h-28 rounded-lg border border-green-200 object-contain" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Stats */}
               {viewSalon.stats && (
                 <div className="grid grid-cols-3 gap-3 mt-2">
@@ -368,20 +408,54 @@ const SuperAdminSalons = () => {
                   <input className={inputCls} value={editForm.businessName} onChange={e => setEditForm(f => ({...f, businessName: e.target.value}))} /></div>
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">GST Number</label>
                   <input className={inputCls} value={editForm.gstNumber} onChange={e => setEditForm(f => ({...f, gstNumber: e.target.value}))} /></div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Subscription Amount (₹)</label>
-                  <input className={inputCls} type="number" value={editForm.subscriptionAmount} onChange={e => setEditForm(f => ({...f, subscriptionAmount: e.target.value}))} /></div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Billing Cycle</label>
-                  <select className={inputCls} value={editForm.billingCycle} onChange={e => setEditForm(f => ({...f, billingCycle: e.target.value}))}>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                    <option value="yearly">Yearly</option>
-                  </select></div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
-                  <select className={inputCls} value={editForm.paymentStatus} onChange={e => setEditForm(f => ({...f, paymentStatus: e.target.value}))}>
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
-                  </select></div>
+              </div>
+
+              {/* Payment Integration */}
+              <div className="border border-gray-100 rounded-xl p-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <QrCode size={15} className="text-primary" />
+                  <span className="text-sm font-semibold text-gray-700">Payment Integration (UPI)</span>
+                </div>
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <div
+                    onClick={() => setEditForm(f => ({ ...f, paymentIntegrationEnabled: !f.paymentIntegrationEnabled }))}
+                    className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${editForm.paymentIntegrationEnabled ? 'bg-primary' : 'bg-gray-200'}`}
+                  >
+                    <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${editForm.paymentIntegrationEnabled ? 'translate-x-5' : ''}`} />
+                  </div>
+                  <span className="text-xs font-medium text-gray-700">Enable UPI Payment for Customers</span>
+                </label>
+
+                {editForm.paymentIntegrationEnabled && (
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Name <span className="text-gray-400">(shown to customers)</span></label>
+                      <input className={inputCls} value={editForm.upiName} placeholder="e.g. Walter Salon" onChange={e => setEditForm(f => ({...f, upiName: e.target.value}))} /></div>
+                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Mobile Number <span className="text-gray-400">(shown to customers)</span></label>
+                      <input className={inputCls} value={editForm.upiMobileNumber} placeholder="9876543210" onChange={e => setEditForm(f => ({...f, upiMobileNumber: e.target.value}))} /></div>
+                    <div><label className="block text-xs font-medium text-gray-600 mb-1">UPI ID <span className="text-gray-400">(internal)</span></label>
+                      <input className={inputCls} value={editForm.upiId} placeholder="yourname@bank" onChange={e => setEditForm(f => ({...f, upiId: e.target.value}))} /></div>
+                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Bank Name <span className="text-gray-400">(internal)</span></label>
+                      <input className={inputCls} value={editForm.bankName} placeholder="HDFC Bank" onChange={e => setEditForm(f => ({...f, bankName: e.target.value}))} /></div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">UPI QR Code</label>
+                      <div className="flex items-center gap-3">
+                        <div
+                          onClick={() => qrInputRef.current?.click()}
+                          className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary cursor-pointer flex items-center justify-center overflow-hidden transition-colors flex-shrink-0"
+                        >
+                          {editQrPreview
+                            ? <img src={editQrPreview} alt="QR" className="w-full h-full object-cover" />
+                            : <div className="text-center text-gray-300 p-2"><QrCode size={24} className="mx-auto mb-1" /><span className="text-xs">Upload</span></div>}
+                        </div>
+                        <input ref={qrInputRef} type="file" accept="image/*" onChange={handleEditQrChange} className="hidden" />
+                        <div className="text-xs text-gray-500">
+                          <p>Upload QR code image</p>
+                          {editQrPreview && <button type="button" onClick={() => { setEditQrPreview(null); setEditQrFile(null); }} className="text-red-400 hover:text-red-500 mt-1 flex items-center gap-1"><X size={10} /> Remove</button>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-3 px-6 pb-6">

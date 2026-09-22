@@ -83,4 +83,28 @@ shopRouter.get('/:slug/slot-settings', async (req, res) => {
   }
 });
 
+// GET /api/shop/:slug/payment-info — public UPI payment info for booking
+// Returns only 3 customer-visible fields (no UPI ID or bank name)
+shopRouter.get('/:slug/payment-info', async (req, res) => {
+  try {
+    const shop = await shopModel
+      .findOne({ slug: req.params.slug, status: 'active' })
+      .select('paymentIntegrationEnabled upiName upiMobileNumber upiQrCode upiId shopId shopName')
+      .lean();
+    if (!shop) return res.json({ success: false, message: 'Salon not found.' });
+
+    res.json({
+      success: true,
+      paymentIntegrationEnabled: shop.paymentIntegrationEnabled || false,
+      upiName: shop.upiName || '',
+      upiMobileNumber: shop.upiMobileNumber || '',
+      upiQrCode: shop.upiQrCode || '',
+      shopId: shop.shopId || '',
+      shopName: shop.shopName,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 export default shopRouter;
