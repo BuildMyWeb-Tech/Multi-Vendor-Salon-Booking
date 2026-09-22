@@ -64,9 +64,7 @@ const Bills = () => {
       <div style="text-align:center"><h2 style="margin:0">${shop?.shopName || 'Salon'}</h2>
       ${shop?.address ? `<p style="margin:2px 0">${shop.address}</p>` : ''}
       ${shop?.phone ? `<p style="margin:2px 0">${shop.phone}</p>` : ''}
-      ${shop?.gstNumber ? `<p style="margin:2px 0">GST: ${shop.gstNumber}</p>` : ''}
-      <p style="margin:4px 0">${new Date(bill.createdAt).toLocaleString('en-IN')}</p>
-      <p style="margin:2px 0">Bill: <strong>${bill.billNumber}</strong></p></div>
+      ${shop?.gstNumber ? `<p style="margin:2px 0">GST: ${shop.gstNumber}</p>` : ''}</div>
       <div class="divider"></div>
       ${bill.customerName ? `<p>Customer: ${bill.customerName}${bill.customerPhone ? ' | ' + bill.customerPhone : ''}</p>` : ''}
       <table>
