@@ -268,10 +268,15 @@ export const getAvailableSlots = async (req, res) => {
     const { slots: allSlots, error } = await generateAvailableSlots(date, settings, docId);
     if (error && allSlots.length === 0) return res.json({ success: false, message: error });
 
-    const free = [];
-    for (const slot of allSlots) {
-      if (await isSlotAvailable(docId, date, slot.startTime)) free.push(slot);
-    }
+    // Single query for all booked slots on this date — avoids N sequential DB calls
+    const booked = await appointmentModel.find({
+      $or: [
+        { doctorId: docId, slotDate: date, cancelled: false },
+        { docId:    docId, slotDate: date, cancelled: false },
+      ],
+    }).select('slotTime').lean();
+    const bookedTimes = new Set(booked.map((a) => a.slotTime));
+    const free = allSlots.filter((slot) => !bookedTimes.has(slot.startTime));
 
     res.json({ success: true, slots: free });
   } catch (error) {
@@ -459,7 +464,10 @@ export const bookAppointment = async (req, res) => {
     res.json({ success: true, message: 'Appointment Booked Successfully' });
   } catch (error) {
     console.error('❌ bookAppointment error:', error.message);
-    console.error(error.stack);
+    // E11000 = duplicate key — slot was booked by someone else between the check and save
+    if (error.code === 11000) {
+      return res.json({ success: false, message: 'This slot was just taken. Please go back and select another time.' });
+    }
     res.json({ success: false, message: error.message });
   }
 };

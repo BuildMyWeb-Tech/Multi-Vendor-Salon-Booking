@@ -442,7 +442,6 @@ const CreateSalon = () => {
           </div>
           <div className="p-6 space-y-4">
             {[
-              { key: 'paymentIntegrationEnabled', icon: QrCode, label: 'UPI Payment', desc: 'Allow customers to pay via UPI during booking' },
               { key: 'serviceBillingEnabled', icon: ShoppingCart, label: 'Service Billing', desc: 'Enable service billing & POS for this salon' },
               { key: 'productBillingEnabled', icon: Package, label: 'Product Billing', desc: 'Enable products, inventory & product billing' },
             ].map(({ key, icon: Icon, label, desc }) => (

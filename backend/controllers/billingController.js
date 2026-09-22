@@ -1,7 +1,6 @@
 import productModel from '../models/productModel.js';
 import billModel from '../models/billModel.js';
 import appointmentModel from '../models/appointmentModel.js';
-import mongoose from 'mongoose';
 
 // ── PRODUCTS ─────────────────────────────────────────────────────────────────
 
@@ -142,8 +141,8 @@ export const getInventory = async (req, res) => {
 // ── BILLS ──────────────────────────────────────────────────────────────────────
 
 export const createBill = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // Track which products had stock reduced so we can roll back on error
+  const stockRollbacks = [];
   try {
     const shopId = req.salonAdmin.shopId;
     const {
@@ -151,7 +150,7 @@ export const createBill = async (req, res) => {
       appointmentId,
       services, products,
       discount, discountType, taxPercent,
-      paymentMethod, utrNumber,
+      paymentMethod,
     } = req.body;
 
     const parsedServices = typeof services === 'string' ? JSON.parse(services) : (services || []);
@@ -160,22 +159,16 @@ export const createBill = async (req, res) => {
     // Validate & enrich products, reduce stock
     const enrichedProducts = [];
     for (const item of parsedProducts) {
-      const product = await productModel.findOne({ _id: item.productId, shopId, isActive: true }).session(session);
-      if (!product) {
-        await session.abortTransaction();
-        return res.json({ success: false, message: `Product ${item.productName} not found.` });
-      }
+      const product = await productModel.findOne({ _id: item.productId, shopId, isActive: true });
+      if (!product) return res.json({ success: false, message: `Product ${item.productName} not found.` });
       const variant = product.variants.id(item.variantId);
-      if (!variant) {
-        await session.abortTransaction();
-        return res.json({ success: false, message: `Variant not found for ${item.productName}.` });
-      }
+      if (!variant) return res.json({ success: false, message: `Variant not found for ${item.productName}.` });
       if (variant.stock < item.quantity) {
-        await session.abortTransaction();
         return res.json({ success: false, message: `Insufficient stock for ${product.name} (${variant.size}). Available: ${variant.stock}` });
       }
       variant.stock -= item.quantity;
-      await product.save({ session });
+      await product.save();
+      stockRollbacks.push({ product, variantId: item.variantId, qty: item.quantity });
 
       enrichedProducts.push({
         productId: product._id,
@@ -191,7 +184,7 @@ export const createBill = async (req, res) => {
     // Compute totals
     const serviceSubtotal = parsedServices.reduce((s, i) => s + (i.price * (i.quantity || 1)), 0);
     const productSubtotal = enrichedProducts.reduce((s, i) => s + i.subtotal, 0);
-    let subtotal = serviceSubtotal + productSubtotal;
+    const subtotal = serviceSubtotal + productSubtotal;
 
     const discountAmt = discountType === 'percent'
       ? Math.round((subtotal * (parseFloat(discount) || 0)) / 100 * 100) / 100
@@ -210,41 +203,35 @@ export const createBill = async (req, res) => {
 
     // Mark appointment completed if linked
     if (appointmentId) {
-      await appointmentModel.findByIdAndUpdate(
-        appointmentId,
-        { isCompleted: true },
-        { session }
-      );
+      await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true });
     }
 
-    const [bill] = await billModel.create(
-      [{
-        shopId,
-        customerName: customerName || '',
-        customerPhone: customerPhone || '',
-        appointmentId: appointmentId || null,
-        services: enrichedServices,
-        products: enrichedProducts,
-        subtotal,
-        discount: discountAmt,
-        discountType: discountType || 'flat',
-        tax: taxAmt,
-        taxPercent: parseFloat(taxPercent) || 0,
-        total,
-        paymentMethod: paymentMethod || 'cash',
-        utrNumber: utrNumber || '',
-        status: 'completed',
-      }],
-      { session }
-    );
+    const bill = await billModel.create({
+      shopId,
+      customerName: customerName || '',
+      customerPhone: customerPhone || '',
+      appointmentId: appointmentId || null,
+      services: enrichedServices,
+      products: enrichedProducts,
+      subtotal,
+      discount: discountAmt,
+      discountType: discountType || 'flat',
+      tax: taxAmt,
+      taxPercent: parseFloat(taxPercent) || 0,
+      total,
+      paymentMethod: paymentMethod || 'cash',
+      utrNumber: '',
+      status: 'completed',
+    });
 
-    await session.commitTransaction();
     res.json({ success: true, message: 'Bill created.', bill });
   } catch (error) {
-    await session.abortTransaction();
+    // Roll back any stock deductions that already happened
+    for (const { product, variantId, qty } of stockRollbacks) {
+      const variant = product.variants.id(variantId);
+      if (variant) { variant.stock += qty; await product.save().catch(() => {}); }
+    }
     res.json({ success: false, message: error.message });
-  } finally {
-    session.endSession();
   }
 };
 
@@ -292,34 +279,28 @@ export const getBillById = async (req, res) => {
 };
 
 export const cancelBill = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const shopId = req.salonAdmin.shopId;
-    const bill = await billModel.findOne({ _id: req.params.id, shopId }).session(session);
-    if (!bill) { await session.abortTransaction(); return res.json({ success: false, message: 'Bill not found.' }); }
-    if (bill.status === 'cancelled') { await session.abortTransaction(); return res.json({ success: false, message: 'Bill already cancelled.' }); }
+    const bill = await billModel.findOne({ _id: req.params.id, shopId });
+    if (!bill) return res.json({ success: false, message: 'Bill not found.' });
+    if (bill.status === 'cancelled') return res.json({ success: false, message: 'Bill already cancelled.' });
 
     // Restore product stock
     for (const item of bill.products) {
-      const product = await productModel.findById(item.productId).session(session);
+      const product = await productModel.findById(item.productId);
       if (product) {
         const variant = product.variants.id(item.variantId);
         if (variant) {
           variant.stock += item.quantity;
-          await product.save({ session });
+          await product.save();
         }
       }
     }
 
     bill.status = 'cancelled';
-    await bill.save({ session });
-    await session.commitTransaction();
+    await bill.save();
     res.json({ success: true, message: 'Bill cancelled and stock restored.' });
   } catch (error) {
-    await session.abortTransaction();
     res.json({ success: false, message: error.message });
-  } finally {
-    session.endSession();
   }
 };
