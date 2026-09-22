@@ -33,6 +33,11 @@ import {
   getSalonAdminNotifications,
   markSalonAdminNotificationsRead,
 } from '../controllers/salonAdminController.js';
+import {
+  createProduct, getProducts, getProductById, updateProduct, deleteProduct,
+  getInventory,
+  createBill, getBills, getBillById, cancelBill,
+} from '../controllers/billingController.js';
 
 const salonAdminRouter = express.Router();
 
@@ -80,5 +85,21 @@ salonAdminRouter.delete('/services/:id', authSalonAdmin, deleteSalonService);
 /* ──────────── NOTIFICATIONS ──────────── */
 salonAdminRouter.get('/notifications', authSalonAdmin, getSalonAdminNotifications);
 salonAdminRouter.post('/notifications/read', authSalonAdmin, markSalonAdminNotificationsRead);
+
+/* ──────────── BILLING — PRODUCTS ──────────── */
+salonAdminRouter.post('/billing/products', authSalonAdmin, createProduct);
+salonAdminRouter.get('/billing/products', authSalonAdmin, getProducts);
+salonAdminRouter.get('/billing/products/:id', authSalonAdmin, getProductById);
+salonAdminRouter.put('/billing/products/:id', authSalonAdmin, updateProduct);
+salonAdminRouter.delete('/billing/products/:id', authSalonAdmin, deleteProduct);
+
+/* ──────────── BILLING — INVENTORY ──────────── */
+salonAdminRouter.get('/billing/inventory', authSalonAdmin, getInventory);
+
+/* ──────────── BILLING — BILLS ──────────── */
+salonAdminRouter.post('/billing/bills', authSalonAdmin, createBill);
+salonAdminRouter.get('/billing/bills', authSalonAdmin, getBills);
+salonAdminRouter.get('/billing/bills/:id', authSalonAdmin, getBillById);
+salonAdminRouter.patch('/billing/bills/:id/cancel', authSalonAdmin, cancelBill);
 
 export default salonAdminRouter;

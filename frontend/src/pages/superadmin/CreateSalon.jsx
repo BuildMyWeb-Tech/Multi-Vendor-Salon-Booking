@@ -4,7 +4,7 @@ import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, User, Phone, Mail, MapPin, Building2,
   Smartphone, Eye, EyeOff, Upload, Check, X,
-  ArrowLeft, Sparkles, QrCode
+  ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
@@ -58,6 +58,8 @@ const CreateSalon = () => {
     businessName: '', gstNumber: '',
     paymentIntegrationEnabled: false,
     upiName: '', upiMobileNumber: '', upiId: '', bankName: '',
+    serviceBillingEnabled: false,
+    productBillingEnabled: false,
     adminName: '', adminId: '', adminEmail: '', password: '',
   });
 
@@ -153,7 +155,7 @@ const CreateSalon = () => {
 
           <div className="flex gap-3">
             <button
-              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); setQrPreview(null); setQrFile(null); }}
+              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',serviceBillingEnabled:false,productBillingEnabled:false,adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); setQrPreview(null); setQrFile(null); }}
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all"
             >
               Create Another
@@ -427,6 +429,41 @@ const CreateSalon = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Feature Toggles */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Zap size={16} className="text-primary" />
+            </div>
+            <h3 className="font-semibold text-gray-800">Feature Settings</h3>
+          </div>
+          <div className="p-6 space-y-4">
+            {[
+              { key: 'paymentIntegrationEnabled', icon: QrCode, label: 'UPI Payment', desc: 'Allow customers to pay via UPI during booking' },
+              { key: 'serviceBillingEnabled', icon: ShoppingCart, label: 'Service Billing', desc: 'Enable service billing & POS for this salon' },
+              { key: 'productBillingEnabled', icon: Package, label: 'Product Billing', desc: 'Enable products, inventory & product billing' },
+            ].map(({ key, icon: Icon, label, desc }) => (
+              <label key={key} className="flex items-center gap-4 cursor-pointer select-none">
+                <div
+                  onClick={() => setForm((f) => ({ ...f, [key]: !f[key] }))}
+                  className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${form[key] ? 'bg-primary' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form[key] ? 'translate-x-5' : ''}`} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${form[key] ? 'bg-primary/10' : 'bg-gray-100'}`}>
+                    <Icon size={14} className={form[key] ? 'text-primary' : 'text-gray-400'} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{label}</p>
+                    <p className="text-xs text-gray-400">{desc}</p>
+                  </div>
+                </div>
+              </label>
+            ))}
           </div>
         </div>
 

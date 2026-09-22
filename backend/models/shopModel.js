@@ -51,6 +51,10 @@ const shopSchema = new mongoose.Schema(
     bankName: { type: String, default: '' },
     upiQrCode: { type: String, default: '' },
 
+    // POS / Billing feature toggles
+    serviceBillingEnabled: { type: Boolean, default: false },
+    productBillingEnabled: { type: Boolean, default: false },
+
     status: {
       type: String,
       enum: ['active', 'inactive', 'suspended'],

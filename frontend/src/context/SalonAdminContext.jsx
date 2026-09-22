@@ -330,6 +330,29 @@ const SalonAdminContextProvider = ({ children }) => {
     } catch {}
   };
 
+  // ── BILLING ─────────────────────────────────────────────────────────────────
+
+  const billingApi = {
+    getProducts: (params = {}) =>
+      axios.get(`${backendUrl}/api/salon-admin/billing/products`, { headers: headers(), params }),
+    createProduct: (data) =>
+      axios.post(`${backendUrl}/api/salon-admin/billing/products`, data, { headers: headers() }),
+    updateProduct: (id, data) =>
+      axios.put(`${backendUrl}/api/salon-admin/billing/products/${id}`, data, { headers: headers() }),
+    deleteProduct: (id) =>
+      axios.delete(`${backendUrl}/api/salon-admin/billing/products/${id}`, { headers: headers() }),
+    getInventory: () =>
+      axios.get(`${backendUrl}/api/salon-admin/billing/inventory`, { headers: headers() }),
+    getBills: (params = {}) =>
+      axios.get(`${backendUrl}/api/salon-admin/billing/bills`, { headers: headers(), params }),
+    getBillById: (id) =>
+      axios.get(`${backendUrl}/api/salon-admin/billing/bills/${id}`, { headers: headers() }),
+    createBill: (data) =>
+      axios.post(`${backendUrl}/api/salon-admin/billing/bills`, data, { headers: headers() }),
+    cancelBill: (id) =>
+      axios.patch(`${backendUrl}/api/salon-admin/billing/bills/${id}/cancel`, {}, { headers: headers() }),
+  };
+
   const logout = () => {
     setSaAdminToken('');
     setShopInfo(null);
@@ -348,6 +371,7 @@ const SalonAdminContextProvider = ({ children }) => {
     dashData, getDashData,
     adminNotifications, adminUnreadCount,
     getAdminNotifications, markAdminNotificationsRead,
+    billingApi,
     logout,
   };
 

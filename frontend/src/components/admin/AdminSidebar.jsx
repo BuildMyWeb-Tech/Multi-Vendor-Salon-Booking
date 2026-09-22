@@ -2,10 +2,11 @@ import React, { useContext, useState } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { DoctorContext } from '../../context/DoctorContext';
 import { AdminContext } from '../../context/AdminContext';
+import { SalonAdminContext } from '../../context/SalonAdminContext';
 import {
   Calendar, UserPlus2, ChevronLeft, ChevronRight, MenuIcon, X,
   Scissors, LayoutGrid, CalendarClock, UserCog, LayoutDashboard,
-  User, IndianRupee,
+  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt,
 } from 'lucide-react';
 
 const iconClass = 'min-w-[23px] w-[23px] h-[23px]';
@@ -13,11 +14,16 @@ const iconClass = 'min-w-[23px] w-[23px] h-[23px]';
 const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
   const { dToken } = useContext(DoctorContext);
   const { aToken } = useContext(AdminContext);
+  const { shopInfo } = useContext(SalonAdminContext);
   const params = useParams();
   const slug = shopSlugProp || params.shopSlug || '';
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const serviceBilling = shopInfo?.serviceBillingEnabled;
+  const productBilling = shopInfo?.productBillingEnabled;
+  const showBilling = serviceBilling || productBilling;
 
   const adminLinks = [
     { to: `/${slug}/admin/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
@@ -26,8 +32,12 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
     { to: `/${slug}/admin/add-stylist`, label: 'Add Stylist', icon: UserPlus2 },
     { to: `/${slug}/admin/services`, label: 'Services', icon: LayoutGrid },
     { to: `/${slug}/admin/slot-management`, label: 'Slots', icon: CalendarClock },
-
-    // { to: `/${slug}/admin/my-profile`, label: 'My Profile', icon: User },
+    ...(showBilling ? [{ to: `/${slug}/admin/billing`, label: 'Billing / POS', icon: ShoppingCart }] : []),
+    ...(productBilling ? [
+      { to: `/${slug}/admin/products`, label: 'Products', icon: Package },
+      { to: `/${slug}/admin/inventory`, label: 'Inventory', icon: Boxes },
+    ] : []),
+    ...(showBilling ? [{ to: `/${slug}/admin/bills`, label: 'Bills', icon: Receipt }] : []),
   ];
 
   const stylistLinks = [
@@ -176,7 +186,10 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
               { to: `/${slug}/admin/appointments`, icon: Calendar, label: 'Appts' },
               { to: `/${slug}/admin/stylists`, icon: UserCog, label: 'Stylists' },
               { to: `/${slug}/admin/services`, icon: Scissors, label: 'Services' },
-              { to: `/${slug}/admin/slot-management`, icon: CalendarClock, label: 'Slots' },
+              ...(showBilling
+                ? [{ to: `/${slug}/admin/billing`, icon: ShoppingCart, label: 'Billing' }]
+                : [{ to: `/${slug}/admin/slot-management`, icon: CalendarClock, label: 'Slots' }]
+              ),
             ].map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}

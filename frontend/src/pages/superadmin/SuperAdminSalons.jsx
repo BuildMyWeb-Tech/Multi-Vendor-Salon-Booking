@@ -64,6 +64,8 @@ const SuperAdminSalons = () => {
       upiMobileNumber: salon.upiMobileNumber || '',
       upiId: salon.upiId || '',
       bankName: salon.bankName || '',
+      serviceBillingEnabled: salon.serviceBillingEnabled || false,
+      productBillingEnabled: salon.productBillingEnabled || false,
     });
     setEditLogoFile(null);
     setEditLogoPreview(salon.logo || null);
@@ -456,6 +458,31 @@ const SuperAdminSalons = () => {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Feature Toggles */}
+              <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard size={15} className="text-primary" />
+                  <span className="text-sm font-semibold text-gray-700">POS & Billing Features</span>
+                </div>
+                {[
+                  { key: 'serviceBillingEnabled', label: 'Service Billing', desc: 'Billing & POS for services' },
+                  { key: 'productBillingEnabled', label: 'Product Billing', desc: 'Products, inventory & product billing' },
+                ].map(({ key, label, desc }) => (
+                  <label key={key} className="flex items-center gap-3 cursor-pointer select-none">
+                    <div
+                      onClick={() => setEditForm(f => ({ ...f, [key]: !f[key] }))}
+                      className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${editForm[key] ? 'bg-primary' : 'bg-gray-200'}`}
+                    >
+                      <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${editForm[key] ? 'translate-x-5' : ''}`} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-700">{label}</p>
+                      <p className="text-xs text-gray-400">{desc}</p>
+                    </div>
+                  </label>
+                ))}
               </div>
             </div>
             <div className="flex gap-3 px-6 pb-6">

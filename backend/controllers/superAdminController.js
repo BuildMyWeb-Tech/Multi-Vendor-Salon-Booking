@@ -233,6 +233,8 @@ export const createSalon = async (req, res) => {
       billingCycle: billingCycle || 'monthly',
       paymentStatus: paymentStatus || 'pending',
       paymentIntegrationEnabled: paymentIntegrationEnabled === 'true' || paymentIntegrationEnabled === true,
+      serviceBillingEnabled: req.body.serviceBillingEnabled === 'true' || req.body.serviceBillingEnabled === true,
+      productBillingEnabled: req.body.productBillingEnabled === 'true' || req.body.productBillingEnabled === true,
       upiName: upiName || '',
       upiMobileNumber: upiMobileNumber || '',
       upiId: upiId || '',
@@ -287,15 +289,15 @@ export const updateSalon = async (req, res) => {
       'setupAmount', 'subscriptionAmount', 'billingCycle', 'paymentStatus',
       'upiName', 'upiMobileNumber', 'upiId', 'bankName',
     ];
+    // Boolean feature toggles (arrive as strings from FormData)
+    ['paymentIntegrationEnabled', 'serviceBillingEnabled', 'productBillingEnabled'].forEach((key) => {
+      if (req.body[key] !== undefined) {
+        shop[key] = req.body[key] === 'true' || req.body[key] === true;
+      }
+    });
     allowed.forEach((key) => {
       if (req.body[key] !== undefined) shop[key] = req.body[key];
     });
-
-    // Handle boolean paymentIntegrationEnabled from FormData (arrives as string)
-    if (req.body.paymentIntegrationEnabled !== undefined) {
-      shop.paymentIntegrationEnabled =
-        req.body.paymentIntegrationEnabled === 'true' || req.body.paymentIntegrationEnabled === true;
-    }
 
     // Handle logo upload
     const logoFile = req.files?.logo?.[0] || (!req.files && req.file);

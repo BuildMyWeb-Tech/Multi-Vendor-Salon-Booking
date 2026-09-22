@@ -40,6 +40,11 @@ import DoctorDashboard from './pages/doctor/DoctorDashboard'
 import DoctorAppointments from './pages/doctor/DoctorAppointments'
 import DoctorProfile from './pages/doctor/DoctorProfile'
 import DoctorEarnings from './pages/doctor/DoctorEarnings'
+import AddProduct from './pages/admin/products/AddProduct'
+import ManageProducts from './pages/admin/products/ManageProducts'
+import Inventory from './pages/admin/products/Inventory'
+import Billing from './pages/admin/billing/Billing'
+import Bills from './pages/admin/billing/Bills'
 
 // Customer pages
 import ShopNavbar from './components/ShopNavbar'
@@ -163,6 +168,12 @@ const ShopAdminSection = () => {
               <Route path="stylist-appointments" element={<DoctorAppointments />} />
               <Route path="stylist-earnings" element={<DoctorEarnings />} />
               <Route path="stylist-profile" element={<DoctorProfile />} />
+              {/* POS / Billing */}
+              <Route path="billing" element={<Billing />} />
+              <Route path="bills" element={<Bills />} />
+              <Route path="add-product" element={<AddProduct />} />
+              <Route path="products" element={<ManageProducts />} />
+              <Route path="inventory" element={<Inventory />} />
               <Route path="" element={<Navigate to={`/${shopSlug}/admin/dashboard`} replace />} />
               <Route path="*" element={<Navigate to={`/${shopSlug}/admin/dashboard`} replace />} />
             </Routes>
