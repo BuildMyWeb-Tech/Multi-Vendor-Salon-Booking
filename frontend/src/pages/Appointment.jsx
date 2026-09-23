@@ -10,7 +10,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import {
   ChevronLeft, CreditCard, CheckCircle, CheckCircle2, ArrowRight,
   Shield, AlertTriangle, Loader2, Clock, Calendar, Award, User, Scissors,
-  QrCode, Smartphone, Upload, X, ImageIcon
+  QrCode, Smartphone, Upload, X, ImageIcon, Tag
 } from "lucide-react";
 
 // Lazy: only init Stripe when payment step is reached
@@ -231,6 +231,14 @@ const Appointment = () => {
   const [utrNumber, setUtrNumber] = useState('');
   const screenshotInputRef = useRef(null);
 
+  // Discount state
+  const [couponCode, setCouponCode]       = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0); // percent
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponError, setCouponError]     = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [packageDiscount, setPackageDiscount] = useState(0); // percent
+
   const navigate = useNavigate();
 
   // Check if user is logged in on page load (with ref to prevent double toast)
@@ -278,9 +286,63 @@ const Appointment = () => {
     return selectedServices.reduce((total, service) => total + service.basePrice, 0);
   }, [selectedServices]);
 
+  // Final price after package + coupon discounts applied sequentially
+  const getFinalPrice = useCallback(() => {
+    let price = getTotalPrice();
+    if (packageDiscount > 0) price = Math.round(price * (1 - packageDiscount / 100));
+    if (couponDiscount  > 0) price = Math.round(price * (1 - couponDiscount  / 100));
+    return price;
+  }, [getTotalPrice, packageDiscount, couponDiscount]);
+
+  // Auto-match package discount when selected services change
+  useEffect(() => {
+    if (!shopPaymentInfo?.packageEnabled || !shopPaymentInfo?.shopId || selectedServices.length < 2) {
+      setPackageDiscount(0);
+      return;
+    }
+    const ids = selectedServices.map((s) => String(s._id));
+    axios.post(`${backendUrl}/api/user/match-package`, { shopId: shopPaymentInfo.shopId, serviceIds: ids })
+      .then(({ data }) => {
+        if (data.success && data.matched) setPackageDiscount(data.discountPercent);
+        else setPackageDiscount(0);
+      })
+      .catch(() => setPackageDiscount(0));
+  }, [selectedServices, shopPaymentInfo, backendUrl]);
+
+  // Apply coupon
+  const applyCoupon = useCallback(async () => {
+    if (!couponCode.trim()) { setCouponError('Enter a coupon code.'); return; }
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const { data } = await axios.post(`${backendUrl}/api/user/validate-coupon`, {
+        shopId: shopPaymentInfo?.shopId,
+        code: couponCode.trim(),
+      });
+      if (data.success) {
+        setCouponDiscount(data.discountPercent);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponError(data.message || 'Invalid coupon code.');
+        setCouponDiscount(0);
+        setCouponApplied(false);
+      }
+    } catch {
+      setCouponError('Could not validate coupon. Try again.');
+    } finally { setCouponLoading(false); }
+  }, [couponCode, shopPaymentInfo, backendUrl]);
+
+  const removeCoupon = () => {
+    setCouponCode('');
+    setCouponDiscount(0);
+    setCouponApplied(false);
+    setCouponError('');
+  };
+
   const fetchAllServices = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${backendUrl}/api/user/services`);
+      const { data } = await axios.get(`${backendUrl}/api/user/services`, { params: { shopSlug } });
       if (data.success) setAllServices(data.services);
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -484,8 +546,8 @@ const Appointment = () => {
         fd.append('slotDate', slotDate);
         fd.append('slotTime', selectedSlotISO);
         fd.append('services', JSON.stringify(servicesData));
-        fd.append('totalAmount', getTotalPrice());
-        fd.append('paidAmount', getTotalPrice());
+        fd.append('totalAmount', getFinalPrice());
+        fd.append('paidAmount', getFinalPrice());
         fd.append('remainingAmount', 0);
         fd.append('paymentMethod', 'upi');
         fd.append('utrNumber', utrNumber.trim());
@@ -502,7 +564,7 @@ const Appointment = () => {
             slotDate,
             slotTime: selectedSlotISO,
             services: servicesData,
-            totalAmount: getTotalPrice(),
+            totalAmount: getFinalPrice(),
             paidAmount: paymentAmount,
             remainingAmount: remainingAmount,
             paymentMethod,
@@ -534,7 +596,7 @@ const Appointment = () => {
     selectedDate,
     selectedServices,
     selectedSlotISO,
-    getTotalPrice,
+    getTotalPrice, getFinalPrice,
     paymentAmount,
     remainingAmount,
     token,
@@ -645,8 +707,8 @@ const Appointment = () => {
 
   useEffect(() => {
     if (selectedServices.length > 0 && slotSettings) {
-      const total = getTotalPrice();
-      
+      const total = getFinalPrice();
+
       if (slotSettings.advancePaymentRequired) {
         const percentage = slotSettings.advancePaymentPercentage || 100;
         const advanceAmount = Math.round((total * percentage) / 100);
@@ -660,7 +722,7 @@ const Appointment = () => {
       setPaymentAmount(0);
       setRemainingAmount(0);
     }
-  }, [selectedServices, slotSettings, getTotalPrice]);
+  }, [selectedServices, slotSettings, getFinalPrice, packageDiscount, couponDiscount]);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -792,10 +854,10 @@ const Appointment = () => {
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                       <div>
                         <p className="text-sm text-gray-700 mb-1">{selectedServices.length} service(s) selected</p>
-                        <p className="text-2xl font-bold text-gray-900">Total: {currencySymbol}{getTotalPrice()}</p>
+                        <p className="text-2xl font-bold text-gray-900">Total: {currencySymbol}{getFinalPrice()}</p>
                         {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100 && (
                           <p className="text-sm text-blue-700 mt-1">
-                            Pay {slotSettings.advancePaymentPercentage}% now ({currencySymbol}{Math.round((getTotalPrice() * slotSettings.advancePaymentPercentage) / 100)})
+                            Pay {slotSettings.advancePaymentPercentage}% now ({currencySymbol}{Math.round((getFinalPrice() * slotSettings.advancePaymentPercentage) / 100)})
                           </p>
                         )}
                       </div>
@@ -836,7 +898,7 @@ const Appointment = () => {
                     ))}
                     <div className="pt-3 border-t-2 border-blue-200 flex justify-between items-center">
                       <span className="font-bold text-gray-900 text-lg">Total</span>
-                      <span className="text-2xl font-bold text-blue-600">{currencySymbol}{getTotalPrice()}</span>
+                      <span className="text-2xl font-bold text-blue-600">{currencySymbol}{getFinalPrice()}</span>
                     </div>
                   </div>
                 </div>
@@ -974,12 +1036,73 @@ const Appointment = () => {
                       </p>
                       <p className="text-blue-600 font-semibold text-sm">{formatTime(selectedSlotISO)}</p>
                     </div>
+                    {/* Discount breakdown */}
+                    {(packageDiscount > 0 || couponDiscount > 0) && (
+                      <div className="space-y-1 pb-2 border-b border-blue-200">
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>Subtotal</span>
+                          <span>{currencySymbol}{getTotalPrice()}</span>
+                        </div>
+                        {packageDiscount > 0 && (
+                          <div className="flex justify-between text-sm text-emerald-600">
+                            <span>Package discount ({packageDiscount}%)</span>
+                            <span>-{currencySymbol}{getTotalPrice() - Math.round(getTotalPrice() * (1 - packageDiscount / 100))}</span>
+                          </div>
+                        )}
+                        {couponDiscount > 0 && (
+                          <div className="flex justify-between text-sm text-emerald-600">
+                            <span>Coupon discount ({couponDiscount}%)</span>
+                            <span>-{currencySymbol}{Math.round(getTotalPrice() * (1 - packageDiscount / 100)) - getFinalPrice()}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="flex justify-between items-center font-bold text-lg">
                       <span className="text-gray-700">Total Amount</span>
-                      <span className="text-gray-900">{currencySymbol}{getTotalPrice()}</span>
+                      <span className="text-gray-900">{currencySymbol}{getFinalPrice()}</span>
                     </div>
                   </div>
                 </div>
+
+                {/* ── Coupon Code (when enabled for this salon) ── */}
+                {shopPaymentInfo?.couponEnabled && (
+                  <div className="bg-white border-2 border-blue-100 rounded-2xl p-5 mb-5 shadow-sm">
+                    <h3 className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
+                      <Tag size={15} className="text-blue-600" />
+                      Have a Coupon Code?
+                    </h3>
+                    {couponApplied ? (
+                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-emerald-700">Coupon applied — {couponDiscount}% off!</p>
+                          <p className="text-xs text-emerald-500 font-mono">{couponCode.toUpperCase()}</p>
+                        </div>
+                        <button onClick={removeCoupon} className="text-emerald-600 hover:text-red-500 transition-colors">
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter coupon code"
+                          value={couponCode}
+                          onChange={(e) => { setCouponCode(e.target.value); setCouponError(''); }}
+                          onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
+                          className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 bg-gray-50"
+                        />
+                        <button
+                          onClick={applyCoupon}
+                          disabled={couponLoading}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                        >
+                          {couponLoading ? '…' : 'Apply'}
+                        </button>
+                      </div>
+                    )}
+                    {couponError && <p className="text-xs text-red-500 mt-2">{couponError}</p>}
+                  </div>
+                )}
 
                 {/* ── UPI Payment (when enabled for this salon) ── */}
                 {shopPaymentInfo?.paymentIntegrationEnabled ? (
@@ -1019,7 +1142,7 @@ const Appointment = () => {
                           )}
                           <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                             <p className="text-xs text-gray-500 mb-0.5">Amount to Pay</p>
-                            <p className="font-bold text-green-700 text-2xl">{currencySymbol}{getTotalPrice()}</p>
+                            <p className="font-bold text-green-700 text-2xl">{currencySymbol}{getFinalPrice()}</p>
                           </div>
                         </div>
                       </div>
@@ -1114,7 +1237,7 @@ const Appointment = () => {
                       {bookingLoading ? (
                         <><Loader2 className="w-5 h-5 animate-spin" /><span>Verifying & Confirming...</span></>
                       ) : (
-                        <><CheckCircle2 size={22} /><span>Confirm Booking — {currencySymbol}{getTotalPrice()}</span></>
+                        <><CheckCircle2 size={22} /><span>Confirm Booking — {currencySymbol}{getFinalPrice()}</span></>
                       )}
                     </button>
                     <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">

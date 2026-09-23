@@ -38,6 +38,10 @@ import {
   getInventory,
   createBill, getBills, getBillById, cancelBill,
 } from '../controllers/billingController.js';
+import {
+  createCoupon, getCoupons, updateCoupon, deleteCoupon,
+  createPackage, getPackages, updatePackage, deletePackage,
+} from '../controllers/discountController.js';
 
 const salonAdminRouter = express.Router();
 
@@ -101,5 +105,17 @@ salonAdminRouter.post('/billing/bills', authSalonAdmin, createBill);
 salonAdminRouter.get('/billing/bills', authSalonAdmin, getBills);
 salonAdminRouter.get('/billing/bills/:id', authSalonAdmin, getBillById);
 salonAdminRouter.patch('/billing/bills/:id/cancel', authSalonAdmin, cancelBill);
+
+/* ──────────── COUPONS ──────────── */
+salonAdminRouter.post('/coupons', authSalonAdmin, createCoupon);
+salonAdminRouter.get('/coupons', authSalonAdmin, getCoupons);
+salonAdminRouter.put('/coupons/:id', authSalonAdmin, updateCoupon);
+salonAdminRouter.delete('/coupons/:id', authSalonAdmin, deleteCoupon);
+
+/* ──────────── PACKAGES ──────────── */
+salonAdminRouter.post('/packages', authSalonAdmin, createPackage);
+salonAdminRouter.get('/packages', authSalonAdmin, getPackages);
+salonAdminRouter.put('/packages/:id', authSalonAdmin, updatePackage);
+salonAdminRouter.delete('/packages/:id', authSalonAdmin, deletePackage);
 
 export default salonAdminRouter;

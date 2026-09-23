@@ -45,6 +45,8 @@ import ManageProducts from './pages/admin/products/ManageProducts'
 import Inventory from './pages/admin/products/Inventory'
 import Billing from './pages/admin/billing/Billing'
 import Bills from './pages/admin/billing/Bills'
+import Coupons from './pages/admin/Coupons'
+import Packages from './pages/admin/Packages'
 
 // Customer pages
 import ShopNavbar from './components/ShopNavbar'
@@ -171,6 +173,9 @@ const ShopAdminSection = () => {
               {/* POS / Billing */}
               <Route path="billing" element={<Billing />} />
               <Route path="bills" element={<Bills />} />
+              {/* Discounts */}
+              <Route path="coupons" element={<Coupons />} />
+              <Route path="packages" element={<Packages />} />
               <Route path="add-product" element={<AddProduct />} />
               <Route path="products" element={<ManageProducts />} />
               <Route path="inventory" element={<Inventory />} />

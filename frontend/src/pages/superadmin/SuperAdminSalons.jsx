@@ -3,7 +3,7 @@ import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, Search, Plus, CheckCircle, Clock, Filter, RefreshCw,
   Eye, Pencil, Trash2, X, ExternalLink, Phone, Mail, MapPin,
-  Building2, User, Upload, Globe, Loader2, AlertTriangle, QrCode, CreditCard
+  Building2, User, Upload, Globe, Loader2, AlertTriangle, QrCode, CreditCard, Tag, Gift
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -66,6 +66,8 @@ const SuperAdminSalons = () => {
       bankName: salon.bankName || '',
       serviceBillingEnabled: salon.serviceBillingEnabled || false,
       productBillingEnabled: salon.productBillingEnabled || false,
+      couponEnabled:  salon.couponEnabled  || false,
+      packageEnabled: salon.packageEnabled || false,
     });
     setEditLogoFile(null);
     setEditLogoPreview(salon.logo || null);
@@ -165,13 +167,7 @@ const SuperAdminSalons = () => {
             <option value="inactive">Inactive</option>
           </select>
         </div>
-        <button
-          onClick={() => getAllSalons({ search, status: statusFilter })}
-          className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all bg-white"
-        >
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          Refresh
-        </button>
+        
       </div>
 
       {/* Table */}
@@ -460,7 +456,7 @@ const SuperAdminSalons = () => {
                 )}
               </div>
 
-              {/* Feature Toggles */}
+              {/* POS & Billing Toggles */}
               <div className="border border-gray-100 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard size={15} className="text-primary" />
@@ -480,6 +476,34 @@ const SuperAdminSalons = () => {
                     <div>
                       <p className="text-xs font-medium text-gray-700">{label}</p>
                       <p className="text-xs text-gray-400">{desc}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {/* Discount & Package Toggles */}
+              <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tag size={15} className="text-primary" />
+                  <span className="text-sm font-semibold text-gray-700">Discount & Package Features</span>
+                </div>
+                {[
+                  { key: 'couponEnabled',  icon: Tag,  label: 'Discount / Coupon', desc: 'Allow admin to create coupon codes for customers' },
+                  { key: 'packageEnabled', icon: Gift, label: 'Package Discount',   desc: 'Auto-apply discount on configured service packages' },
+                ].map(({ key, icon: Icon, label, desc }) => (
+                  <label key={key} className="flex items-center gap-3 cursor-pointer select-none">
+                    <div
+                      onClick={() => setEditForm(f => ({ ...f, [key]: !f[key] }))}
+                      className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${editForm[key] ? 'bg-primary' : 'bg-gray-200'}`}
+                    >
+                      <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${editForm[key] ? 'translate-x-5' : ''}`} />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Icon size={12} className={editForm[key] ? 'text-primary' : 'text-gray-400'} />
+                      <div>
+                        <p className="text-xs font-medium text-gray-700">{label}</p>
+                        <p className="text-xs text-gray-400">{desc}</p>
+                      </div>
                     </div>
                   </label>
                 ))}

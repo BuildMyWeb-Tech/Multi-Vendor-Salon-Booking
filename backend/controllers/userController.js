@@ -143,7 +143,20 @@ const updateProfile = async (req, res) => {
 export const getServices = async (req, res) => {
   try {
     const { default: ServiceCategory } = await import('../models/ServiceCategory.js');
-    const services = await ServiceCategory.find({ isActive: true }).sort({ order: 1, name: 1 });
+    const { shopId, shopSlug } = req.query;
+
+    let filter = { isActive: true };
+
+    if (shopId) {
+      filter.shopId = shopId;
+    } else if (shopSlug) {
+      // resolve slug → shopId
+      const { default: shopModel } = await import('../models/shopModel.js');
+      const shop = await shopModel.findOne({ slug: shopSlug, status: 'active' }).select('shopId').lean();
+      if (shop) filter.shopId = shop.shopId;
+    }
+
+    const services = await ServiceCategory.find(filter).sort({ order: 1, name: 1 });
     res.json({ success: true, services });
   } catch (error) {
     console.error('getServices error:', error);

@@ -89,7 +89,7 @@ shopRouter.get('/:slug/payment-info', async (req, res) => {
   try {
     const shop = await shopModel
       .findOne({ slug: req.params.slug, status: 'active' })
-      .select('paymentIntegrationEnabled upiName upiMobileNumber upiQrCode upiId shopId shopName')
+      .select('paymentIntegrationEnabled upiName upiMobileNumber upiQrCode upiId shopId shopName couponEnabled packageEnabled')
       .lean();
     if (!shop) return res.json({ success: false, message: 'Salon not found.' });
 
@@ -101,6 +101,8 @@ shopRouter.get('/:slug/payment-info', async (req, res) => {
       upiQrCode: shop.upiQrCode || '',
       shopId: shop.shopId || '',
       shopName: shop.shopName,
+      couponEnabled: shop.couponEnabled || false,
+      packageEnabled: shop.packageEnabled || false,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

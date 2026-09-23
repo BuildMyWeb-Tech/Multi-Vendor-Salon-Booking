@@ -332,6 +332,26 @@ const SalonAdminContextProvider = ({ children }) => {
 
   // ── BILLING ─────────────────────────────────────────────────────────────────
 
+  // ── COUPONS & PACKAGES ────────────────────────────────────────────────────
+  const discountApi = {
+    getCoupons: () =>
+      axios.get(`${backendUrl}/api/salon-admin/coupons`, { headers: headers() }),
+    createCoupon: (data) =>
+      axios.post(`${backendUrl}/api/salon-admin/coupons`, data, { headers: headers() }),
+    updateCoupon: (id, data) =>
+      axios.put(`${backendUrl}/api/salon-admin/coupons/${id}`, data, { headers: headers() }),
+    deleteCoupon: (id) =>
+      axios.delete(`${backendUrl}/api/salon-admin/coupons/${id}`, { headers: headers() }),
+    getPackages: () =>
+      axios.get(`${backendUrl}/api/salon-admin/packages`, { headers: headers() }),
+    createPackage: (data) =>
+      axios.post(`${backendUrl}/api/salon-admin/packages`, data, { headers: headers() }),
+    updatePackage: (id, data) =>
+      axios.put(`${backendUrl}/api/salon-admin/packages/${id}`, data, { headers: headers() }),
+    deletePackage: (id) =>
+      axios.delete(`${backendUrl}/api/salon-admin/packages/${id}`, { headers: headers() }),
+  };
+
   const billingApi = {
     getProducts: (params = {}) =>
       axios.get(`${backendUrl}/api/salon-admin/billing/products`, { headers: headers(), params }),
@@ -372,6 +392,7 @@ const SalonAdminContextProvider = ({ children }) => {
     adminNotifications, adminUnreadCount,
     getAdminNotifications, markAdminNotificationsRead,
     billingApi,
+    discountApi,
     logout,
   };
 

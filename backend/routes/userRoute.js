@@ -50,6 +50,11 @@ userRouter.get('/services', getServices);
 userRouter.get('/notifications', authUser, getNotifications);
 userRouter.post('/notifications/mark-read', authUser, markNotificationsRead);
 
+/* ===================== DISCOUNTS (public — no auth needed) ===================== */
+import { validateCoupon, matchPackage } from '../controllers/discountController.js';
+userRouter.post('/validate-coupon', validateCoupon);
+userRouter.post('/match-package', matchPackage);
+
 /* ===================== PAYMENTS ===================== */
 userRouter.post('/payment-razorpay', authUser, paymentRazorpay);
 userRouter.post('/verify-razorpay', authUser, verifyRazorpay);

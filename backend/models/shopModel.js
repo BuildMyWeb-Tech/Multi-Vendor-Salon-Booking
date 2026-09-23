@@ -55,6 +55,10 @@ const shopSchema = new mongoose.Schema(
     serviceBillingEnabled: { type: Boolean, default: false },
     productBillingEnabled: { type: Boolean, default: false },
 
+    // Discount / Coupon & Package feature toggles
+    couponEnabled: { type: Boolean, default: false },
+    packageEnabled: { type: Boolean, default: false },
+
     status: {
       type: String,
       enum: ['active', 'inactive', 'suspended'],

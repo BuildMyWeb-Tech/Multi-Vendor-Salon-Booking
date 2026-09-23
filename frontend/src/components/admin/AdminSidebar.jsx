@@ -6,7 +6,7 @@ import { SalonAdminContext } from '../../context/SalonAdminContext';
 import {
   Calendar, UserPlus2, ChevronLeft, ChevronRight, MenuIcon, X,
   Scissors, LayoutGrid, CalendarClock, UserCog, LayoutDashboard,
-  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt,
+  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt, Tag, Gift,
 } from 'lucide-react';
 
 const iconClass = 'min-w-[23px] w-[23px] h-[23px]';
@@ -23,7 +23,9 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
 
   const serviceBilling = shopInfo?.serviceBillingEnabled;
   const productBilling = shopInfo?.productBillingEnabled;
-  const showBilling = serviceBilling || productBilling;
+  const showBilling    = serviceBilling || productBilling;
+  const couponEnabled  = shopInfo?.couponEnabled;
+  const packageEnabled = shopInfo?.packageEnabled;
 
   const adminLinks = [
     { to: `/${slug}/admin/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
@@ -38,6 +40,8 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
       { to: `/${slug}/admin/inventory`, label: 'Inventory', icon: Boxes },
     ] : []),
     ...(showBilling ? [{ to: `/${slug}/admin/bills`, label: 'Bills', icon: Receipt }] : []),
+    ...(couponEnabled  ? [{ to: `/${slug}/admin/coupons`,  label: 'Coupons',  icon: Tag  }] : []),
+    ...(packageEnabled ? [{ to: `/${slug}/admin/packages`, label: 'Packages', icon: Gift }] : []),
   ];
 
   const stylistLinks = [

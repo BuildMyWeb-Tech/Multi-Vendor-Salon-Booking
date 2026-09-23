@@ -510,7 +510,7 @@ const EditStylist = () => {
                         {specialty.map(item => (
                             <span
                                 key={item}
-                                className="bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1"
+                                className="inline-flex items-center gap-1.5 bg-primary text-white text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full"
                             >
                                 {item}
                                 <button
@@ -519,7 +519,8 @@ const EditStylist = () => {
                                         e.stopPropagation();
                                         setSpecialty(specialty.filter(s => s !== item));
                                     }}
-                                    className="hover:text-red-500"
+                                    className="w-4 h-4 rounded-full bg-white/20 hover:bg-red-500 flex items-center justify-center text-white leading-none transition-colors"
+                                    title="Remove"
                                 >
                                     ×
                                 </button>
