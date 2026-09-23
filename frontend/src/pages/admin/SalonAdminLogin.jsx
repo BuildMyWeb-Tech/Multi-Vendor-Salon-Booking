@@ -1,9 +1,9 @@
 // admin/src/pages/SalonAdminLogin.jsx
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { SalonAdminContext } from '../../context/SalonAdminContext';
 import { toast } from 'react-toastify';
-import { Eye, EyeOff, Scissors, Store, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Scissors, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SalonAdminLogin = ({ shopSlug, shopName }) => {
@@ -13,6 +13,14 @@ const SalonAdminLogin = ({ shopSlug, shopName }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stylistEnabled, setStylistEnabled] = useState(false);
+
+  useEffect(() => {
+    if (!shopSlug) return;
+    axios.get(`${backendUrl}/api/salon-admin/public-info/${shopSlug}`)
+      .then(({ data }) => { if (data.success) setStylistEnabled(data.stylistPanelEnabled); })
+      .catch(() => {});
+  }, [shopSlug]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -102,14 +110,14 @@ const SalonAdminLogin = ({ shopSlug, shopName }) => {
               </button>
             </form>
 
-            {shopSlug && (
+            {shopSlug && stylistEnabled && (
               <p className="text-center text-xs text-gray-400 mt-5">
-                Customer booking:{' '}
+                Stylist?{' '}
                 <a
-                  href={`/${shopSlug}`}
-                  className="text-primary hover:underline"
+                  href={`/${shopSlug}/stylist`}
+                  className="text-primary hover:underline font-medium"
                 >
-                  /{shopSlug}
+                  Open Stylist Portal →
                 </a>
               </p>
             )}

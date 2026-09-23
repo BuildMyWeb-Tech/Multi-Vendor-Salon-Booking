@@ -59,6 +59,9 @@ const shopSchema = new mongoose.Schema(
     couponEnabled: { type: Boolean, default: false },
     packageEnabled: { type: Boolean, default: false },
 
+    // Stylist Panel toggle
+    stylistPanelEnabled: { type: Boolean, default: false },
+
     status: {
       type: String,
       enum: ['active', 'inactive', 'suspended'],

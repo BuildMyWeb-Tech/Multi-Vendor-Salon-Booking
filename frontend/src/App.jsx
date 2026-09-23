@@ -15,6 +15,7 @@ import { SuperAdminContext } from './context/SuperAdminContext'
 import { SalonAdminContext } from './context/SalonAdminContext'
 import { AdminContext } from './context/AdminContext'
 import { ShopContext } from './context/ShopContext'
+import { StylistContext } from './context/StylistContext'
 
 // Super Admin
 import SuperAdminLogin from './pages/superadmin/SuperAdminLogin'
@@ -47,6 +48,7 @@ import Billing from './pages/admin/billing/Billing'
 import Bills from './pages/admin/billing/Bills'
 import Coupons from './pages/admin/Coupons'
 import Packages from './pages/admin/Packages'
+import StylistSection from './pages/stylist/StylistSection'
 
 // Customer pages
 import ShopNavbar from './components/ShopNavbar'
@@ -472,6 +474,9 @@ const App = () => (
 
       {/* Shop Admin — must be before /:shopSlug/* */}
       <Route path="/:shopSlug/admin/*" element={<ShopAdminSection />} />
+
+      {/* Stylist Panel — must be before /:shopSlug/* */}
+      <Route path="/:shopSlug/stylist/*" element={<StylistSection />} />
 
       {/* Customer shop pages */}
       <Route path="/:shopSlug/*" element={<ShopCustomerSection />} />

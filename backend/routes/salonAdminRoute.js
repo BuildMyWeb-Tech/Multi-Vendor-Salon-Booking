@@ -45,6 +45,17 @@ import {
 
 const salonAdminRouter = express.Router();
 
+/* ──────────── PUBLIC ──────────── */
+salonAdminRouter.get('/public-info/:slug', async (req, res) => {
+  try {
+    const { default: shopModel } = await import('../models/shopModel.js');
+    const shop = await shopModel.findOne({ slug: req.params.slug, status: 'active' })
+      .select('stylistPanelEnabled shopName').lean();
+    if (!shop) return res.json({ success: false });
+    res.json({ success: true, stylistPanelEnabled: shop.stylistPanelEnabled || false, shopName: shop.shopName });
+  } catch { res.json({ success: false }); }
+});
+
 /* ──────────── AUTH ──────────── */
 salonAdminRouter.post('/login', loginSalonAdmin);
 

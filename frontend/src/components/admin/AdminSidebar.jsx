@@ -21,11 +21,12 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const serviceBilling = shopInfo?.serviceBillingEnabled;
-  const productBilling = shopInfo?.productBillingEnabled;
-  const showBilling    = serviceBilling || productBilling;
-  const couponEnabled  = shopInfo?.couponEnabled;
-  const packageEnabled = shopInfo?.packageEnabled;
+  const serviceBilling      = shopInfo?.serviceBillingEnabled;
+  const productBilling      = shopInfo?.productBillingEnabled;
+  const showBilling         = serviceBilling || productBilling;
+  const couponEnabled       = shopInfo?.couponEnabled;
+  const packageEnabled      = shopInfo?.packageEnabled;
+  const stylistPanelEnabled = shopInfo?.stylistPanelEnabled;
 
   const adminLinks = [
     { to: `/${slug}/admin/dashboard`, label: 'Dashboard', icon: LayoutDashboard },

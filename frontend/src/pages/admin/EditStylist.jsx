@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { AdminContext } from '../../context/AdminContext';
 import { AppContext } from '../../context/AppContext';
-import { Pencil, User, Mail, Phone, Award, Hash, Instagram, Clock, FileText, ArrowLeft, Scissors, Loader2, Upload, Lock, Eye, EyeOff } from 'lucide-react';
+import { Pencil, User, Mail, Phone, Award, Instagram, Clock, FileText, ArrowLeft, Scissors, Loader2, Upload, Lock, Eye, EyeOff } from 'lucide-react';
 
 const EditStylist = () => {
     const { id, shopSlug } = useParams();
@@ -24,7 +24,6 @@ const EditStylist = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [phone, setPhone] = useState('');
     const [experience, setExperience] = useState('1 Year');
-    const [price, setPrice] = useState('');
     const [about, setAbout] = useState('');
     const [specialty, setSpecialty] = useState([]);
     const [open, setOpen] = useState(false);
@@ -75,7 +74,6 @@ const EditStylist = () => {
                     setEmail(stylist.email || '');
                     setPhone(stylist.phone || '');
                     setExperience(stylist.experience || '1 Year');
-                    setPrice(stylist.price?.toString() || stylist.fees?.toString() || '');
                     setAbout(stylist.about || '');
                     setPassword(stylist.password || '');
 
@@ -144,7 +142,6 @@ const EditStylist = () => {
             formData.append('email', email);
             formData.append('phone', phone);
             formData.append('experience', experience);
-            formData.append('price', price);
             formData.append('about', about);
             formData.append('available', available);
             formData.append('specialty', JSON.stringify(specialty));
@@ -368,23 +365,6 @@ const EditStylist = () => {
                             </select>
                         </div>
 
-                        <div className='flex flex-col gap-1.5'>
-                            <label className='text-sm font-medium text-gray-700 flex items-center'>
-                                <Hash size={16} className="mr-1.5" /> Base Price
-                                <span className="text-red-500 ml-1">*</span>
-                            </label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
-                                <input
-                                    onChange={e => setPrice(e.target.value)}
-                                    value={price}
-                                    className='border rounded-md pl-7 pr-3 py-2.5 w-full focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary'
-                                    type="number"
-                                    placeholder='Starting price for services'
-                                    required
-                                />
-                            </div>
-                        </div>
 
                         <div className='flex flex-col gap-1.5'>
                             <label className='text-sm font-medium text-gray-700 flex items-center'>

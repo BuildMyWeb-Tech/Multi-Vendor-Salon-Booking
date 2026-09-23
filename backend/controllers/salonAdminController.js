@@ -304,8 +304,11 @@ export const addSalonDoctor = async (req, res) => {
       return res.json({ success: false, message: 'Password must be at least 6 characters.' });
     }
 
-    const exists = await doctorModel.findOne({ email });
-    if (exists) return res.json({ success: false, message: 'Email already registered.' });
+    const emailExists = await doctorModel.findOne({ email: email.toLowerCase().trim(), shopId });
+    if (emailExists) return res.json({ success: false, message: 'A stylist with this email already exists in this salon.' });
+
+    const nameExists = await doctorModel.findOne({ name: name.trim(), shopId });
+    if (nameExists) return res.json({ success: false, message: 'A stylist with this name already exists in this salon.' });
 
     let imageUrl = '';
     if (req.file) {

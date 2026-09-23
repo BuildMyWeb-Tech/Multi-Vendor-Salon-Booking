@@ -4,7 +4,8 @@ import mongoose from 'mongoose';
 const doctorSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    // NOTE: Global unique removed — uniqueness is per salon (shopId + email compound index below)
+    email: { type: String, required: true },
     password: { type: String, required: true },
     image: { type: String, required: true },
 
@@ -52,5 +53,10 @@ const doctorSchema = new mongoose.Schema(
   },
   { minimize: false }
 );
+
+// Unique email per salon (drop old `email_1` index in MongoDB if it exists)
+doctorSchema.index({ shopId: 1, email: 1 }, { unique: true });
+// Unique name per salon
+doctorSchema.index({ shopId: 1, name: 1 }, { unique: true });
 
 export default mongoose.model('doctor', doctorSchema);

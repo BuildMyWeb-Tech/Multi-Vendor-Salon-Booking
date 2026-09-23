@@ -11,6 +11,7 @@ import DoctorContextProvider from './context/DoctorContext.jsx'
 import AppContextProvider from './context/AppContext.jsx'
 import ShopContextProvider from './context/ShopContext.jsx'
 import SlotManagementContextProvider from './context/SlotManagementContext.jsx'
+import StylistContextProvider from './context/StylistContext.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -22,7 +23,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <AppContextProvider>
                 <ShopContextProvider>
                   <SlotManagementContextProvider>
-                    <App />
+                    <StylistContextProvider>
+                      <App />
+                    </StylistContextProvider>
                   </SlotManagementContextProvider>
                 </ShopContextProvider>
               </AppContextProvider>

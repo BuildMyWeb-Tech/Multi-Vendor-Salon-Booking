@@ -18,7 +18,6 @@ const AddStylist = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [experience, setExperience] = useState('1 Year');
-    const [price, setPrice] = useState('');
     const [about, setAbout] = useState('');
     const [specialty, setSpecialty] = useState([]);
     const [open, setOpen] = useState(false);
@@ -95,7 +94,6 @@ const AddStylist = () => {
             formData.append('phone', phone);
             formData.append('password', password);
             formData.append('experience', experience);
-            formData.append('price', Number(price));
             formData.append('about', about);
 
             // Convert specialty array to string for backend processing
@@ -138,7 +136,6 @@ const AddStylist = () => {
         setPassword('');
         setCertification('');
         setAbout('');
-        setPrice('');
         setInstagram('');
         setWorkingHours('');
         setSpecialty([]);

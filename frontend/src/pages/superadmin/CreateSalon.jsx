@@ -4,7 +4,7 @@ import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, User, Phone, Mail, MapPin, Building2,
   Smartphone, Eye, EyeOff, Upload, Check, X,
-  ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap, Tag, Gift,
+  ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap, Tag, Gift, Users,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
@@ -62,6 +62,7 @@ const CreateSalon = () => {
     productBillingEnabled: false,
     couponEnabled: false,
     packageEnabled: false,
+    stylistPanelEnabled: false,
     adminName: '', adminId: '', adminEmail: '', password: '',
   });
 
@@ -446,8 +447,9 @@ const CreateSalon = () => {
             {[
               { key: 'serviceBillingEnabled', icon: ShoppingCart, label: 'Service Billing', desc: 'Enable service billing & POS for this salon' },
               { key: 'productBillingEnabled', icon: Package, label: 'Product Billing', desc: 'Enable products, inventory & product billing' },
-              { key: 'couponEnabled', icon: Tag, label: 'Discount / Coupon', desc: 'Allow admin to create coupon codes for customer discounts' },
-              { key: 'packageEnabled', icon: Gift, label: 'Package Discount', desc: 'Auto-apply discount when customers select a configured service package' },
+              { key: 'couponEnabled',       icon: Tag,   label: 'Discount / Coupon',  desc: 'Allow admin to create coupon codes for customer discounts' },
+              { key: 'packageEnabled',      icon: Gift,  label: 'Package Discount',   desc: 'Auto-apply discount when customers select a configured service package' },
+              { key: 'stylistPanelEnabled', icon: Users, label: 'Stylist Panel',       desc: 'Give stylists a dedicated login portal at /{salon}/stylist' },
             ].map(({ key, icon: Icon, label, desc }) => (
               <label key={key} className="flex items-center gap-4 cursor-pointer select-none">
                 <div
