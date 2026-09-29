@@ -78,7 +78,16 @@ const EditStylist = () => {
                     setPassword(stylist.password || '');
 
                     if (Array.isArray(stylist.specialty)) {
-                        setSpecialty(stylist.specialty);
+                        // Guard against a previously-corrupted row where the array's
+                        // only element is itself a JSON-encoded string e.g. '["Haircut"]'
+                        const first = stylist.specialty[0];
+                        if (stylist.specialty.length === 1 && typeof first === 'string' && first.trim().startsWith('[')) {
+                            try { setSpecialty(JSON.parse(first)); } catch { setSpecialty(stylist.specialty); }
+                        } else {
+                            setSpecialty(stylist.specialty);
+                        }
+                    } else if (typeof stylist.specialty === 'string' && stylist.specialty.trim().startsWith('[')) {
+                        try { setSpecialty(JSON.parse(stylist.specialty)); } catch { setSpecialty([stylist.specialty]); }
                     } else if (stylist.specialty) {
                         setSpecialty([stylist.specialty]);
                     }

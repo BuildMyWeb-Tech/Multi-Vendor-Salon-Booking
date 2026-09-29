@@ -370,7 +370,17 @@ export const updateSalonDoctor = async (req, res) => {
     const { name, specialty, certification, experience, about, price, phone, instagram, workingHours, available } = req.body;
 
     if (name) doctor.name = name;
-    if (specialty) doctor.specialty = Array.isArray(specialty) ? specialty : [specialty];
+    if (specialty) {
+      try {
+        doctor.specialty = Array.isArray(specialty)
+          ? specialty
+          : typeof specialty === 'string'
+            ? JSON.parse(specialty)
+            : [specialty];
+      } catch {
+        doctor.specialty = [specialty];
+      }
+    }
     if (certification) doctor.certification = certification;
     if (experience) doctor.experience = experience;
     if (about) doctor.about = about;

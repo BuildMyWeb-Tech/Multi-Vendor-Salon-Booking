@@ -56,7 +56,8 @@ const DoctorContextProvider = (props) => {
                     doctor.specialty = Array.isArray(doctor.speciality) ?
                         doctor.speciality : [doctor.speciality];
                 } else if (doctor.specialty && !Array.isArray(doctor.specialty)) {
-                    doctor.specialty = [doctor.specialty];
+                    try { doctor.specialty = JSON.parse(doctor.specialty); } catch { doctor.specialty = [doctor.specialty]; }
+                    if (!Array.isArray(doctor.specialty)) doctor.specialty = [doctor.specialty];
                 }
 
                 // Ensure price/fees fields are in sync

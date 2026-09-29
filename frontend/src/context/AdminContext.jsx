@@ -62,7 +62,8 @@ const AdminContextProvider = (props) => {
             ? stylist.speciality
             : [stylist.speciality];
         } else if (stylist.specialty && !Array.isArray(stylist.specialty)) {
-          stylist.specialty = [stylist.specialty];
+          try { stylist.specialty = JSON.parse(stylist.specialty); } catch { stylist.specialty = [stylist.specialty]; }
+          if (!Array.isArray(stylist.specialty)) stylist.specialty = [stylist.specialty];
         }
         if (stylist.phoneNumber && !stylist.phone) {
           stylist.phone = stylist.phoneNumber;

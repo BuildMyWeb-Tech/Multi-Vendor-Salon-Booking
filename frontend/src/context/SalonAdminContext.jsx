@@ -106,7 +106,10 @@ const SalonAdminContextProvider = ({ children }) => {
       if (data.success) {
         const stylist = data.stylist;
         if (stylist.speciality && !stylist.specialty) stylist.specialty = Array.isArray(stylist.speciality) ? stylist.speciality : [stylist.speciality];
-        else if (stylist.specialty && !Array.isArray(stylist.specialty)) stylist.specialty = [stylist.specialty];
+        else if (stylist.specialty && !Array.isArray(stylist.specialty)) {
+          try { stylist.specialty = JSON.parse(stylist.specialty); } catch { stylist.specialty = [stylist.specialty]; }
+          if (!Array.isArray(stylist.specialty)) stylist.specialty = [stylist.specialty];
+        }
         if (!stylist.leaveDates) stylist.leaveDates = [];
         return stylist;
       }
