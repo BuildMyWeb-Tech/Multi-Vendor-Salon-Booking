@@ -5,7 +5,10 @@ import 'react-toastify/dist/ReactToastify.css'
 import {
   Scissors, Calendar, Bell, Star, MapPin, Clock,
   Sparkles, Users, Award, Zap, Shield, ArrowRight,
-  CheckCircle, ChevronRight, Store, Phone, Search
+  CheckCircle, ChevronRight, Store, Phone, Search,
+  CreditCard, Receipt, Tag, Percent, UserCheck, LayoutDashboard,
+  Building2, BadgeCheck, Smartphone, QrCode, Package, TrendingUp,
+  Globe, Lock, ChevronDown, Layers, PanelLeft, Settings
 } from 'lucide-react'
 
 import ScrollToTop from './components/ScrollToTop'
@@ -226,174 +229,343 @@ const ShopCustomerSection = () => {
 }
 
 // ── PLATFORM ROOT ───────────────────────────────────────────────────────────
+const featureCategories = [
+  {
+    id: 'salon',
+    label: 'Core Salon System',
+    icon: Building2,
+    gradient: 'from-blue-500 to-blue-600',
+    lightBg: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    borderColor: 'border-blue-100',
+    hoverBorder: 'hover:border-blue-300',
+    items: [
+      { icon: Globe, text: 'Custom salon URL & branded booking page' },
+      { icon: Layers, text: 'Service catalogue with categories & pricing' },
+      { icon: Settings, text: 'Full salon admin control panel' },
+      { icon: Star, text: 'Logo, gallery & profile management' },
+      { icon: MapPin, text: 'Location & contact info display' },
+    ],
+  },
+  {
+    id: 'booking',
+    label: 'Salon Booking',
+    icon: Calendar,
+    gradient: 'from-violet-500 to-violet-600',
+    lightBg: 'bg-violet-50',
+    iconColor: 'text-violet-600',
+    borderColor: 'border-violet-100',
+    hoverBorder: 'hover:border-violet-300',
+    items: [
+      { icon: Calendar, text: 'Real-time slot availability & date picker' },
+      { icon: UserCheck, text: 'Choose preferred stylist per booking' },
+      { icon: Bell, text: 'Instant booking confirmation notifications' },
+      { icon: Clock, text: 'Reschedule & cancellation support' },
+      { icon: Layers, text: 'Multi-service booking in one appointment' },
+    ],
+  },
+  {
+    id: 'service-billing',
+    label: 'Service Billing',
+    icon: Receipt,
+    gradient: 'from-amber-500 to-orange-500',
+    lightBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    borderColor: 'border-amber-100',
+    hoverBorder: 'hover:border-amber-300',
+    items: [
+      { icon: Receipt, text: 'Bill services directly at the counter' },
+      { icon: Scissors, text: 'Select services & quantities per visit' },
+      { icon: Percent, text: 'Apply coupons & discounts at billing' },
+      { icon: CreditCard, text: 'Cash, UPI or card payment modes' },
+      { icon: TrendingUp, text: 'Service revenue reports & analytics' },
+    ],
+  },
+  {
+    id: 'product-billing',
+    label: 'Product Billing',
+    icon: Package,
+    gradient: 'from-orange-500 to-red-500',
+    lightBg: 'bg-orange-50',
+    iconColor: 'text-orange-600',
+    borderColor: 'border-orange-100',
+    hoverBorder: 'hover:border-orange-300',
+    items: [
+      { icon: Package, text: 'Sell retail products alongside services' },
+      { icon: Layers, text: 'Manage product catalogue & stock' },
+      { icon: Tag, text: 'Set product price & apply discounts' },
+      { icon: CreditCard, text: 'Mixed service + product invoices' },
+      { icon: TrendingUp, text: 'Product sales tracking & reports' },
+    ],
+  },
+  {
+    id: 'stylist',
+    label: 'Stylist Panel',
+    icon: Users,
+    gradient: 'from-cyan-500 to-cyan-600',
+    lightBg: 'bg-cyan-50',
+    iconColor: 'text-cyan-600',
+    borderColor: 'border-cyan-100',
+    hoverBorder: 'hover:border-cyan-300',
+    items: [
+      { icon: UserCheck, text: 'Individual login for each stylist' },
+      { icon: Calendar, text: 'Personal appointment dashboard' },
+      { icon: Award, text: 'Specialisation & expertise tags' },
+      { icon: Bell, text: 'New booking alerts per stylist' },
+      { icon: Users, text: 'Multiple stylists per salon' },
+    ],
+  },
+  {
+    id: 'create',
+    label: 'Create Your Salon',
+    icon: Store,
+    gradient: 'from-indigo-500 to-purple-600',
+    lightBg: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
+    borderColor: 'border-indigo-100',
+    hoverBorder: 'hover:border-indigo-300',
+    items: [
+      { icon: Store, text: 'Fill & submit salon form in minutes' },
+      { icon: CheckCircle, text: 'Super Admin reviews & approves request' },
+      { icon: Globe, text: 'Go live with your own booking URL instantly' },
+      { icon: Sparkles, text: 'No setup fee — completely free to list' },
+      { icon: Settings, text: 'Admin configures features before approval' },
+    ],
+  },
+  {
+    id: 'coupons',
+    label: 'Coupons',
+    icon: Tag,
+    gradient: 'from-rose-500 to-pink-500',
+    lightBg: 'bg-rose-50',
+    iconColor: 'text-rose-600',
+    borderColor: 'border-rose-100',
+    hoverBorder: 'hover:border-rose-300',
+    items: [
+      { icon: Tag, text: 'Create coupon codes with custom names' },
+      { icon: Percent, text: 'Percentage or flat amount discount types' },
+      { icon: BadgeCheck, text: 'Set minimum order value conditions' },
+      { icon: Clock, text: 'Expiry date & usage count limits' },
+      { icon: Zap, text: 'Auto-apply eligible coupons at checkout' },
+    ],
+  },
+  {
+    id: 'packages',
+    label: 'Packages',
+    icon: Package,
+    gradient: 'from-fuchsia-500 to-purple-600',
+    lightBg: 'bg-fuchsia-50',
+    iconColor: 'text-fuchsia-600',
+    borderColor: 'border-fuchsia-100',
+    hoverBorder: 'hover:border-fuchsia-300',
+    items: [
+      { icon: Package, text: 'Bundle multiple services into one package' },
+      { icon: Percent, text: 'Offer package at a discounted total price' },
+      { icon: Layers, text: 'Customisable service combinations' },
+      { icon: Star, text: 'Highlight packages on booking page' },
+      { icon: TrendingUp, text: 'Track package sales & redemptions' },
+    ],
+  },
+  {
+    id: 'broadcast',
+    label: 'Broadcast & Bulk SMS',
+    icon: Bell,
+    gradient: 'from-sky-500 to-blue-600',
+    lightBg: 'bg-sky-50',
+    iconColor: 'text-sky-600',
+    borderColor: 'border-sky-100',
+    hoverBorder: 'hover:border-sky-300',
+    items: [
+      { icon: Users, text: 'Send bulk messages to all customers' },
+      { icon: Bell, text: 'Broadcast offers, updates & announcements' },
+      { icon: Smartphone, text: 'WhatsApp & SMS delivery channels' },
+      { icon: Tag, text: 'Attach coupon codes inside messages' },
+      { icon: TrendingUp, text: 'Track delivery & open rates' },
+    ],
+  },
+];
+
 const PlatformRoot = () => (
   <div className="min-h-screen bg-white flex flex-col">
+
     {/* ── Navbar ─────────────────────────────────────────────────────────── */}
-    <header className="w-full px-6 sm:px-10 py-4 flex items-center justify-between border-b border-gray-100 bg-white sticky top-0 z-20 shadow-sm">
+    <header className="w-full px-6 sm:px-10 py-4 flex items-center justify-between border-b border-gray-100 bg-white/95 backdrop-blur-md sticky top-0 z-20 shadow-sm">
       <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-md shadow-primary/30">
+        <div className="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-primary/30">
           <Scissors size={17} className="text-white" />
         </div>
         <span className="text-xl font-extrabold text-gray-900 tracking-tight">Salvexa</span>
       </div>
-      <a
-        href="/super-admin"
-        className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-sm shadow-primary/20"
-      >
-        <Shield size={14} />
-        Admin Portal
-        <ChevronRight size={14} />
-      </a>
+      <div className="flex items-center gap-2">
+        <a
+          href="/create-salon"
+          className="hidden sm:inline-flex items-center gap-1.5 border border-primary text-primary hover:bg-primary/5 text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+        >
+          <Store size={14} /> List Salon
+        </a>
+        
+      </div>
     </header>
 
     {/* ── Hero ───────────────────────────────────────────────────────────── */}
     <section className="bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
-        <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute inset-0 pointer-events-none select-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+        <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-yellow-300/10 rounded-full" />
+        <div className="absolute bottom-1/4 right-1/4 w-20 h-20 bg-pink-300/10 rounded-full" />
       </div>
-      <div className="max-w-5xl mx-auto px-6 py-20 sm:py-28 text-center relative">
-        <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white/90 text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
-          <Star size={11} fill="currentColor" /> Multi-Vendor Salon Booking Platform
+      <div className="max-w-5xl mx-auto px-6 py-20 sm:py-32 text-center relative">
+        <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white/90 text-xs font-bold px-4 py-2 rounded-full mb-7 tracking-wide uppercase">
+          <Star size={10} fill="currentColor" className="text-yellow-300" />
+          Multi-Vendor Salon Booking Platform
         </div>
-        <h1 className="text-4xl sm:text-6xl font-extrabold leading-tight mb-5">
+        <h1 className="text-4xl sm:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
           Book Your <span className="text-yellow-300">Perfect Style</span>
           <br className="hidden sm:block" /> at Any Salon, Anytime
         </h1>
-        <p className="text-white/70 text-lg max-w-xl mx-auto mb-10">
-          Salvexa connects you with top salons. Browse stylists, pick a slot and book — all from
-          one seamless platform.
+        <p className="text-white/75 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+          Salvexa powers complete salon businesses — from customer booking to POS billing,
+          UPI payments, stylist management and beyond.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
-          <div className="flex items-center gap-3 bg-white/10 border border-white/20 backdrop-blur-sm rounded-xl px-5 py-3 text-sm text-white/80 w-full sm:w-auto">
-            <Search size={15} className="text-white/60" />
-            Visit: <code className="text-yellow-300 font-bold ml-1">/your-salon-name</code>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+          <div className="flex items-center gap-3 bg-white/10 border border-white/20 backdrop-blur-sm rounded-xl px-5 py-3.5 text-sm text-white/80 w-full sm:w-auto">
+            <Search size={15} className="text-white/50 flex-shrink-0" />
+            Visit your salon: <code className="text-yellow-300 font-bold ml-1">/salon-name</code>
           </div>
           <a
             href="/create-salon"
-            className="inline-flex items-center gap-2 bg-white text-primary font-bold px-6 py-3 rounded-xl hover:bg-white/90 transition-all shadow-lg shadow-black/20 text-sm w-full sm:w-auto justify-center"
+            className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3.5 rounded-xl hover:bg-yellow-50 transition-all shadow-lg shadow-black/20 text-sm w-full sm:w-auto justify-center"
           >
-            <Store size={15} /> Create Your Salon <ArrowRight size={14} />
+            <Store size={15} /> List Your Salon <ArrowRight size={14} />
           </a>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-6 text-white/70 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-6 text-white/65 text-sm">
           {[
             { icon: <Users size={14} />, text: 'Multiple Salons' },
-            { icon: <Calendar size={14} />, text: 'Easy Booking' },
-            { icon: <Bell size={14} />, text: 'Instant Notifications' },
-            { icon: <Shield size={14} />, text: 'Secure Payments' },
+            { icon: <Calendar size={14} />, text: 'Real-time Booking' },
+            { icon: <QrCode size={14} />, text: 'UPI Payments' },
+            { icon: <Receipt size={14} />, text: 'POS Billing' },
+            { icon: <Shield size={14} />, text: 'Super Admin Controls' },
           ].map((s) => (
             <div key={s.text} className="flex items-center gap-1.5">
-              {s.icon}
-              {s.text}
+              {s.icon}{s.text}
             </div>
           ))}
         </div>
       </div>
+      {/* Scroll hint */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-40 animate-bounce">
+        <ChevronDown size={20} className="text-white" />
+      </div>
     </section>
 
-    {/* ── Features ───────────────────────────────────────────────────────── */}
-    <section className="max-w-6xl mx-auto w-full px-6 py-16">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Everything You Need</h2>
-        <p className="text-gray-500">
-          A complete salon booking experience — for customers and salon owners alike
+    {/* ── Stats Strip ────────────────────────────────────────────────────── */}
+    <section className="border-b border-gray-100 bg-white">
+      <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+        {[
+          { value: '8+', label: 'Platform Features' },
+          { value: 'UPI', label: 'Dynamic QR Payments' },
+          { value: '∞', label: 'Salons Supported' },
+          { value: '1-click', label: 'Booking Experience' },
+        ].map(({ value, label }) => (
+          <div key={label}>
+            <div className="text-2xl sm:text-3xl font-extrabold text-primary mb-1">{value}</div>
+            <div className="text-xs text-gray-500 font-medium">{label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ── Feature Categories ─────────────────────────────────────────────── */}
+    <section className="max-w-7xl mx-auto w-full px-6 py-20">
+      <div className="text-center mb-14">
+        <div className="inline-flex items-center gap-2 bg-primary/8 text-primary text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+          <Sparkles size={11} /> Platform Capabilities
+        </div>
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
+          Everything Your Salon Needs
+        </h2>
+        <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          A complete end-to-end platform — from booking to billing, for every type of salon.
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {[
-          {
-            icon: Calendar,
-            color: 'bg-blue-50 text-blue-600',
-            title: 'Easy Scheduling',
-            desc: 'Pick your date, time and stylist in seconds. No waiting, no phone calls required.',
-          },
-          {
-            icon: Users,
-            color: 'bg-violet-50 text-violet-600',
-            title: 'Expert Stylists',
-            desc: 'Browse experienced professionals at each salon and choose the one that fits your style.',
-          },
-          {
-            icon: Sparkles,
-            color: 'bg-amber-50 text-amber-600',
-            title: 'All Services',
-            desc: 'Haircuts, colour, treatments, bridal — find every service in one place.',
-          },
-          {
-            icon: Bell,
-            color: 'bg-rose-50 text-rose-600',
-            title: 'Instant Alerts',
-            desc: 'Real-time notifications for bookings, cancellations and reschedules.',
-          },
-          {
-            icon: Zap,
-            color: 'bg-emerald-50 text-emerald-600',
-            title: 'Quick Payment',
-            desc: 'Secure online payments via Razorpay — pay partial or full, hassle-free.',
-          },
-          {
-            icon: Award,
-            color: 'bg-primary/5 text-primary',
-            title: 'Multi-Vendor',
-            desc: 'Each salon gets its own branded page, admin panel and customer URL.',
-          },
-        ].map(({ icon: Icon, color, title, desc }) => (
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {featureCategories.map(({ id, label, icon: CatIcon, gradient, lightBg, iconColor, borderColor, hoverBorder, items }) => (
           <div
-            key={title}
-            className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default"
+            key={id}
+            className={`group bg-white rounded-2xl border ${borderColor} ${hoverBorder} shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden cursor-default`}
           >
-            <div
-              className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}
-            >
-              <Icon size={20} />
+            {/* Card header */}
+            <div className={`bg-gradient-to-br ${gradient} p-5`}>
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                <CatIcon size={20} className="text-white" />
+              </div>
+              <h3 className="text-white font-bold text-base leading-snug">{label}</h3>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1.5">{title}</h3>
-            <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+            {/* Card body */}
+            <div className="p-4 space-y-2.5">
+              {items.map(({ icon: ItemIcon, text }) => (
+                <div key={text} className="flex items-start gap-2.5">
+                  <div className={`w-6 h-6 ${lightBg} rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <ItemIcon size={12} className={iconColor} />
+                  </div>
+                  <span className="text-gray-600 text-xs leading-snug">{text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
     </section>
 
     {/* ── How It Works ───────────────────────────────────────────────────── */}
-    <section className="bg-gray-50 py-16">
+    <section className="bg-gradient-to-br from-gray-50 to-blue-50/40 py-20">
       <div className="max-w-5xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">How It Works</h2>
-          <p className="text-gray-500">Three simple steps to your perfect salon experience</p>
+        <div className="text-center mb-14">
+          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+            <Zap size={11} /> Simple Process
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">How It Works</h2>
+          <p className="text-gray-500 text-lg">Three steps from browsing to booking</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 relative">
+          {/* Connector line (desktop) */}
+          <div className="hidden sm:block absolute top-8 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30 z-0" />
           {[
             {
               icon: Search,
               step: '01',
               title: 'Find Your Salon',
-              desc: "Navigate to your salon's URL (e.g. /unique-salon) to see their services and stylists.",
+              desc: "Navigate to your salon's unique URL to see services, stylists and availability.",
+              color: 'bg-blue-500',
             },
             {
               icon: Calendar,
               step: '02',
               title: 'Pick a Slot',
-              desc: 'Choose your preferred stylist, date and time from available slots.',
+              desc: 'Choose a stylist, date and time. Apply coupons or packages for discounts.',
+              color: 'bg-violet-500',
             },
             {
               icon: CheckCircle,
               step: '03',
-              title: 'Confirm & Go',
-              desc: 'Pay online or at the salon, receive instant confirmation and show up relaxed.',
+              title: 'Confirm & Pay',
+              desc: 'Pay via UPI QR or at the salon. Get instant confirmation and reminders.',
+              color: 'bg-emerald-500',
             },
-          ].map(({ icon: Icon, step, title, desc }) => (
-            <div key={step} className="group text-center">
+          ].map(({ icon: Icon, step, title, desc, color }) => (
+            <div key={step} className="group text-center relative z-10">
               <div className="relative inline-flex mb-5">
-                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-md shadow-primary/25 group-hover:scale-105 transition-transform duration-200 mx-auto">
+                <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto`}>
                   <Icon size={26} className="text-white" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 text-gray-900 text-xs font-black rounded-full flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 w-7 h-7 bg-yellow-400 text-gray-900 text-xs font-black rounded-full flex items-center justify-center shadow">
                   {step.slice(1)}
                 </span>
               </div>
-              <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
+              <h3 className="font-bold text-gray-800 mb-2 text-base">{title}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
             </div>
           ))}
@@ -401,67 +573,145 @@ const PlatformRoot = () => (
       </div>
     </section>
 
-    {/* ── Salon Types ────────────────────────────────────────────────────── */}
-    <section className="max-w-6xl mx-auto w-full px-6 py-16">
-      <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Services We Cover</h2>
-        <p className="text-gray-500">From haircuts to bridal looks — every service, every salon</p>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { icon: Scissors, label: 'Haircuts & Styling' },
-          { icon: Sparkles, label: 'Colour & Highlights' },
-          { icon: Star, label: 'Bridal & Makeup' },
-          { icon: Award, label: 'Spa & Treatments' },
-          { icon: Zap, label: 'Beard & Grooming' },
-          { icon: Clock, label: 'Express Services' },
-          { icon: Users, label: 'Group Bookings' },
-          { icon: MapPin, label: 'Walk-in Salons' },
-        ].map(({ icon: Icon, label }) => (
-          <div
-            key={label}
-            className="group flex flex-col items-center gap-3 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 cursor-default text-center"
-          >
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-200">
-              <Icon size={18} className="text-primary group-hover:text-white transition-colors" />
-            </div>
-            <span className="text-sm font-medium text-gray-700 group-hover:text-primary transition-colors">
-              {label}
-            </span>
+    {/* ── Services We Cover ──────────────────────────────────────────────── */}
+    <section className="py-20 overflow-hidden">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-14">
+          <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+            <Scissors size={11} /> Service Types
           </div>
-        ))}
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">Services We Cover</h2>
+          <p className="text-gray-500 text-lg">From haircuts to bridal looks — every service, every salon</p>
+        </div>
+
+        {/* Large horizontal scroll cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          {[
+            {
+              icon: Scissors,
+              label: 'Haircuts & Styling',
+              desc: 'Precision cuts, blowouts and everyday styling for all hair types.',
+              gradient: 'from-blue-500 to-blue-600',
+              tag: 'Most Popular',
+            },
+            {
+              icon: Sparkles,
+              label: 'Colour & Highlights',
+              desc: 'Balayage, ombré, full colour and toning treatments.',
+              gradient: 'from-violet-500 to-purple-600',
+              tag: 'Trending',
+            },
+            {
+              icon: Star,
+              label: 'Bridal & Makeup',
+              desc: 'Complete bridal packages — hair, makeup and trials included.',
+              gradient: 'from-pink-500 to-rose-500',
+              tag: 'Premium',
+            },
+            {
+              icon: Award,
+              label: 'Spa & Treatments',
+              desc: 'Deep conditioning, keratin, scalp treatments and more.',
+              gradient: 'from-emerald-500 to-teal-500',
+              tag: 'Relaxing',
+            },
+          ].map(({ icon: Icon, label, desc, gradient, tag }) => (
+            <div
+              key={label}
+              className={`group relative bg-gradient-to-br ${gradient} rounded-2xl p-6 text-white overflow-hidden cursor-default hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl`}
+            >
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-white/10 rounded-full" />
+              <div className="absolute top-4 right-4 bg-white/20 text-white/90 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                {tag}
+              </div>
+              <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                <Icon size={20} className="text-white" />
+              </div>
+              <h3 className="font-bold text-base mb-1.5 leading-snug">{label}</h3>
+              <p className="text-white/75 text-xs leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom row — smaller pill-style */}
+        <div className="flex flex-wrap gap-3 justify-center">
+          {[
+            { icon: Zap, label: 'Beard & Grooming' },
+            { icon: Clock, label: 'Express Services' },
+            { icon: Users, label: 'Group Bookings' },
+            { icon: MapPin, label: 'Walk-in Salons' },
+            { icon: Phone, label: 'Online Consultation' },
+            { icon: TrendingUp, label: 'Hair Extensions' },
+          ].map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="group flex items-center gap-2.5 bg-white border border-gray-200 hover:border-primary/40 hover:bg-primary/5 rounded-full px-4 py-2.5 shadow-sm hover:shadow-md transition-all duration-200 cursor-default"
+            >
+              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Icon size={12} className="text-primary" />
+              </div>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-primary transition-colors">{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
 
     {/* ── CTA Banner ─────────────────────────────────────────────────────── */}
-    <section className="mx-6 sm:mx-10 mb-16 bg-gradient-to-r from-primary to-blue-600 rounded-3xl p-10 text-white text-center shadow-xl shadow-primary/20">
-      <Scissors size={36} className="mx-auto mb-4 opacity-80" />
-      <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Own a Salon?</h2>
-      <p className="text-white/75 mb-6 max-w-md mx-auto">
-        Get your own branded booking page, manage stylists, appointments and payments — all from one
-        dashboard.
-      </p>
-      <a
-        href="/create-salon"
-        className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3 rounded-xl hover:bg-white/90 transition-all shadow-md text-sm"
-      >
-        <Store size={16} /> List Your Salon <ArrowRight size={15} />
-      </a>
+    <section className="max-w-6xl mx-auto w-full px-6 pb-20">
+      <div className="relative bg-gradient-to-br from-primary via-blue-600 to-purple-600 rounded-3xl p-10 sm:p-14 text-white overflow-hidden text-center">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-yellow-300/10 rounded-full" />
+        <div className="relative">
+          <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+            <Store size={26} className="text-white" />
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-extrabold mb-3 tracking-tight">Ready to Grow Your Salon?</h2>
+          <p className="text-white/75 text-base sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed">
+            Submit your salon for review and go live with your own booking page, UPI payments,
+            stylist panel and POS billing — all in one platform.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href="/create-salon"
+              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-8 py-3.5 rounded-xl hover:bg-yellow-50 transition-all shadow-lg text-sm"
+            >
+              <Store size={16} /> List Your Salon <ArrowRight size={15} />
+            </a>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-5 mt-7 text-white/60 text-xs">
+            {[
+              { icon: <CheckCircle size={13} />, text: 'No setup fee' },
+              { icon: <CheckCircle size={13} />, text: 'Quick approval' },
+              { icon: <CheckCircle size={13} />, text: 'Your own booking URL' },
+              { icon: <CheckCircle size={13} />, text: 'Full admin dashboard' },
+            ].map(({ icon, text }) => (
+              <div key={text} className="flex items-center gap-1.5">{icon}{text}</div>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
 
     {/* ── Footer ─────────────────────────────────────────────────────────── */}
-    <footer className="border-t border-gray-100 py-6 px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+    <footer className="border-t border-gray-100 py-7 px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
-          <Scissors size={12} className="text-white" />
+        <div className="w-7 h-7 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center">
+          <Scissors size={13} className="text-white" />
         </div>
-        <span className="font-semibold text-gray-600">Salvexa</span>
+        <span className="font-bold text-gray-700 text-sm">Salvexa</span>
+        <span className="text-gray-300 mx-1">·</span>
+        <span className="text-gray-400">Multi-Vendor Salon Platform</span>
       </div>
-      <span>© {new Date().getFullYear()} Salvexa · Design and Developed By <a href="https://buildmyweb.info/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-        BuildMyWeb
-      </a>
-      </span>
-      
+      <div className="flex items-center gap-4">
+        <span>
+          © {new Date().getFullYear()} Salvexa · Designed & Developed by{' '}
+          <a href="https://buildmyweb.info/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">
+            BuildMyWeb
+          </a>
+        </span>
+      </div>
     </footer>
   </div>
 );
