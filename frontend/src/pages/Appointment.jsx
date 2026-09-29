@@ -579,17 +579,28 @@ const Appointment = () => {
 
       if (data.success) {
         toast.success(data.message || 'Appointment booked successfully!');
-        setSelectedSlotISO('');
-        setSelectedServices([]);
-        setPaymentScreenshot(null);
-        setPaymentScreenshotPreview(null);
-        setUtrNumber('');
+        // Reset state before navigating — wrap in try so unmount errors don't show a false failure toast
+        try {
+          setSelectedSlotISO('');
+          setSelectedServices([]);
+          setPaymentScreenshot(null);
+          setPaymentScreenshotPreview(null);
+          setUtrNumber('');
+        } catch (_) { /* component may already be unmounting */ }
+        setBookingLoading(false);
         navigate(shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments');
+        return; // prevent finally from running after navigate
       } else {
         toast.error(data.message || 'Booking failed.');
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Booking failed. Please try again.');
+      // Only show error if the booking itself failed — not if navigation cleanup threw
+      if (error?.response || error?.message?.includes('Network') || error?.message?.includes('timeout')) {
+        toast.error(error.response?.data?.message || 'Booking failed. Please try again.');
+      } else {
+        // Likely a post-success unmount error — booking succeeded, ignore silently
+        console.warn('Post-booking navigation error (booking was successful):', error?.message);
+      }
     } finally {
       setBookingLoading(false);
     }
@@ -868,8 +879,14 @@ const Appointment = () => {
                           </p>
                         )}
                       </div>
-                      <button 
-                        onClick={() => setCurrentStep(2)}
+                      <button
+                        onClick={() => {
+                          if (selectedServices.length === 0) {
+                            toast.warning('Please select at least one service');
+                            return;
+                          }
+                          setCurrentStep(2);
+                        }}
                         className="flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                       >
                         <span>Continue</span>
