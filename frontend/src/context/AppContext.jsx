@@ -118,21 +118,35 @@ const AppContextProvider = (props) => {
     }
   }, [userData?.notifications?.length]);
 
-  const markUserNotificationsRead = async (notifId = null) => {
+  const markUserNotificationsRead = async (notifId = null, shopId = null) => {
     try {
       await axios.post(
         backendUrl + '/api/user/notifications/mark-read',
-        notifId ? { notifId } : {},
+        { ...(notifId ? { notificationId: notifId } : {}), ...(shopId ? { shopId } : {}) },
         { headers: { token } }
       );
       if (notifId) {
         setUserNotifications(prev => prev.map(n => n._id?.toString() === notifId?.toString() ? { ...n, read: true } : n));
         setUserUnreadCount(prev => Math.max(0, prev - 1));
       } else {
-        setUserNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        setUserUnreadCount(0);
+        // When marking all read, only mark notifications for this salon
+        setUserNotifications(prev => prev.map(n =>
+          (!shopId || n.shopId === shopId) ? { ...n, read: true } : n
+        ));
+        setUserUnreadCount(prev => {
+          if (!shopId) return 0;
+          // recalculate unread across all (other salons may still have unread)
+          return userNotifications.filter(n => !n.read && n.shopId !== shopId).length;
+        });
       }
     } catch {}
+  };
+
+  // Returns notifications filtered to a specific salon
+  const getShopNotifications = (shopId) => {
+    if (!shopId) return { notifications: userNotifications, unreadCount: userUnreadCount };
+    const filtered = userNotifications.filter(n => n.shopId === shopId);
+    return { notifications: filtered, unreadCount: filtered.filter(n => !n.read).length };
   };
 
   const value = {
@@ -148,6 +162,7 @@ const AppContextProvider = (props) => {
     userNotifications,
     userUnreadCount,
     markUserNotificationsRead,
+    getShopNotifications,
   };
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

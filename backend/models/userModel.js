@@ -41,8 +41,9 @@ const userSchema = new mongoose.Schema(
         },
         read: { type: Boolean, default: false },
         createdAt: { type: Date, default: Date.now },
-        // optional link — e.g. '/my-appointments'
         link: { type: String, default: null },
+        // Salon isolation — every notification is tied to the salon that created it
+        shopId: { type: String, default: null },
       },
     ],
   },

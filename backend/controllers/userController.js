@@ -435,7 +435,7 @@ export const bookAppointment = async (req, res) => {
     const shopSlug = shopDoc?.slug || '';
     const myApptLink = shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments';
 
-    // ✅ Notify USER — booking confirmation
+    // ✅ Notify USER — booking confirmation (shopId ensures salon isolation)
     const userNotifBook = {
       title: 'Booking Confirmed!',
       message: `Your appointment with ${docData.name} is confirmed for ${dateStr} at ${timeStr}. We look forward to seeing you!`,
@@ -443,6 +443,7 @@ export const bookAppointment = async (req, res) => {
       read: false,
       link: myApptLink,
       createdAt: new Date(),
+      shopId: docData.shopId || null,
     };
     await userModel.findByIdAndUpdate(userId, { $push: { notifications: userNotifBook } });
     emitToUser(userId.toString(), userNotifBook);
@@ -537,7 +538,7 @@ export const cancelAppointment = async (req, res) => {
     const cancelShopSlug = cancelShopDoc?.slug || '';
     const cancelApptLink = cancelShopSlug ? `/${cancelShopSlug}/my-appointments` : '/my-appointments';
 
-    // ✅ Notify USER — cancellation confirmation
+    // ✅ Notify USER — cancellation confirmation (shopId ensures salon isolation)
     await userModel.findByIdAndUpdate(userId, {
       $push: {
         notifications: {
@@ -547,6 +548,7 @@ export const cancelAppointment = async (req, res) => {
           read: false,
           link: cancelApptLink,
           createdAt: new Date(),
+          shopId: appointment.shopId || null,
         },
       },
     });
@@ -682,12 +684,20 @@ const verifyRazorpay = async (req, res) => {
 export const getNotifications = async (req, res) => {
   try {
     const { userId } = req.body;
+    // shopId scoping: client sends the current salon's shopId so only that salon's notifications are returned
+    const shopId = req.body.shopId || req.query.shopId || null;
+
     const user = await userModel.findById(userId).select('notifications');
     if (!user) return res.json({ success: false, message: 'User not found' });
 
-    const notifications = [...(user.notifications || [])].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
+    let notifications = [...(user.notifications || [])];
+
+    // Filter to this salon only when a shopId is provided
+    if (shopId) {
+      notifications = notifications.filter((n) => n.shopId === shopId);
+    }
+
+    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     const unreadCount = notifications.filter((n) => !n.read).length;
 
     res.json({ success: true, notifications, unreadCount });
@@ -699,7 +709,7 @@ export const getNotifications = async (req, res) => {
 
 export const markNotificationsRead = async (req, res) => {
   try {
-    const { userId, notificationId } = req.body;
+    const { userId, notificationId, shopId } = req.body;
     const user = await userModel.findById(userId);
     if (!user) return res.json({ success: false, message: 'User not found' });
 
@@ -710,8 +720,9 @@ export const markNotificationsRead = async (req, res) => {
         await user.save();
       }
     } else {
+      // Mark all read — scope to this salon only when shopId is provided
       user.notifications.forEach((n) => {
-        n.read = true;
+        if (!shopId || n.shopId === shopId) n.read = true;
       });
       await user.save();
     }

@@ -219,11 +219,12 @@ export const cancelSalonAppointment = async (req, res) => {
 
       const userNotifAdmin = {
         title: 'Appointment Cancelled by Salon',
-        message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled by the salon. Please contact us for details.`,
+        message: `Your appointment with ${stylistName} on ${dateStr} at ${timeStr} has been cancelled by the salon. ${appointment.cancellationReason ? 'Reason: ' + appointment.cancellationReason + '.' : 'Please contact us for details.'}`,
         type: 'cancellation',
         read: false,
         link: apptLink,
         createdAt: new Date(),
+        shopId: shopId || null,
       };
       await userModel.findByIdAndUpdate(appointment.userId, { $push: { notifications: userNotifAdmin } });
       emitToUser(appointment.userId.toString(), userNotifAdmin);
@@ -471,6 +472,7 @@ export const updateSalonStylistLeaveDates = async (req, res) => {
           read: false,
           link: leaveApptLink,
           createdAt: new Date(),
+          shopId: shopId || null,
         };
         await userModel.findByIdAndUpdate(appt.userId, { $push: { notifications: leaveUserNotif } });
         emitToUser(appt.userId.toString(), leaveUserNotif);

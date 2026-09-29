@@ -11,7 +11,7 @@ import {
 const ShopNavbar = () => {
   const navigate = useNavigate();
   const { shopSlug } = useParams();
-  const { token, setToken, userData, backendUrl, userNotifications, userUnreadCount, markUserNotificationsRead } = useContext(AppContext);
+  const { token, setToken, userData, backendUrl, markUserNotificationsRead, getShopNotifications } = useContext(AppContext);
   const { currentShop } = useContext(ShopContext);
 
   const [showMenu, setShowMenu] = useState(false);
@@ -20,9 +20,9 @@ const ShopNavbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
 
-  // Use context-managed notifications (real-time via socket)
-  const notifications = userNotifications;
-  const unreadCount = userUnreadCount;
+  // Only show notifications belonging to this salon
+  const currentShopId = currentShop?.shopId || null;
+  const { notifications, unreadCount } = getShopNotifications(currentShopId);
 
   const shopName = currentShop?.shopName || (shopSlug ? shopSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Salon');
   const s = shopSlug || '';
@@ -57,7 +57,7 @@ const ShopNavbar = () => {
     navigate(`/${s}/login`);
   };
 
-  const markAllRead = () => markUserNotificationsRead();
+  const markAllRead = () => markUserNotificationsRead(null, currentShopId);
 
   const navLinks = [
     { to: `/${s}`, label: 'HOME', icon: Home },

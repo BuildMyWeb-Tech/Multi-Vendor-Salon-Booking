@@ -82,7 +82,7 @@ export const startReminderCron = () => {
           const stylistName = appt.docData?.name || 'your stylist';
           const userName = appt.userData?.name || 'User';
 
-          // ✅ USER — 24-hour reminder notification
+          // ✅ USER — 24-hour reminder notification (shopId for salon isolation)
           await userModel.findByIdAndUpdate(appt.userId, {
             $push: {
               notifications: {
@@ -92,6 +92,7 @@ export const startReminderCron = () => {
                 read: false,
                 link: '/my-appointments',
                 createdAt: new Date(),
+                shopId: appt.shopId || null,
               },
             },
           });

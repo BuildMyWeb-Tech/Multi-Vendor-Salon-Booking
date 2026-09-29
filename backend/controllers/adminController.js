@@ -423,6 +423,7 @@ export const updateStylistLeaveDates = async (req, res) => {
               read: false,
               link: '/my-appointments',
               createdAt: new Date(),
+              shopId: appointment.shopId || null,
             },
           },
         });
@@ -681,6 +682,7 @@ export const cancelAppointment = async (req, res) => {
           read: false,
           link: myApptLink,
           createdAt: new Date(),
+          shopId: appointment.shopId || null,
         },
       },
     });
