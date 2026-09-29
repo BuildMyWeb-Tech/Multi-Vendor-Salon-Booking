@@ -619,7 +619,7 @@ const Appointment = () => {
           key: razorpayKeyId,
           amount: paymentAmount * 100,
           currency: "INR",
-          name: currentShop?.shopName || "StyleSlot",
+          name: currentShop?.shopName || "Salvexa",
           description: `Booking with ${stylistInfo?.name || 'stylist'} at ${currentShop?.shopName || 'our salon'}`,
           image: currentShop?.logo || "",
           handler: function() {

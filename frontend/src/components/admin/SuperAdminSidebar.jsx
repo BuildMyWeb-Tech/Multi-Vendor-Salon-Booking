@@ -1,22 +1,26 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
-  ShieldCheck, LayoutDashboard, Store, Plus,
+  ShieldCheck, LayoutDashboard, Store, Plus, Clock,
   LogOut, MenuIcon, X, ChevronLeft, ChevronRight, Scissors
 } from 'lucide-react';
-
 const navItems = [
   { to: '/super-admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/super-admin/salons', icon: Store, label: 'All Salons' },
   { to: '/super-admin/salons/create', icon: Plus, label: 'Create Salon' },
+  { to: '/super-admin/pending-salons', icon: Clock, label: 'Pending Salons' },
 ];
 
 const SuperAdminSidebar = () => {
-  const { setSaToken } = useContext(SuperAdminContext);
+  const { setSaToken, saToken, pendingSalonCount, refreshPendingCount } = useContext(SuperAdminContext);
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (saToken) refreshPendingCount();
+  }, [saToken]);
 
   const logout = () => {
     setSaToken('');
@@ -55,24 +59,40 @@ const SuperAdminSidebar = () => {
 
       {/* Nav */}
       <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/super-admin/dashboard'}
-            onClick={() => mobile && setMobileOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all font-medium ${
-                isActive
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-              } ${collapsed && !mobile ? 'justify-center' : ''}`
-            }
-          >
-            <Icon size={18} className="flex-shrink-0" />
-            {(!collapsed || mobile) && <span>{label}</span>}
-          </NavLink>
-        ))}
+        {navItems.map(({ to, icon: Icon, label }) => {
+          const isPending = to === '/super-admin/pending-salons';
+          const showBadge = isPending && pendingSalonCount > 0;
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/super-admin/dashboard'}
+              onClick={() => mobile && setMobileOpen(false)}
+              className={({ isActive }) =>
+                `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all font-medium ${
+                  isActive
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                } ${collapsed && !mobile ? 'justify-center' : ''}`
+              }
+            >
+              <Icon size={18} className="flex-shrink-0" />
+              {(!collapsed || mobile) && (
+                <span className="flex-1">{label}</span>
+              )}
+              {showBadge && (!collapsed || mobile) && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+                  {pendingSalonCount}
+                </span>
+              )}
+              {showBadge && collapsed && !mobile && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
+                  {pendingSalonCount}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Super Admin Badge */}

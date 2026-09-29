@@ -2,7 +2,7 @@
 import React, { useContext, useState, useRef } from 'react';
 import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
-  Store, User, Phone, Mail, MapPin, Building2,
+  Store, User, Phone, Mail, MapPin,
   Smartphone, Eye, EyeOff, Upload, Check, X,
   ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap, Tag, Gift, Users,
 } from 'lucide-react';
@@ -254,6 +254,9 @@ const CreateSalon = () => {
           <Field label="Pincode">
             <Input value={form.pincode} onChange={set('pincode')} placeholder="Pincode" />
           </Field>
+          <Field label="GST Number" >
+            <Input value={form.gstNumber} onChange={set('gstNumber')} placeholder="GSTIN (optional)" />
+          </Field>
         </Section>
 
         {/* Contact */}
@@ -271,24 +274,6 @@ const CreateSalon = () => {
           </Field>
           <Field label="WhatsApp">
             <Input value={form.whatsapp} onChange={set('whatsapp')} placeholder="+91 9876543210" />
-          </Field>
-        </Section>
-
-        {/* Business */}
-        <Section title="Business Details" icon={Building2}>
-          <Field label="Business Name">
-            <Input
-              value={form.businessName}
-              onChange={set('businessName')}
-              placeholder="Registered business name"
-            />
-          </Field>
-          <Field label="GST Number">
-            <Input
-              value={form.gstNumber}
-              onChange={set('gstNumber')}
-              placeholder="GSTIN (optional)"
-            />
           </Field>
         </Section>
 

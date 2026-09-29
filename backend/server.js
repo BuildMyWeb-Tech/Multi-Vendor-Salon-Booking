@@ -21,6 +21,7 @@ import superAdminRouter from './routes/superAdminRoute.js';
 import salonAdminRouter from './routes/salonAdminRoute.js';
 import shopRouter from './routes/shopRoute.js';
 import stylistRouter from './routes/stylistRoute.js';
+import salonRequestRouter from './routes/salonRequestRoute.js';
 
 import {
   startAppointmentCompletionCron,
@@ -116,6 +117,7 @@ app.use('/api/super-admin', superAdminRouter);
 app.use('/api/shop', shopRouter);
 app.use('/api/doctor', doctorRouter);
 app.use('/api/stylist', stylistRouter);
+app.use('/api/salon-request', salonRequestRouter);
 
 // ── STATIC FILES ─────────────────────────────────────────────────────────────
 app.use('/images', express.static(path.join(__dirname, 'uploads')));

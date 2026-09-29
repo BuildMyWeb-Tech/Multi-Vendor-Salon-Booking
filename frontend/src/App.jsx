@@ -22,6 +22,8 @@ import SuperAdminLogin from './pages/superadmin/SuperAdminLogin'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import SuperAdminSalons from './pages/superadmin/SuperAdminSalons'
 import CreateSalon from './pages/superadmin/CreateSalon'
+import PendingSalons from './pages/superadmin/PendingSalons'
+import CreateYourSalon from './pages/CreateYourSalon'
 import SuperAdminSidebar from './components/admin/SuperAdminSidebar'
 import SuperAdminNavbar from './components/admin/SuperAdminNavbar'
 
@@ -79,6 +81,7 @@ const SuperAdminSection = () => {
             <Route path="dashboard" element={<SuperAdminDashboard />} />
             <Route path="salons" element={<SuperAdminSalons />} />
             <Route path="salons/create" element={<CreateSalon />} />
+            <Route path="pending-salons" element={<PendingSalons />} />
             <Route path="login" element={<Navigate to="/super-admin/dashboard" replace />} />
             <Route path="" element={<Navigate to="/super-admin/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
@@ -231,7 +234,7 @@ const PlatformRoot = () => (
         <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-md shadow-primary/30">
           <Scissors size={17} className="text-white" />
         </div>
-        <span className="text-xl font-extrabold text-gray-900 tracking-tight">StyleSlot</span>
+        <span className="text-xl font-extrabold text-gray-900 tracking-tight">Salvexa</span>
       </div>
       <a
         href="/super-admin"
@@ -259,7 +262,7 @@ const PlatformRoot = () => (
           <br className="hidden sm:block" /> at Any Salon, Anytime
         </h1>
         <p className="text-white/70 text-lg max-w-xl mx-auto mb-10">
-          StyleSlot connects you with top salons. Browse stylists, pick a slot and book — all from
+          Salvexa connects you with top salons. Browse stylists, pick a slot and book — all from
           one seamless platform.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
@@ -268,10 +271,10 @@ const PlatformRoot = () => (
             Visit: <code className="text-yellow-300 font-bold ml-1">/your-salon-name</code>
           </div>
           <a
-            href="/super-admin"
+            href="/create-salon"
             className="inline-flex items-center gap-2 bg-white text-primary font-bold px-6 py-3 rounded-xl hover:bg-white/90 transition-all shadow-lg shadow-black/20 text-sm w-full sm:w-auto justify-center"
           >
-            <Store size={15} /> Open Admin Portal <ArrowRight size={14} />
+            <Store size={15} /> Create Your Salon <ArrowRight size={14} />
           </a>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-6 text-white/70 text-sm">
@@ -439,10 +442,10 @@ const PlatformRoot = () => (
         dashboard.
       </p>
       <a
-        href="/super-admin"
+        href="/create-salon"
         className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3 rounded-xl hover:bg-white/90 transition-all shadow-md text-sm"
       >
-        <Store size={16} /> Get Started as Admin <ArrowRight size={15} />
+        <Store size={16} /> List Your Salon <ArrowRight size={15} />
       </a>
     </section>
 
@@ -452,9 +455,9 @@ const PlatformRoot = () => (
         <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
           <Scissors size={12} className="text-white" />
         </div>
-        <span className="font-semibold text-gray-600">StyleSlot</span>
+        <span className="font-semibold text-gray-600">Salvexa</span>
       </div>
-      <span>© {new Date().getFullYear()} StyleSlot · Design and Developed By <a href="https://buildmyweb.info/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+      <span>© {new Date().getFullYear()} Salvexa · Design and Developed By <a href="https://buildmyweb.info/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
         BuildMyWeb
       </a>
       </span>
@@ -480,6 +483,9 @@ const App = () => (
 
       {/* Customer shop pages */}
       <Route path="/:shopSlug/*" element={<ShopCustomerSection />} />
+
+      {/* Create Your Own Salon — public form */}
+      <Route path="/create-salon" element={<CreateYourSalon />} />
 
       {/* Platform root */}
       <Route path="/" element={<PlatformRoot />} />

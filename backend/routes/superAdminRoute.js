@@ -13,6 +13,13 @@ import {
   updateSalonStatus,
   getSalonStats,
 } from '../controllers/superAdminController.js';
+import {
+  getSalonRequests,
+  getSalonRequestById,
+  updateSalonRequest,
+  approveSalonRequest,
+  deleteSalonRequest,
+} from '../controllers/salonRequestController.js';
 
 const superAdminRouter = express.Router();
 
@@ -31,5 +38,12 @@ superAdminRouter.put('/salons/:shopId', authSuperAdmin, salonUpload, updateSalon
 superAdminRouter.delete('/salons/:shopId', authSuperAdmin, deleteSalon);
 superAdminRouter.patch('/salons/:shopId/status', authSuperAdmin, updateSalonStatus);
 superAdminRouter.get('/salons/:shopId/stats', authSuperAdmin, getSalonStats);
+
+// Pending Salon Requests
+superAdminRouter.get('/salon-requests', authSuperAdmin, getSalonRequests);
+superAdminRouter.get('/salon-requests/:id', authSuperAdmin, getSalonRequestById);
+superAdminRouter.put('/salon-requests/:id', authSuperAdmin, updateSalonRequest);
+superAdminRouter.post('/salon-requests/:id/approve', authSuperAdmin, approveSalonRequest);
+superAdminRouter.delete('/salon-requests/:id', authSuperAdmin, deleteSalonRequest);
 
 export default superAdminRouter;

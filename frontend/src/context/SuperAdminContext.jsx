@@ -11,6 +11,7 @@ const SuperAdminContextProvider = ({ children }) => {
   const [salons, setSalons] = useState([]);
   const [dashData, setDashData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [pendingSalonCount, setPendingSalonCount] = useState(0);
 
   const getDashboard = async () => {
     setLoading(true);
@@ -133,11 +134,67 @@ const SuperAdminContextProvider = ({ children }) => {
     }
   };
 
+  const refreshPendingCount = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/super-admin/salon-requests`, {
+        headers: { superadmintoken: saToken }, params: { status: 'pending' },
+      });
+      if (data.success) setPendingSalonCount(data.requests.length);
+    } catch { /* silent */ }
+  };
+
+  const getSalonRequests = async (params = {}) => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/super-admin/salon-requests`, {
+        headers: { superadmintoken: saToken }, params,
+      });
+      if (data.success && (!params.status || params.status === 'pending')) {
+        setPendingSalonCount(data.requests.filter((r) => r.status === 'pending').length);
+      }
+      return data;
+    } catch { return { success: false }; }
+  };
+
+  const approveSalonRequest = async (id) => {
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/super-admin/salon-requests/${id}/approve`,
+        {},
+        { headers: { superadmintoken: saToken } }
+      );
+      if (data.success) setPendingSalonCount((c) => Math.max(0, c - 1));
+      return data;
+    } catch (error) { return { success: false, message: error.message }; }
+  };
+
+  const updateSalonRequest = async (id, body) => {
+    try {
+      const { data } = await axios.put(
+        `${backendUrl}/api/super-admin/salon-requests/${id}`,
+        body,
+        { headers: { superadmintoken: saToken } }
+      );
+      return data;
+    } catch (error) { return { success: false, message: error.message }; }
+  };
+
+  const deleteSalonRequest = async (id) => {
+    try {
+      const { data } = await axios.delete(
+        `${backendUrl}/api/super-admin/salon-requests/${id}`,
+        { headers: { superadmintoken: saToken } }
+      );
+      if (data.success) setPendingSalonCount((c) => Math.max(0, c - 1));
+      return data;
+    } catch (error) { return { success: false, message: error.message }; }
+  };
+
   const value = {
     saToken, setSaToken, backendUrl, loading,
-    salons, dashData,
+    salons, dashData, pendingSalonCount, refreshPendingCount,
     getDashboard, getAllSalons, createSalon,
     updateSalonStatus, getSalonStats, getSalonById, updateSalon, deleteSalon,
+    getSalonRequests, approveSalonRequest, updateSalonRequest, deleteSalonRequest,
   };
 
   return <SuperAdminContext.Provider value={value}>{children}</SuperAdminContext.Provider>;
