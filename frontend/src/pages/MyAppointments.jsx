@@ -2,6 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { assets } from '../assets/assets';
@@ -47,8 +48,12 @@ const to12Hr = (time24) => {
 
 const MyAppointments = () => {
   const { backendUrl, token, currencySymbol = '₹' } = useContext(AppContext);
+  const { currentShop } = useContext(ShopContext);
   const navigate = useNavigate();
   const { shopSlug } = useParams();
+
+  // Salon isolation: scope all appointment queries to the current salon
+  const currentShopId = currentShop?.shopId || null;
 
   const [appointments, setAppointments] = useState([]);
   const [rescheduleModal, setRescheduleModal] = useState(false);
@@ -91,6 +96,8 @@ const MyAppointments = () => {
     try {
       const { data } = await axios.get(backendUrl + '/api/user/appointments', {
         headers: { token },
+        // Pass shopId so the backend returns only this salon's appointments
+        params: currentShopId ? { shopId: currentShopId } : {},
       });
       setAppointments(data.appointments.reverse());
       setLocalAppointments(data.appointments.reverse());
@@ -305,7 +312,7 @@ const MyAppointments = () => {
     } else {
       navigate('/login');
     }
-  }, [token]);
+  }, [token, currentShopId]);
 
   useEffect(() => {
     if (appointments.length > 0) {

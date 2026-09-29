@@ -577,7 +577,10 @@ export const cancelAppointment = async (req, res) => {
 const listAppointment = async (req, res) => {
   try {
     const { userId } = req.body;
-    const appointments = await appointmentModel.find({ userId }).sort({ date: -1 });
+    // shopId scoping: only return appointments for the salon the user is currently inside
+    const shopId = req.query.shopId || null;
+    const filter = shopId ? { userId, shopId } : { userId };
+    const appointments = await appointmentModel.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, appointments });
   } catch (error) {
     console.log(error);
