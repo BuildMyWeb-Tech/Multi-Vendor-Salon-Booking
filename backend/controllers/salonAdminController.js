@@ -715,3 +715,4 @@ export const markSalonAdminNotificationsRead = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+

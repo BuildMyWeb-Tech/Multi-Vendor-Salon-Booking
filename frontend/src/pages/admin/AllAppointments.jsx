@@ -43,8 +43,8 @@ import { toast } from "react-toastify";
 
 
 const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimePast, slotDateFormat, formatTime12hr }) => {
-  // Show payment details whenever the appointment has a UTR (customer paid), regardless of current shop config
-  const hasUpi = !!(appt.utrNumber && appt.utrNumber.length > 0);
+  // Show payment details whenever customer submitted a UPI payment screenshot
+  const hasUpi = !!(appt.paymentScreenshot && appt.paymentScreenshot.length > 0) || !!(appt.utrNumber && appt.utrNumber.length > 0);
 
   let statusLabel, statusColor;
   if (appt.cancelled) {
@@ -165,10 +165,24 @@ const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimeP
                 <CreditCard size={13} /> UPI Payment Details
               </p>
               <div className="space-y-2.5 text-sm">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-gray-500 flex items-center gap-1 flex-shrink-0"><Hash size={12} /> UTR / Transaction ID</span>
-                  <span className="font-mono font-bold text-gray-900 text-right break-all">{appt.utrNumber}</span>
-                </div>
+                {appt.upiIdUsed && (
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 flex items-center gap-1 flex-shrink-0"><QrCode size={12} /> UPI ID Used</span>
+                    <span className="font-mono font-semibold text-gray-900 text-right break-all">{appt.upiIdUsed}</span>
+                  </div>
+                )}
+                {appt.utrNumber && (
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 flex items-center gap-1 flex-shrink-0"><Hash size={12} /> UTR / Transaction ID</span>
+                    <span className="font-mono font-bold text-gray-900 text-right break-all">{appt.utrNumber}</span>
+                  </div>
+                )}
+                {appt.paymentSubmittedAt && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 flex items-center gap-1"><Clock size={12} /> Submitted At</span>
+                    <span className="font-semibold text-gray-700">{new Date(appt.paymentSubmittedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Payment Method</span>
                   <span className="font-semibold text-green-700">UPI</span>

@@ -8,24 +8,24 @@ import {
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-// Dynamic base URL — works locally and in production
 const baseUrl = () => window.location.origin;
+
+const buildDynamicQr = (upiId, upiName) =>
+  upiId
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${upiName || ''}&cu=INR`)}`
+    : null;
 
 const SuperAdminSalons = () => {
   const { getAllSalons, salons, updateSalonStatus, updateSalon, deleteSalon, getSalonById, loading } = useContext(SuperAdminContext);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Modal state
   const [viewSalon, setViewSalon] = useState(null);
   const [editSalon, setEditSalon] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [editLogoFile, setEditLogoFile] = useState(null);
   const [editLogoPreview, setEditLogoPreview] = useState(null);
-  const [editQrFile, setEditQrFile] = useState(null);
-  const [editQrPreview, setEditQrPreview] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
-  const qrInputRef = useRef(null);
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -36,13 +36,11 @@ const SuperAdminSalons = () => {
     getAllSalons({ search, status: statusFilter });
   }, [search, statusFilter]);
 
-  // ── Toggle active/inactive ──────────────────────────────────────────────────
   const handleToggleStatus = async (salon) => {
     const newStatus = salon.status === 'active' ? 'inactive' : 'active';
     await updateSalonStatus(salon.shopId, newStatus);
   };
 
-  // ── Open Edit Modal ─────────────────────────────────────────────────────────
   const openEdit = (salon) => {
     setEditSalon(salon);
     setEditForm({
@@ -72,8 +70,6 @@ const SuperAdminSalons = () => {
     });
     setEditLogoFile(null);
     setEditLogoPreview(salon.logo || null);
-    setEditQrFile(null);
-    setEditQrPreview(salon.upiQrCode || null);
   };
 
   const handleEditLogoChange = (e) => {
@@ -86,23 +82,12 @@ const SuperAdminSalons = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleEditQrChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('QR image must be under 5MB'); return; }
-    setEditQrFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setEditQrPreview(reader.result);
-    reader.readAsDataURL(file);
-  };
-
   const handleEditSave = async () => {
     if (!editForm.shopName) { toast.error('Salon name is required'); return; }
     setEditSaving(true);
     const fd = new FormData();
     Object.entries(editForm).forEach(([k, v]) => fd.append(k, v));
     if (editLogoFile) fd.append('logo', editLogoFile);
-    if (editQrFile) fd.append('qrCode', editQrFile);
     const result = await updateSalon(editSalon.shopId, fd);
     setEditSaving(false);
     if (result?.success) {
@@ -112,7 +97,6 @@ const SuperAdminSalons = () => {
     }
   };
 
-  // ── Delete ──────────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleteLoading(true);
@@ -129,7 +113,6 @@ const SuperAdminSalons = () => {
 
   return (
     <div className="p-6 space-y-5">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">All Salons</h1>
@@ -144,7 +127,6 @@ const SuperAdminSalons = () => {
         </Link>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -168,10 +150,8 @@ const SuperAdminSalons = () => {
             <option value="inactive">Inactive</option>
           </select>
         </div>
-        
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {loading && salons.length === 0 ? (
           <div className="p-6 space-y-3">
@@ -201,7 +181,6 @@ const SuperAdminSalons = () => {
               <tbody className="divide-y divide-gray-50">
                 {salons.map((salon) => (
                   <tr key={salon.shopId} className="hover:bg-gray-50/60 transition-colors">
-                    {/* Salon */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -215,12 +194,10 @@ const SuperAdminSalons = () => {
                         </div>
                       </div>
                     </td>
-                    {/* Contact */}
                     <td className="px-5 py-4 hidden md:table-cell">
                       <p className="text-gray-700 text-sm">{salon.phone || '—'}</p>
                       <p className="text-xs text-gray-400">{[salon.city, salon.state].filter(Boolean).join(', ') || '—'}</p>
                     </td>
-                    {/* Admin */}
                     <td className="px-5 py-4 hidden lg:table-cell">
                       {salon.admin ? (
                         <div>
@@ -229,13 +206,11 @@ const SuperAdminSalons = () => {
                         </div>
                       ) : <span className="text-gray-300 text-xs">No admin</span>}
                     </td>
-                    {/* Status toggle */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleToggleStatus(salon)}
                           className={`relative flex-shrink-0 w-14 h-7 rounded-full transition-colors duration-200 focus:outline-none ${salon.status === 'active' ? 'bg-primary' : 'bg-gray-300'}`}
-                          title={salon.status === 'active' ? 'Click to deactivate' : 'Click to activate'}
                         >
                           <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${salon.status === 'active' ? 'translate-x-8' : 'translate-x-1'}`} />
                         </button>
@@ -244,7 +219,6 @@ const SuperAdminSalons = () => {
                         </span>
                       </div>
                     </td>
-                    {/* URLs */}
                     <td className="px-5 py-4 hidden lg:table-cell">
                       <div className="space-y-1">
                         <a href={`${baseUrl()}/${salon.slug}`} target="_blank" rel="noreferrer"
@@ -257,7 +231,6 @@ const SuperAdminSalons = () => {
                         </a>
                       </div>
                     </td>
-                    {/* Actions */}
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-center gap-1.5">
                         <button onClick={() => setViewSalon(salon)}
@@ -282,18 +255,15 @@ const SuperAdminSalons = () => {
         )}
       </div>
 
-      {/* ── VIEW MODAL ────────────────────────────────────────────────────────── */}
+      {/* VIEW MODAL */}
       {viewSalon && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
               <h2 className="text-base font-semibold text-gray-800">Salon Details</h2>
-              <button onClick={() => setViewSalon(null)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
-                <X size={18} />
-              </button>
+              <button onClick={() => setViewSalon(null)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100"><X size={18} /></button>
             </div>
             <div className="p-6 space-y-5">
-              {/* Logo + name */}
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {viewSalon.logo ? <img src={viewSalon.logo} alt="logo" className="w-full h-full object-cover" /> : <Store size={24} className="text-primary" />}
@@ -317,7 +287,6 @@ const SuperAdminSalons = () => {
               <Row icon={CreditCard} label="Subscription" value={viewSalon.subscriptionAmount ? `₹${viewSalon.subscriptionAmount} / ${viewSalon.billingCycle}` : undefined} />
               <Row icon={User} label="Admin" value={viewSalon.admin ? `${viewSalon.admin.name} (${viewSalon.admin.adminId})` : undefined} />
 
-              {/* UPI Payment Info */}
               {viewSalon.paymentIntegrationEnabled && (
                 <div className="border border-green-100 bg-green-50 rounded-xl p-4 space-y-2">
                   <p className="text-xs font-semibold text-green-700 uppercase flex items-center gap-1.5">
@@ -328,16 +297,21 @@ const SuperAdminSalons = () => {
                     {viewSalon.upiMobileNumber && <div className="flex justify-between"><span className="text-gray-500">Mobile</span><span className="font-medium text-gray-800">{viewSalon.upiMobileNumber}</span></div>}
                     {viewSalon.upiId && <div className="flex justify-between"><span className="text-gray-500">UPI ID</span><span className="font-mono font-medium text-gray-800">{viewSalon.upiId}</span></div>}
                     {viewSalon.bankName && <div className="flex justify-between"><span className="text-gray-500">Bank</span><span className="font-medium text-gray-800">{viewSalon.bankName}</span></div>}
-                    {viewSalon.upiQrCode && (
-                      <div className="pt-2"><p className="text-xs text-gray-400 mb-1">QR Code</p>
-                        <img src={viewSalon.upiQrCode} alt="QR" className="w-28 h-28 rounded-lg border border-green-200 object-contain" />
+                    {viewSalon.upiId && (
+                      <div className="pt-2">
+                        <p className="text-xs text-gray-400 mb-1">Dynamic QR Code</p>
+                        <img
+                          src={buildDynamicQr(viewSalon.upiId, viewSalon.upiName)}
+                          alt="UPI QR"
+                          className="w-28 h-28 rounded-lg border border-green-200 object-contain bg-white p-1"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Amount set per booking</p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Stats */}
               {viewSalon.stats && (
                 <div className="grid grid-cols-3 gap-3 mt-2">
                   {[
@@ -357,15 +331,13 @@ const SuperAdminSalons = () => {
         </div>
       )}
 
-      {/* ── EDIT MODAL ────────────────────────────────────────────────────────── */}
+      {/* EDIT MODAL */}
       {editSalon && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
               <h2 className="text-base font-semibold text-gray-800">Edit Salon — {editSalon.shopName}</h2>
-              <button onClick={() => setEditSalon(null)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
-                <X size={18} />
-              </button>
+              <button onClick={() => setEditSalon(null)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100"><X size={18} /></button>
             </div>
             <div className="p-6 space-y-5">
               {/* Logo */}
@@ -427,37 +399,44 @@ const SuperAdminSalons = () => {
 
                 {editForm.paymentIntegrationEnabled && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Name <span className="text-gray-400">(shown to customers)</span></label>
-                      <input className={inputCls} value={editForm.upiName} placeholder="e.g. Walter Salon" onChange={e => setEditForm(f => ({...f, upiName: e.target.value}))} /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Mobile Number <span className="text-gray-400">(shown to customers)</span></label>
-                      <input className={inputCls} value={editForm.upiMobileNumber} placeholder="9876543210" onChange={e => setEditForm(f => ({...f, upiMobileNumber: e.target.value}))} /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">UPI ID <span className="text-gray-400">(internal)</span></label>
-                      <input className={inputCls} value={editForm.upiId} placeholder="yourname@bank" onChange={e => setEditForm(f => ({...f, upiId: e.target.value}))} /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Bank Name <span className="text-gray-400">(internal)</span></label>
-                      <input className={inputCls} value={editForm.bankName} placeholder="HDFC Bank" onChange={e => setEditForm(f => ({...f, bankName: e.target.value}))} /></div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">UPI QR Code</label>
-                      <div className="flex items-center gap-3">
-                        <div
-                          onClick={() => qrInputRef.current?.click()}
-                          className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary cursor-pointer flex items-center justify-center overflow-hidden transition-colors flex-shrink-0"
-                        >
-                          {editQrPreview
-                            ? <img src={editQrPreview} alt="QR" className="w-full h-full object-cover" />
-                            : <div className="text-center text-gray-300 p-2"><QrCode size={24} className="mx-auto mb-1" /><span className="text-xs">Upload</span></div>}
-                        </div>
-                        <input ref={qrInputRef} type="file" accept="image/*" onChange={handleEditQrChange} className="hidden" />
-                        <div className="text-xs text-gray-500">
-                          <p>Upload QR code image</p>
-                          {editQrPreview && <button type="button" onClick={() => { setEditQrPreview(null); setEditQrFile(null); }} className="text-red-400 hover:text-red-500 mt-1 flex items-center gap-1"><X size={10} /> Remove</button>}
+                      <label className="block text-xs font-medium text-gray-600 mb-1">UPI ID <span className="text-red-400">*</span> <span className="text-gray-400 font-normal">(used to generate QR)</span></label>
+                      <input className={inputCls} value={editForm.upiId} placeholder="yourname@bank" onChange={e => setEditForm(f => ({...f, upiId: e.target.value}))} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Display Name <span className="text-gray-400 font-normal">(shown to customers)</span></label>
+                      <input className={inputCls} value={editForm.upiName} placeholder="e.g. Walter Salon" onChange={e => setEditForm(f => ({...f, upiName: e.target.value}))} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Mobile Number <span className="text-gray-400 font-normal">(shown to customers)</span></label>
+                      <input className={inputCls} value={editForm.upiMobileNumber} placeholder="9876543210" onChange={e => setEditForm(f => ({...f, upiMobileNumber: e.target.value}))} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Bank Name <span className="text-gray-400 font-normal">(internal)</span></label>
+                      <input className={inputCls} value={editForm.bankName} placeholder="HDFC Bank" onChange={e => setEditForm(f => ({...f, bankName: e.target.value}))} />
+                    </div>
+                    {editForm.upiId && (
+                      <div className="pt-1">
+                        <label className="block text-xs font-medium text-gray-600 mb-2">Dynamic QR Preview</label>
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={buildDynamicQr(editForm.upiId, editForm.upiName)}
+                            alt="UPI QR Preview"
+                            className="w-24 h-24 rounded-xl border border-gray-200 object-contain bg-white p-1 shadow-sm"
+                          />
+                          <div className="text-xs text-gray-500 space-y-0.5">
+                            <p><span className="text-gray-400">UPI ID:</span> <span className="font-mono">{editForm.upiId}</span></p>
+                            {editForm.upiName && <p><span className="text-gray-400">Name:</span> {editForm.upiName}</p>}
+                            <p className="text-blue-500 mt-1">Amount is set dynamically per booking</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* POS & Billing Toggles */}
+              {/* POS & Billing */}
               <div className="border border-gray-100 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard size={15} className="text-primary" />
@@ -482,7 +461,7 @@ const SuperAdminSalons = () => {
                 ))}
               </div>
 
-              {/* Discount & Package Toggles */}
+              {/* Discount & Package */}
               <div className="border border-gray-100 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Tag size={15} className="text-primary" />
@@ -524,7 +503,7 @@ const SuperAdminSalons = () => {
         </div>
       )}
 
-      {/* ── DELETE CONFIRMATION MODAL ─────────────────────────────────────────── */}
+      {/* DELETE MODAL */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
@@ -552,7 +531,6 @@ const SuperAdminSalons = () => {
   );
 };
 
-// Row helper for View modal
 const Row = ({ icon: Icon, label, value, link }) => {
   if (!value) return null;
   return (

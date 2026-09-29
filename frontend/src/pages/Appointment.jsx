@@ -228,7 +228,6 @@ const Appointment = () => {
   const [shopPaymentInfo, setShopPaymentInfo] = useState(null);
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState(null);
-  const [utrNumber, setUtrNumber] = useState('');
   const screenshotInputRef = useRef(null);
 
   // Discount state
@@ -550,7 +549,6 @@ const Appointment = () => {
         fd.append('paidAmount', getFinalPrice());
         fd.append('remainingAmount', 0);
         fd.append('paymentMethod', 'upi');
-        fd.append('utrNumber', utrNumber.trim());
         fd.append('paymentScreenshot', screenshotFile);
         const res = await axios.post(backendUrl + '/api/user/book-appointment', fd, {
           headers: { token }, // No Content-Type — axios sets it with boundary automatically
@@ -602,7 +600,6 @@ const Appointment = () => {
     token,
     navigate,
     shopSlug,
-    utrNumber,
   ]);
 
   const processPayment = useCallback(async (method) => {
@@ -1114,14 +1111,14 @@ const Appointment = () => {
                         Scan & Pay via UPI
                       </h3>
                       <div className="flex flex-col sm:flex-row gap-6 items-start">
-                        {shopPaymentInfo.upiQrCode && (
+                        {shopPaymentInfo.upiId && (
                           <div className="flex-shrink-0 text-center">
                             <img
-                              src={shopPaymentInfo.upiQrCode}
+                              src={`${backendUrl}/api/shop/${shopSlug}/upi-qr?amount=${getFinalPrice()}`}
                               alt="UPI QR Code"
                               className="w-44 h-44 object-contain border-2 border-gray-200 rounded-xl p-2 bg-white shadow"
                             />
-                            <p className="text-xs text-gray-400 mt-1">Scan to pay</p>
+                            <p className="text-xs text-gray-400 mt-1">Scan to pay ₹{getFinalPrice()}</p>
                           </div>
                         )}
                         <div className="flex-1 space-y-3">
@@ -1146,26 +1143,6 @@ const Appointment = () => {
                           </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* UTR / Transaction ID Input */}
-                    <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm">
-                      <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                        <CheckCircle2 size={17} className="text-blue-600" />
-                        Enter Transaction ID / UTR Number
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-3">
-                        After paying, find the UTR / Transaction ID in your UPI app payment receipt and enter it below.
-                      </p>
-                      <input
-                        type="text"
-                        value={utrNumber}
-                        onChange={(e) => setUtrNumber(e.target.value)}
-                        placeholder="e.g. 123456789012 or T2309281234567"
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:border-blue-500 focus:outline-none transition-colors uppercase"
-                        maxLength={30}
-                      />
-                      <p className="text-xs text-gray-400 mt-1.5">This unique ID verifies your payment and prevents duplicate submissions.</p>
                     </div>
 
                     {/* Screenshot Upload */}
@@ -1221,27 +1198,23 @@ const Appointment = () => {
                     {/* Confirm Button */}
                     <button
                       onClick={() => {
-                        if (!utrNumber.trim() || utrNumber.trim().length < 6) {
-                          toast.warning('Please enter your UTR / Transaction ID');
-                          return;
-                        }
                         if (!paymentScreenshot) {
                           toast.warning('Please upload your payment screenshot');
                           return;
                         }
                         completeBooking('upi', paymentScreenshot);
                       }}
-                      disabled={bookingLoading || !paymentScreenshot || !utrNumber.trim()}
+                      disabled={bookingLoading || !paymentScreenshot}
                       className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                       {bookingLoading ? (
-                        <><Loader2 className="w-5 h-5 animate-spin" /><span>Verifying & Confirming...</span></>
+                        <><Loader2 className="w-5 h-5 animate-spin" /><span>Confirming...</span></>
                       ) : (
                         <><CheckCircle2 size={22} /><span>Confirm Booking — {currencySymbol}{getFinalPrice()}</span></>
                       )}
                     </button>
                     <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
-                      <Shield size={12} /> Booking confirmed only after UTR verification
+                      <Shield size={12} /> Screenshot submitted — admin will verify your payment
                     </p>
                   </div>
                 ) : (

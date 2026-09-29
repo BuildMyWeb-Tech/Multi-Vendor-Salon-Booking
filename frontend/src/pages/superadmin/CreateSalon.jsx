@@ -48,10 +48,6 @@ const CreateSalon = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const [qrFile, setQrFile] = useState(null);
-  const [qrPreview, setQrPreview] = useState(null);
-  const qrInputRef = useRef(null);
-
   const [form, setForm] = useState({
     shopName: '', slug: '', address: '', city: '', state: '', pincode: '',
     phone: '', email: '', whatsapp: '',
@@ -88,15 +84,6 @@ const CreateSalon = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleQrChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('QR image must be under 5MB'); return; }
-    setQrFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setQrPreview(reader.result);
-    reader.readAsDataURL(file);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,7 +97,6 @@ const CreateSalon = () => {
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
     if (logoFile) fd.append('logo', logoFile);
-    if (qrFile) fd.append('qrCode', qrFile);
 
     const result = await createSalon(fd);
     setLoading(false);
@@ -158,7 +144,7 @@ const CreateSalon = () => {
 
           <div className="flex gap-3">
             <button
-              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',serviceBillingEnabled:false,productBillingEnabled:false,adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); setQrPreview(null); setQrFile(null); }}
+              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',serviceBillingEnabled:false,productBillingEnabled:false,adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); }}
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all"
             >
               Create Another
@@ -382,54 +368,30 @@ const CreateSalon = () => {
                     placeholder="9876543210"
                   />
                 </Field>
-                <Field label="UPI ID" hint="e.g. salon@okaxis (internal, not shown to customers)">
+                <Field label="UPI ID" hint="Used to generate a dynamic QR code per booking">
                   <Input value={form.upiId} onChange={set('upiId')} placeholder="yourname@bank" />
                 </Field>
                 <Field label="Bank Name" hint="e.g. HDFC Bank (internal reference)">
                   <Input value={form.bankName} onChange={set('bankName')} placeholder="HDFC Bank" />
                 </Field>
-                <div className="sm:col-span-2">
-                  <Field label="UPI QR Code Image">
-                    <div className="flex items-start gap-4">
-                      <div
-                        onClick={() => qrInputRef.current.click()}
-                        className="w-28 h-28 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary cursor-pointer flex items-center justify-center overflow-hidden transition-all group flex-shrink-0"
-                      >
-                        {qrPreview ? (
-                          <img src={qrPreview} alt="QR" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="text-center text-gray-400 group-hover:text-primary transition-colors p-2">
-                            <QrCode size={28} className="mx-auto mb-1" />
-                            <p className="text-xs">Upload QR</p>
-                          </div>
-                        )}
+                {form.upiId && (
+                  <div className="sm:col-span-2">
+                    <Field label="Dynamic QR Preview">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${form.upiId}&pn=${form.upiName}&cu=INR`)}`}
+                          alt="UPI QR Preview"
+                          className="w-28 h-28 rounded-xl border border-gray-200 object-contain bg-white p-1 shadow-sm"
+                        />
+                        <div className="text-sm text-gray-500 space-y-1">
+                          <p><span className="text-gray-400">UPI ID:</span> <span className="font-mono">{form.upiId}</span></p>
+                          {form.upiName && <p><span className="text-gray-400">Name:</span> {form.upiName}</p>}
+                          <p className="text-xs text-blue-500">Amount is set dynamically per booking</p>
+                        </div>
                       </div>
-                      <input
-                        ref={qrInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleQrChange}
-                        className="hidden"
-                      />
-                      <div className="text-sm text-gray-500 pt-2">
-                        <p className="font-medium text-gray-700 mb-1">Upload your UPI QR code</p>
-                        <p>PNG or JPG, max 5MB.</p>
-                        {qrPreview && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setQrPreview(null);
-                              setQrFile(null);
-                            }}
-                            className="flex items-center gap-1 text-xs text-red-400 hover:text-red-500 mt-2"
-                          >
-                            <X size={12} /> Remove
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </Field>
-                </div>
+                    </Field>
+                  </div>
+                )}
               </div>
             )}
           </div>

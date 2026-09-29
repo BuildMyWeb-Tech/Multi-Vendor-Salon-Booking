@@ -86,6 +86,8 @@ const appointmentSchema = new mongoose.Schema(
 
     paymentScreenshot: { type: String, default: '' },
     utrNumber: { type: String, default: '' },
+    upiIdUsed: { type: String, default: '' },
+    paymentSubmittedAt: { type: Date, default: null },
     paymentVerified: { type: Boolean, default: false },
     ocrData: { type: mongoose.Schema.Types.Mixed, default: null },
 

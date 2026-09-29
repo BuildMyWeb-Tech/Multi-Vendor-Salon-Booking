@@ -356,25 +356,14 @@ export const bookAppointment = async (req, res) => {
     let paymentScreenshotUrl = '';
     let paymentVerified = false;
 
+    let shopUpiId = '';
     if (paymentMethod === 'upi') {
-      // 1. Basic UTR validation
-      if (!utrNumber || utrNumber.trim().length < 6) {
-        return res.json({ success: false, message: 'Please enter a valid UTR / Transaction ID (minimum 6 characters).' });
-      }
-      const normalizedUtr = utrNumber.trim().toUpperCase();
-
-      // 2. Duplicate UTR check
-      const existingUtr = await UtrRecord.findOne({ utrNumber: normalizedUtr });
-      if (existingUtr) {
-        return res.json({ success: false, message: 'This UTR / Transaction ID has already been used for another booking.' });
-      }
-
-      // 3. Screenshot required
+      // Screenshot required
       if (!req.file) {
         return res.json({ success: false, message: 'Payment screenshot is required to confirm UPI booking.' });
       }
 
-      // 4. Upload screenshot to Cloudinary
+      // Upload screenshot to Cloudinary
       const b64 = req.file.buffer.toString('base64');
       const dataUri = `data:${req.file.mimetype};base64,${b64}`;
       const uploadResult = await cloudinary.uploader.upload(dataUri, {
@@ -383,7 +372,10 @@ export const bookAppointment = async (req, res) => {
       });
       paymentScreenshotUrl = uploadResult.secure_url;
 
-      // 5. Mark payment as verified (UTR + screenshot submitted — admin reviews manually)
+      // Fetch shop's UPI ID to record which UPI was used
+      const shopForUpi = await shopModel.findOne({ shopId: docData.shopId }).select('upiId').lean();
+      shopUpiId = shopForUpi?.upiId || '';
+
       paymentVerified = true;
     }
 
@@ -418,20 +410,12 @@ export const bookAppointment = async (req, res) => {
       paymentMethod: paymentMethod || 'cash',
       paymentScreenshot: paymentScreenshotUrl,
       utrNumber: utrNumber ? utrNumber.trim().toUpperCase() : '',
+      upiIdUsed: shopUpiId,
+      paymentSubmittedAt: paymentMethod === 'upi' ? new Date() : null,
       paymentVerified,
       shopId: docData.shopId || 'SHOP001',
       date: Date.now(),
     }).save();
-
-    // Register UTR to prevent duplicate use
-    if (paymentMethod === 'upi' && utrNumber) {
-      await UtrRecord.create({
-        utrNumber: utrNumber.trim().toUpperCase(),
-        shopId: docData.shopId || 'SHOP001',
-        appointmentId: newAppointment._id,
-        amount: finalAmount,
-      });
-    }
 
     // Mark slot booked in doctor's map
     const slots_booked =
