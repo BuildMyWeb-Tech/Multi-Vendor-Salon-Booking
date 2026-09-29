@@ -221,6 +221,7 @@ const Appointment = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [slotSettings, setSlotSettings] = useState(null);
   const [allServices, setAllServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
   const [availableDates, setAvailableDates] = useState([]);
   const [dateLoading, setDateLoading] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
@@ -236,6 +237,7 @@ const Appointment = () => {
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError]     = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  const [couponOpen, setCouponOpen]       = useState(false);
   const [packageDiscount, setPackageDiscount] = useState(0); // percent
 
   const navigate = useNavigate();
@@ -340,11 +342,14 @@ const Appointment = () => {
   };
 
   const fetchAllServices = useCallback(async () => {
+    setServicesLoading(true);
     try {
       const { data } = await axios.get(`${backendUrl}/api/user/services`, { params: { shopSlug } });
       if (data.success) setAllServices(data.services);
     } catch (error) {
       console.error("Error fetching services:", error);
+    } finally {
+      setServicesLoading(false);
     }
   }, [backendUrl]);
 
@@ -805,7 +810,12 @@ const Appointment = () => {
               <div className="animate-slideDown">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Services</h2>
                 
-                {stylistServices.length === 0 ? (
+                {servicesLoading ? (
+                  <div className="flex items-center gap-3 py-6 text-gray-400">
+                    <div className="w-5 h-5 border-2 border-gray-200 border-t-primary rounded-full animate-spin flex-shrink-0" />
+                    <span className="text-sm">Loading services…</span>
+                  </div>
+                ) : stylistServices.length === 0 ? (
                   <p className="text-gray-500">No services available for this stylist</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1063,7 +1073,18 @@ const Appointment = () => {
 
                 {/* ── Coupon Code (when enabled for this salon) ── */}
                 {shopPaymentInfo?.couponEnabled && (
-                  <div className="bg-white border-2 border-blue-100 rounded-2xl p-5 mb-5 shadow-sm">
+                  <div className="mb-5">
+                    {!couponOpen && !couponApplied && (
+                      <button
+                        type="button"
+                        onClick={() => setCouponOpen(true)}
+                        className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2.5 rounded-xl transition-all w-full justify-center"
+                      >
+                        <Tag size={14} />
+                        Add Coupon
+                      </button>
+                    )}
+                  <div className={`bg-white border-2 border-blue-100 rounded-2xl p-5 shadow-sm ${!couponOpen && !couponApplied ? 'hidden' : ''}`}>
                     <h3 className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
                       <Tag size={15} className="text-blue-600" />
                       Have a Coupon Code?
@@ -1098,6 +1119,7 @@ const Appointment = () => {
                       </div>
                     )}
                     {couponError && <p className="text-xs text-red-500 mt-2">{couponError}</p>}
+                  </div>
                   </div>
                 )}
 
