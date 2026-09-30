@@ -19,22 +19,31 @@ export const getBroadcastContacts = async (req, res) => {
       .select('userData.name userData.phone')
       .lean();
 
-    // Merge into a map keyed by phone to deduplicate
+    // Merge into a map keyed by trimmed phone number to deduplicate.
+    // Priority: user account record first; appointment fills gaps (new phone)
+    // or fills an empty name if the registered user has none.
     const phoneMap = new Map();
 
-    users.forEach(({ name, phone }) => {
-      if (phone) phoneMap.set(phone.trim(), { name: name || '', phone: phone.trim() });
-    });
+    for (const { name, phone } of users) {
+      const p = phone?.trim();
+      if (p) phoneMap.set(p, { name: (name || '').trim(), phone: p });
+    }
 
-    appts.forEach(({ userData }) => {
-      const phone = userData?.phone?.trim();
-      if (phone && !phoneMap.has(phone)) {
-        phoneMap.set(phone, { name: userData.name || '', phone });
+    for (const { userData } of appts) {
+      const p = userData?.phone?.trim();
+      if (!p) continue;
+      const apptName = (userData.name || '').trim();
+      if (phoneMap.has(p)) {
+        // Contact already exists — fill in name only if it is currently empty
+        const existing = phoneMap.get(p);
+        if (!existing.name && apptName) existing.name = apptName;
+      } else {
+        phoneMap.set(p, { name: apptName, phone: p });
       }
-    });
+    }
 
     const contacts = Array.from(phoneMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name)
+      (a.name || a.phone).localeCompare(b.name || b.phone)
     );
 
     res.json({ success: true, contacts });
