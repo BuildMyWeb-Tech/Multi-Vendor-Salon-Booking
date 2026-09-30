@@ -8,7 +8,6 @@ import {
 const navItems = [
   { to: '/super-admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/super-admin/salons', icon: Store, label: 'All Salons' },
-  { to: '/super-admin/salons/create', icon: Plus, label: 'Create Salon' },
   { to: '/super-admin/pending-salons', icon: Clock, label: 'Pending Salons' },
 ];
 

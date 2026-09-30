@@ -49,7 +49,7 @@ const formatDisplayDate = (slotDate, slotTime) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, shopId } = req.body;
     if (!name || !email || !password || !phone)
       return res.json({ success: false, message: 'Missing Details' });
     if (!validator.isEmail(email))
@@ -64,7 +64,9 @@ const registerUser = async (req, res) => {
       return res.json({ success: false, message: 'Phone number already registered' });
 
     const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
-    const user = await new userModel({ name, email, password: hashedPassword, phone }).save();
+    const userDoc = { name, email, password: hashedPassword, phone };
+    if (shopId) userDoc.shopId = shopId;
+    const user = await new userModel(userDoc).save();
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ success: true, token });
   } catch (error) {

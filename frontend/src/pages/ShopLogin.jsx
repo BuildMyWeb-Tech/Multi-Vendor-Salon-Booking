@@ -37,7 +37,7 @@ const ShopLogin = () => {
           setLoading(false);
           return;
         }
-        const { data } = await axios.post(`${backendUrl}/api/user/register`, { name, email, password, phone });
+        const { data } = await axios.post(`${backendUrl}/api/user/register`, { name, email, password, phone, shopId: currentShop?.shopId || '' });
         if (data.success) {
           localStorage.setItem('token', data.token);
           setToken(data.token);
