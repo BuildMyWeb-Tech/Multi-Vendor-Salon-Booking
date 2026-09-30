@@ -62,6 +62,9 @@ const shopSchema = new mongoose.Schema(
     // Stylist Panel toggle
     stylistPanelEnabled: { type: Boolean, default: false },
 
+    // WhatsApp Broadcast toggle
+    broadcastEnabled: { type: Boolean, default: false },
+
     status: {
       type: String,
       enum: ['active', 'inactive', 'suspended'],

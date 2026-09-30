@@ -42,6 +42,12 @@ import {
   createCoupon, getCoupons, updateCoupon, deleteCoupon,
   createPackage, getPackages, updatePackage, deletePackage,
 } from '../controllers/discountController.js';
+import {
+  getBroadcastContacts,
+  createBroadcast,
+  getBroadcastHistory,
+  getBroadcastById,
+} from '../controllers/broadcastController.js';
 
 const salonAdminRouter = express.Router();
 
@@ -128,5 +134,11 @@ salonAdminRouter.post('/packages', authSalonAdmin, createPackage);
 salonAdminRouter.get('/packages', authSalonAdmin, getPackages);
 salonAdminRouter.put('/packages/:id', authSalonAdmin, updatePackage);
 salonAdminRouter.delete('/packages/:id', authSalonAdmin, deletePackage);
+
+/* ──────────── BROADCAST ──────────── */
+salonAdminRouter.get('/broadcast/contacts', authSalonAdmin, getBroadcastContacts);
+salonAdminRouter.get('/broadcast', authSalonAdmin, getBroadcastHistory);
+salonAdminRouter.get('/broadcast/:id', authSalonAdmin, getBroadcastById);
+salonAdminRouter.post('/broadcast', authSalonAdmin, upload.single('media'), createBroadcast);
 
 export default salonAdminRouter;

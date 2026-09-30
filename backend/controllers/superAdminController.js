@@ -238,6 +238,7 @@ export const createSalon = async (req, res) => {
       couponEnabled:        req.body.couponEnabled        === 'true' || req.body.couponEnabled        === true,
       packageEnabled:       req.body.packageEnabled       === 'true' || req.body.packageEnabled       === true,
       stylistPanelEnabled:  req.body.stylistPanelEnabled  === 'true' || req.body.stylistPanelEnabled  === true,
+      broadcastEnabled:     req.body.broadcastEnabled     === 'true' || req.body.broadcastEnabled     === true,
       upiName: upiName || '',
       upiMobileNumber: upiMobileNumber || '',
       upiId: upiId || '',
@@ -293,7 +294,7 @@ export const updateSalon = async (req, res) => {
       'upiName', 'upiMobileNumber', 'upiId', 'bankName',
     ];
     // Boolean feature toggles (arrive as strings from FormData)
-    ['paymentIntegrationEnabled', 'serviceBillingEnabled', 'productBillingEnabled', 'couponEnabled', 'packageEnabled', 'stylistPanelEnabled'].forEach((key) => {
+    ['paymentIntegrationEnabled', 'serviceBillingEnabled', 'productBillingEnabled', 'couponEnabled', 'packageEnabled', 'stylistPanelEnabled', 'broadcastEnabled'].forEach((key) => {
       if (req.body[key] !== undefined) {
         shop[key] = req.body[key] === 'true' || req.body[key] === true;
       }

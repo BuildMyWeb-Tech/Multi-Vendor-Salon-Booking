@@ -133,7 +133,7 @@ export const updateSalonRequest = async (req, res) => {
       'businessName', 'gstNumber', 'upiName', 'upiMobileNumber', 'upiId', 'bankName',
       'adminName', 'adminId', 'adminEmail', 'adminPassword',
     ];
-    const boolKeys = ['paymentIntegrationEnabled', 'serviceBillingEnabled', 'productBillingEnabled', 'couponEnabled', 'packageEnabled', 'stylistPanelEnabled'];
+    const boolKeys = ['paymentIntegrationEnabled', 'serviceBillingEnabled', 'productBillingEnabled', 'couponEnabled', 'packageEnabled', 'stylistPanelEnabled', 'broadcastEnabled'];
     boolKeys.forEach((key) => {
       if (req.body[key] !== undefined) request[key] = req.body[key] === 'true' || req.body[key] === true;
     });
@@ -186,6 +186,7 @@ export const approveSalonRequest = async (req, res) => {
       couponEnabled: request.couponEnabled,
       packageEnabled: request.packageEnabled,
       stylistPanelEnabled: request.stylistPanelEnabled,
+      broadcastEnabled: request.broadcastEnabled,
     });
 
     const hashedPassword = await bcrypt.hash(request.adminPassword, 10);

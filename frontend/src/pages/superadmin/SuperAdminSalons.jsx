@@ -3,7 +3,7 @@ import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, Search, Plus, CheckCircle, Clock, Filter, RefreshCw,
   Eye, Pencil, Trash2, X, ExternalLink, Phone, Mail, MapPin,
-  Building2, User, Upload, Globe, Loader2, AlertTriangle, QrCode, CreditCard, Tag, Gift, Users
+  Building2, User, Upload, Globe, Loader2, AlertTriangle, QrCode, CreditCard, Tag, Gift, Users, MessageCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -67,6 +67,7 @@ const SuperAdminSalons = () => {
       couponEnabled:        salon.couponEnabled        || false,
       packageEnabled:       salon.packageEnabled       || false,
       stylistPanelEnabled:  salon.stylistPanelEnabled  || false,
+      broadcastEnabled:     salon.broadcastEnabled     || false,
     });
     setEditLogoFile(null);
     setEditLogoPreview(salon.logo || null);
@@ -468,9 +469,10 @@ const SuperAdminSalons = () => {
                   <span className="text-sm font-semibold text-gray-700">Discount & Package Features</span>
                 </div>
                 {[
-                  { key: 'couponEnabled',       icon: Tag,   label: 'Discount / Coupon',  desc: 'Allow admin to create coupon codes for customers' },
-                  { key: 'packageEnabled',      icon: Gift,  label: 'Package Discount',   desc: 'Auto-apply discount on configured service packages' },
-                  { key: 'stylistPanelEnabled', icon: Users, label: 'Stylist Panel',       desc: 'Give stylists their own login portal at /{salon}/stylist' },
+                  { key: 'couponEnabled',       icon: Tag,          label: 'Discount / Coupon',    desc: 'Allow admin to create coupon codes for customers' },
+                  { key: 'packageEnabled',      icon: Gift,         label: 'Package Discount',     desc: 'Auto-apply discount on configured service packages' },
+                  { key: 'stylistPanelEnabled', icon: Users,        label: 'Stylist Panel',         desc: 'Give stylists their own login portal at /{salon}/stylist' },
+                  { key: 'broadcastEnabled',    icon: MessageCircle, label: 'WhatsApp Broadcast',   desc: 'Let admin send bulk WhatsApp messages to salon customers' },
                 ].map(({ key, icon: Icon, label, desc }) => (
                   <label key={key} className="flex items-center gap-3 cursor-pointer select-none">
                     <div

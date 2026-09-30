@@ -4,7 +4,7 @@ import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, User, Phone, Mail, MapPin,
   Smartphone, Eye, EyeOff, Upload, Check, X,
-  ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap, Tag, Gift, Users,
+  ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap, Tag, Gift, Users, MessageCircle,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
@@ -59,6 +59,7 @@ const CreateSalon = () => {
     couponEnabled: false,
     packageEnabled: false,
     stylistPanelEnabled: false,
+    broadcastEnabled: false,
     adminName: '', adminId: '', adminEmail: '', password: '',
   });
 
@@ -397,6 +398,7 @@ const CreateSalon = () => {
               { key: 'couponEnabled',       icon: Tag,   label: 'Discount / Coupon',  desc: 'Allow admin to create coupon codes for customer discounts' },
               { key: 'packageEnabled',      icon: Gift,  label: 'Package Discount',   desc: 'Auto-apply discount when customers select a configured service package' },
               { key: 'stylistPanelEnabled', icon: Users, label: 'Stylist Panel',       desc: 'Give stylists a dedicated login portal at /{salon}/stylist' },
+              { key: 'broadcastEnabled',    icon: MessageCircle, label: 'WhatsApp Broadcast', desc: 'Let admin send bulk WhatsApp messages to salon customers' },
             ].map(({ key, icon: Icon, label, desc }) => (
               <label key={key} className="flex items-center gap-4 cursor-pointer select-none">
                 <div

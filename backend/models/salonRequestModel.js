@@ -25,6 +25,7 @@ const salonRequestSchema = new mongoose.Schema(
     couponEnabled:         { type: Boolean, default: false },
     packageEnabled:        { type: Boolean, default: false },
     stylistPanelEnabled:   { type: Boolean, default: false },
+    broadcastEnabled:      { type: Boolean, default: false },
 
     adminName:     { type: String, required: true },
     adminId:       { type: String, required: true },

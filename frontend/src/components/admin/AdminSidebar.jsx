@@ -6,7 +6,7 @@ import { SalonAdminContext } from '../../context/SalonAdminContext';
 import {
   Calendar, UserPlus2, ChevronLeft, ChevronRight, MenuIcon, X,
   Scissors, LayoutGrid, CalendarClock, UserCog, LayoutDashboard,
-  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt, Tag, Gift,
+  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt, Tag, Gift, MessageCircle,
 } from 'lucide-react';
 
 const iconClass = 'min-w-[23px] w-[23px] h-[23px]';
@@ -27,6 +27,7 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
   const couponEnabled       = shopInfo?.couponEnabled;
   const packageEnabled      = shopInfo?.packageEnabled;
   const stylistPanelEnabled = shopInfo?.stylistPanelEnabled;
+  const broadcastEnabled    = shopInfo?.broadcastEnabled;
 
   const adminLinks = [
     { to: `/${slug}/admin/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
@@ -41,8 +42,9 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
       { to: `/${slug}/admin/inventory`, label: 'Inventory', icon: Boxes },
     ] : []),
     ...(showBilling ? [{ to: `/${slug}/admin/bills`, label: 'Bills', icon: Receipt }] : []),
-    ...(couponEnabled  ? [{ to: `/${slug}/admin/coupons`,  label: 'Coupons',  icon: Tag  }] : []),
-    ...(packageEnabled ? [{ to: `/${slug}/admin/packages`, label: 'Packages', icon: Gift }] : []),
+    ...(couponEnabled     ? [{ to: `/${slug}/admin/coupons`,    label: 'Coupons',             icon: Tag            }] : []),
+    ...(packageEnabled    ? [{ to: `/${slug}/admin/packages`,   label: 'Packages',            icon: Gift           }] : []),
+    ...(broadcastEnabled  ? [{ to: `/${slug}/admin/broadcast`,  label: 'WhatsApp Broadcast',  icon: MessageCircle  }] : []),
   ];
 
   const stylistLinks = [

@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import {
   Clock, Eye, Check, Trash2, X, AlertTriangle, Search,
   Store, User, Phone, Mail, MapPin, Building2, QrCode, Zap,
-  ShoppingCart, Package, Tag, Gift, Users, ExternalLink, Edit2,
+  ShoppingCart, Package, Tag, Gift, Users, MessageCircle, ExternalLink, Edit2,
   ChevronDown, ChevronUp, Save,
 } from 'lucide-react';
 
@@ -14,6 +14,7 @@ const FEATURE_KEYS = [
   { key: 'couponEnabled',         icon: Tag,          label: 'Coupons', desc: 'Create discount coupon codes' },
   { key: 'packageEnabled',        icon: Gift,         label: 'Packages', desc: 'Service package discounts' },
   { key: 'stylistPanelEnabled',   icon: Users,        label: 'Stylist Panel', desc: 'Individual login per stylist' },
+  { key: 'broadcastEnabled',      icon: MessageCircle, label: 'WhatsApp Broadcast', desc: 'Bulk WhatsApp messaging to salon customers' },
 ];
 
 const Input = (props) => (
@@ -432,7 +433,7 @@ export default function PendingSalons() {
                 disabled={deleting}
                 className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl text-sm"
               >
-                {deleting ? 'Deleting…' : 'Delete'}
+                {deleting ? 'Deletingâ€¦' : 'Delete'}
               </button>
             </div>
           </div>
