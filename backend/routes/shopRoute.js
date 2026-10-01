@@ -36,10 +36,20 @@ const generateUpiQr = (upiId, name, amount) =>
       .catch(() => tryCmd('python3').then(resolve).catch(reject));
   });
 
-// GET /api/shop/:slug — resolve a slug to shop info
+// GET /api/shop/:slug — resolve a slug to public shop info
+// Only fields needed by the customer-facing UI are returned.
+// Sensitive fields (upiId, bankName, gstNumber, adminId, adminEmail, billing flags, etc.)
+// are intentionally excluded — use authenticated /api/salon-admin routes for those.
+const PUBLIC_SHOP_FIELDS =
+  'shopId shopName slug logo tagline phone whatsapp email address city state pincode ' +
+  'workingHours status couponEnabled packageEnabled paymentIntegrationEnabled broadcastEnabled';
+
 shopRouter.get('/:slug', async (req, res) => {
   try {
-    const shop = await shopModel.findOne({ slug: req.params.slug }).lean();
+    const shop = await shopModel
+      .findOne({ slug: req.params.slug })
+      .select(PUBLIC_SHOP_FIELDS)
+      .lean();
     if (!shop) {
       return res.json({ success: false, message: 'Salon not found.' });
     }
