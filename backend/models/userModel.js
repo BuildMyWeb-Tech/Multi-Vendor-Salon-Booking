@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: true,
-      unique: true,
     },
     address: { type: Object, default: { line1: '', line2: '' } },
     gender: { type: String, default: 'Not Selected' },
@@ -52,6 +51,9 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Compound unique index: same phone can exist in different salons, but not twice in the same salon
+userSchema.index({ phone: 1, shopId: 1 }, { unique: true });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);
 export default userModel;

@@ -617,10 +617,11 @@ export const removeSpecialWorkingDay = async (req, res) => {
 
 export const getPublicSlotSettings = async (req, res) => {
   try {
-    let settings = await SlotSettings.findOne();
+    const shopId = req.query.shopId || req.salonAdmin?.shopId || 'SHOP001';
+    let settings = await SlotSettings.findOne({ shopId });
     if (!settings) {
       settings = await SlotSettings.create({
-        shopId: 'SHOP001',
+        shopId,
         slotStartTime: '09:00',
         slotEndTime: '18:00',
         slotDuration: 30,

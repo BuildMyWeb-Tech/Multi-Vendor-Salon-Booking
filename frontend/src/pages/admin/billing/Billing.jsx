@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SalonAdminContext } from '../../../context/SalonAdminContext';
 import { toast } from 'react-toastify';
 import {
@@ -17,8 +18,13 @@ const getSavedTax = () => {
 
 const Billing = () => {
   const { billingApi, appointments, getAllAppointments, shopInfo } = useContext(SalonAdminContext);
+  const navigate = useNavigate();
   const serviceBilling = shopInfo?.serviceBillingEnabled;
   const productBilling = shopInfo?.productBillingEnabled;
+
+  useEffect(() => {
+    if (shopInfo && !serviceBilling && !productBilling) navigate('/admin/dashboard');
+  }, [shopInfo]);
 
   // ── State ─────────────────────────────────────────────────────────────────────
   const [products, setProducts] = useState([]);

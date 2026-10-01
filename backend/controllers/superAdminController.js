@@ -7,6 +7,16 @@ import appointmentModel from '../models/appointmentModel.js';
 import doctorModel from '../models/doctorModel.js';
 import userModel from '../models/userModel.js';
 import { v2 as cloudinary } from 'cloudinary';
+import billModel from '../models/billModel.js';
+import productModel from '../models/productModel.js';
+import couponModel from '../models/couponModel.js';
+import packageModel from '../models/packageModel.js';
+import broadcastModel from '../models/broadcastModel.js';
+import SlotSettings from '../models/SlotSettings.js';
+import BlockedDate from '../models/BlockedDate.js';
+import RecurringHoliday from '../models/RecurringHoliday.js';
+import SpecialWorkingDay from '../models/SpecialWorkingDay.js';
+import AdminNotification from '../models/AdminNotification.js';
 
 // ── Helper: generate sequential shopId (collision-safe) ──────────────────────
 const generateShopId = async () => {
@@ -334,7 +344,26 @@ export const deleteSalon = async (req, res) => {
     const { shopId } = req.params;
     const shop = await shopModel.findOneAndDelete({ shopId });
     if (!shop) return res.json({ success: false, message: 'Salon not found.' });
-    res.json({ success: true, message: 'Salon deleted.' });
+
+    // Cascade: remove all data belonging to this salon
+    await Promise.all([
+      appointmentModel.deleteMany({ shopId }),
+      doctorModel.deleteMany({ shopId }),
+      userModel.deleteMany({ shopId }),
+      salonAdminModel.deleteMany({ shopId }),
+      billModel.deleteMany({ shopId }),
+      productModel.deleteMany({ shopId }),
+      couponModel.deleteMany({ shopId }),
+      packageModel.deleteMany({ shopId }),
+      broadcastModel.deleteMany({ shopId }),
+      SlotSettings.deleteMany({ shopId }),
+      BlockedDate.deleteMany({ shopId }),
+      RecurringHoliday.deleteMany({ shopId }),
+      SpecialWorkingDay.deleteMany({ shopId }),
+      AdminNotification.deleteMany({ shopId }),
+    ]);
+
+    res.json({ success: true, message: 'Salon and all associated data deleted.' });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

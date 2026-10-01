@@ -111,7 +111,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ── API ROUTES ───────────────────────────────────────────────────────────────
 app.use('/api/user', userRouter);
-app.use('/api/admin', adminRouter);
+// app.use('/api/admin', adminRouter); // disabled — single-tenant legacy routes; use /api/salon-admin instead
 app.use('/api/salon-admin', salonAdminRouter);
 app.use('/api/super-admin', superAdminRouter);
 app.use('/api/shop', shopRouter);

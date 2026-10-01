@@ -71,9 +71,11 @@ const appointmentCancel = async (req, res) => {
     try {
         const { docId, appointmentId } = req.body
 
-        const appointmentData = await appointmentModel.findById(appointmentId)
-        
-        // ✅ FIX: Check doctorId instead of docId
+        const doctor = await doctorModel.findById(docId).select('shopId slots_booked')
+        const appointmentData = doctor
+          ? await appointmentModel.findOne({ _id: appointmentId, shopId: doctor.shopId })
+          : null
+
         if (appointmentData && appointmentData.doctorId.toString() === docId) {
             await appointmentModel.findByIdAndUpdate(appointmentId, { 
                 cancelled: true,
@@ -81,7 +83,7 @@ const appointmentCancel = async (req, res) => {
             })
             
             // ✅ Remove slot from doctor's booked slots
-            const doctor = await doctorModel.findById(docId)
+            const doctor = await doctorModel.findById(docId).select('slots_booked')
             if (doctor) {
                 const slotDate = appointmentData.slotDate
                 let slots_booked = doctor.slots_booked || new Map()

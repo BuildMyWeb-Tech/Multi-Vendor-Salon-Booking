@@ -1,12 +1,18 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { SalonAdminContext } from '../../context/SalonAdminContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Tag, Plus, Trash2, Pencil, Check, X, Clock, Infinity } from 'lucide-react';
 
 const EMPTY = { code: '', discountPercent: '', expiryDate: '', lifetime: true };
 
 const Coupons = () => {
-  const { discountApi } = useContext(SalonAdminContext);
+  const { discountApi, shopInfo } = useContext(SalonAdminContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (shopInfo && !shopInfo.couponEnabled) navigate('/admin/dashboard');
+  }, [shopInfo]);
   const [coupons, setCoupons]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [showForm, setShowForm] = useState(false);

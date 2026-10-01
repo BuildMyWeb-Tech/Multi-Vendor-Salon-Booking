@@ -60,8 +60,8 @@ const registerUser = async (req, res) => {
       return res.json({ success: false, message: 'Please enter a strong password' });
     if (await userModel.findOne({ email }))
       return res.json({ success: false, message: 'User already exists with this email' });
-    if (await userModel.findOne({ phone }))
-      return res.json({ success: false, message: 'Phone number already registered' });
+    if (await userModel.findOne({ phone, shopId: shopId || 'SHOP001' }))
+      return res.json({ success: false, message: 'Phone number already registered at this salon' });
 
     const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
     const userDoc = { name, email, password: hashedPassword, phone };
@@ -178,9 +178,9 @@ export const getAvailableDates = async (req, res) => {
     if (!doctor.available) return res.json({ success: false, message: 'Stylist is not available' });
 
     const shopId = doctor.shopId || 'SHOP001';
-    let settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
+    let settings = await SlotSettings.findOne({ shopId });
 
-    // Auto-seed default settings if none exist in the database
+    // Auto-seed default settings if none exist for this salon
     if (!settings) {
       settings = await SlotSettings.create({
         shopId,
@@ -264,7 +264,7 @@ export const getAvailableSlots = async (req, res) => {
       return res.json({ success: true, slots: [], message: 'Stylist is on leave on this date' });
 
     const shopId = doctor.shopId || 'SHOP001';
-    let settings = await SlotSettings.findOne({ shopId }) || await SlotSettings.findOne();
+    let settings = await SlotSettings.findOne({ shopId });
     if (!settings) {
       settings = await SlotSettings.create({
         shopId,

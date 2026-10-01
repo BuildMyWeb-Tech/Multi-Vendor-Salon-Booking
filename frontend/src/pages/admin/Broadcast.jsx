@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { SalonAdminContext } from '../../context/SalonAdminContext';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import {
@@ -84,8 +85,13 @@ const HistoryCard = ({ broadcast, onView }) => (
 // ── main component ────────────────────────────────────────────────────────────
 
 const Broadcast = () => {
-  const { saAdminToken, backendUrl } = useContext(SalonAdminContext);
+  const { saAdminToken, backendUrl, shopInfo } = useContext(SalonAdminContext);
+  const navigate = useNavigate();
   const hdrs = () => ({ satoken: saAdminToken });
+
+  useEffect(() => {
+    if (shopInfo && !shopInfo.broadcastEnabled) navigate('/admin/dashboard');
+  }, [shopInfo]);
 
   // contacts
   const [contacts, setContacts]             = useState([]);
