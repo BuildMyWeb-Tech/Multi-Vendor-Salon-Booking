@@ -145,7 +145,7 @@ const CreateSalon = () => {
 
           <div className="flex gap-3">
             <button
-              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',serviceBillingEnabled:false,productBillingEnabled:false,couponEnabled:false,packageEnabled:false,broadcastEnabled:false,adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); }}
+              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',serviceBillingEnabled:false,productBillingEnabled:false,couponEnabled:false,packageEnabled:false,broadcastEnabled:false,stylistPanelEnabled:false,adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); }}
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all"
             >
               Create Another

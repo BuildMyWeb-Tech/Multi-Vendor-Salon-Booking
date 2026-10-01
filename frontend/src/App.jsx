@@ -62,7 +62,7 @@ import MyAppointments from './pages/MyAppointments'
 import MyProfile from './pages/MyProfile'
 import Verify from './pages/Verify'
 
-// â”€â”€ SUPER ADMIN SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SUPER ADMIN SECTION ──────────────────────────────────────────────────────
 const SuperAdminSection = () => {
   const { saToken } = useContext(SuperAdminContext)
 
@@ -89,7 +89,7 @@ const SuperAdminSection = () => {
   )
 }
 
-// â”€â”€ SHOP ADMIN SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SHOP ADMIN SECTION ───────────────────────────────────────────────────────
 const ShopAdminSection = () => {
   const { shopSlug } = useParams()
   const salonAdminCtx = useContext(SalonAdminContext)
@@ -193,7 +193,7 @@ const ShopAdminSection = () => {
   )
 }
 
-// â”€â”€ CUSTOMER SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CUSTOMER SECTION ─────────────────────────────────────────────────────────
 const ShopCustomerSection = () => {
   const { shopSlug } = useParams()
   const { loadShop } = useContext(ShopContext)
@@ -225,25 +225,25 @@ const ShopCustomerSection = () => {
 }
 
 
-// â”€â”€ MAIN APP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
 const App = () => (
   <>
     <ToastContainer position="top-center" autoClose={3000} />
     <ScrollToTop />
     <Routes>
-      {/* Super Admin â€” must be before /:shopSlug/* to avoid slug capturing "super-admin" */}
+      {/* Super Admin — must be before /:shopSlug/* to avoid slug capturing “super-admin” */}
       <Route path="/super-admin/*" element={<SuperAdminSection />} />
 
-      {/* Shop Admin â€” must be before /:shopSlug/* */}
+      {/* Shop Admin — must be before /:shopSlug/* */}
       <Route path="/:shopSlug/admin/*" element={<ShopAdminSection />} />
 
-      {/* Stylist Panel â€” must be before /:shopSlug/* */}
+      {/* Stylist Panel — must be before /:shopSlug/* */}
       <Route path="/:shopSlug/stylist/*" element={<StylistSection />} />
 
       {/* Customer shop pages */}
       <Route path="/:shopSlug/*" element={<ShopCustomerSection />} />
 
-      {/* Create Your Own Salon â€” public form */}
+      {/* Create Your Own Salon — public form */}
       <Route path="/create-salon" element={<CreateYourSalon />} />
 
       {/* Platform root */}

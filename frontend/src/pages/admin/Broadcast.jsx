@@ -121,6 +121,10 @@ const Broadcast = () => {
   const [detail, setDetail]                 = useState(null);
   const [detailLoading, setDetailLoading]   = useState(false);
 
+  // manual send queue modal
+  const [sendQueue, setSendQueue]           = useState(null); // { contacts, message, current }
+
+
   useEffect(() => { loadContacts(); loadHistory(); }, []);
 
   const loadContacts = async (page = 1, append = false) => {
@@ -192,17 +196,22 @@ const Broadcast = () => {
   const handleManualSend = async () => {
     if (selected.size === 0) { toast.warning('Select at least one contact'); return; }
     if (!message.trim() && !mediaFile) { toast.warning('Enter a message or upload media'); return; }
+    // Save broadcast record first, then show the send-queue modal
     setSending(true);
     try {
-      selectedContacts.forEach((c) => window.open(waUrl(c.phone, message.trim()), '_blank'));
       const data = await saveBroadcast(selectedContacts.map((c) => ({ ...c, status: 'pending' })));
-      if (data.success) {
-        toast.success('WhatsApp opened and broadcast saved!');
-        setMessage(''); setSelected(new Set()); clearMedia();
-        loadHistory(); setView('history');
-      } else { toast.error(data.message); }
+      if (!data.success) { toast.error(data.message); return; }
+      // Open queue modal — user opens WhatsApp one contact at a time
+      setSendQueue({ contacts: selectedContacts, message: message.trim(), current: 0 });
+      setMessage(''); setSelected(new Set()); clearMedia();
     } catch (err) { toast.error(err.response?.data?.message || err.message || 'Error'); }
     finally { setSending(false); }
+  };
+
+  const closeSendQueue = () => {
+    setSendQueue(null);
+    loadHistory();
+    setView('history');
   };
 
   const handleApiSend = async () => {
@@ -413,7 +422,7 @@ const Broadcast = () => {
               )}
               {sendMode === 'manual' && (
                 <p className="mt-3 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700">
-                  WhatsApp will open once per selected contact. Only messages you manually send are actually delivered — they are saved as "Pending" in history.
+                  A step-by-step guide will open WhatsApp for each contact one at a time. Only messages you manually send are actually delivered — they are saved as "Pending" in history.
                 </p>
               )}
             </div>
@@ -473,7 +482,7 @@ const Broadcast = () => {
                   </p>
                   {selected.size > 0 && sendMode === 'manual' && (
                     <p className="text-xs text-amber-600 mt-0.5">
-                      WhatsApp will open {selected.size} time{selected.size !== 1 ? 's' : ''}
+                      Opens a step-by-step guide for {selected.size} contact{selected.size !== 1 ? 's' : ''}
                     </p>
                   )}
                   {selected.size > 0 && sendMode === 'api' && (
@@ -582,7 +591,93 @@ const Broadcast = () => {
           </div>
         </div>
       )}
-    </div>
+
+      {/* ── Manual Send Queue Modal ─────────────────────────────────────────── */}
+    {sendQueue && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-gray-800">Send via WhatsApp</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {sendQueue.current + 1} of {sendQueue.contacts.length} contacts
+              </p>
+            </div>
+            <button onClick={closeSendQueue} className="text-gray-400 hover:text-gray-600">
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Progress bar */}
+          <div className="h-1 bg-gray-100">
+            <div
+              className="h-1 bg-primary transition-all"
+              style={{ width: `${((sendQueue.current) / sendQueue.contacts.length) * 100}%` }}
+            />
+          </div>
+
+          <div className="p-5 space-y-4">
+            {sendQueue.current < sendQueue.contacts.length ? (
+              <>
+                <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-4">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-sm font-bold text-primary">
+                      {(sendQueue.contacts[sendQueue.current].name || sendQueue.contacts[sendQueue.current].phone).charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800">{sendQueue.contacts[sendQueue.current].name || '—'}</p>
+                    <p className="text-xs text-gray-400">{sendQueue.contacts[sendQueue.current].phone}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                  Click <strong>Open WhatsApp</strong>, send the message manually, then click <strong>Next</strong>.
+                </p>
+                <div className="flex gap-3">
+                  <a
+                    href={waUrl(sendQueue.contacts[sendQueue.current].phone, sendQueue.message)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-all"
+                  >
+                    <MessageCircle size={15} /> Open WhatsApp
+                  </a>
+                  <button
+                    onClick={() => setSendQueue(q => ({ ...q, current: q.current + 1 }))}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 rounded-xl text-sm transition-all"
+                  >
+                    Next →
+                  </button>
+                </div>
+                <button
+                  onClick={closeSendQueue}
+                  className="w-full text-xs text-gray-400 hover:text-gray-600 py-1"
+                >
+                  Skip remaining and finish
+                </button>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckSquare size={22} className="text-green-600" />
+                </div>
+                <p className="font-semibold text-gray-800">All done!</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Broadcast saved for all {sendQueue.contacts.length} contacts.
+                </p>
+                <button
+                  onClick={closeSendQueue}
+                  className="mt-4 bg-primary text-white font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-primary/90 transition-all"
+                >
+                  View History
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
   );
 };
 

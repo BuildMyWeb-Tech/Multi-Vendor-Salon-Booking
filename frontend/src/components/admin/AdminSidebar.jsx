@@ -187,26 +187,27 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
       {/* Mobile bottom nav — admin */}
       {!mobileOpen && aToken && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-xl py-1 z-30">
-          <div className="flex justify-around">
+          <div className="flex overflow-x-auto scrollbar-none gap-1 px-1">
             {[
-              { to: `/${slug}/admin/dashboard`, icon: LayoutDashboard, label: 'Dashboard' },
-              { to: `/${slug}/admin/appointments`, icon: Calendar, label: 'Appts' },
-              { to: `/${slug}/admin/stylists`, icon: UserCog, label: 'Stylists' },
-              { to: `/${slug}/admin/services`, icon: Scissors, label: 'Services' },
-              ...(showBilling
-                ? [{ to: `/${slug}/admin/billing`, icon: ShoppingCart, label: 'Billing' }]
-                : [{ to: `/${slug}/admin/slot-management`, icon: CalendarClock, label: 'Slots' }]
-              ),
+              { to: `/${slug}/admin/dashboard`,       icon: LayoutDashboard, label: 'Home'     },
+              { to: `/${slug}/admin/appointments`,    icon: Calendar,        label: 'Appts'    },
+              { to: `/${slug}/admin/stylists`,        icon: UserCog,         label: 'Stylists' },
+              { to: `/${slug}/admin/services`,        icon: Scissors,        label: 'Services' },
+              { to: `/${slug}/admin/slot-management`, icon: CalendarClock,   label: 'Slots'    },
+              ...(showBilling    ? [{ to: `/${slug}/admin/billing`,   icon: ShoppingCart,  label: 'Billing'   }] : []),
+              ...(couponEnabled  ? [{ to: `/${slug}/admin/coupons`,   icon: Tag,           label: 'Coupons'   }] : []),
+              ...(packageEnabled ? [{ to: `/${slug}/admin/packages`,  icon: Gift,          label: 'Packages'  }] : []),
+              ...(broadcastEnabled ? [{ to: `/${slug}/admin/broadcast`, icon: MessageCircle, label: 'Broadcast' }] : []),
             ].map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `flex flex-col items-center text-xs p-2 ${isActive ? 'text-primary' : 'text-gray-500'}`
+                  `flex flex-col items-center text-xs py-1.5 px-3 flex-shrink-0 rounded-lg transition-colors ${isActive ? 'text-primary' : 'text-gray-500'}`
                 }
               >
-                <Icon className="w-5 h-5 mb-1" />
-                <span>{label}</span>
+                <Icon className="w-5 h-5 mb-0.5" />
+                <span className="whitespace-nowrap">{label}</span>
               </NavLink>
             ))}
           </div>

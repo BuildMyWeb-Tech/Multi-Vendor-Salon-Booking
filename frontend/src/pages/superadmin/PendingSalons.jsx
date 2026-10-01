@@ -433,7 +433,7 @@ export default function PendingSalons() {
                 disabled={deleting}
                 className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl text-sm"
               >
-                {deleting ? 'Deletingâ€¦' : 'Delete'}
+                {deleting ? 'Deleting…' : 'Delete'}
               </button>
             </div>
           </div>
