@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { CreditCard, Smartphone, QrCode, Save, Loader2, ToggleLeft, ToggleRight, Info } from 'lucide-react';
 
 const PaymentSettings = () => {
-  const { saAdminToken, backendUrl } = useContext(SalonAdminContext);
+  const { saAdminToken, backendUrl, fetchShopInfo } = useContext(SalonAdminContext);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -41,8 +41,10 @@ const PaymentSettings = () => {
       const { data } = await axios.put(`${backendUrl}/api/salon-admin/payment-settings`, form, {
         headers: { saadmintoken: saAdminToken },
       });
-      if (data.success) toast.success('Payment settings saved');
-      else toast.error(data.message);
+      if (data.success) {
+        toast.success('Payment settings saved');
+        fetchShopInfo({ force: true });
+      } else toast.error(data.message);
     } catch {
       toast.error('Failed to save settings');
     } finally {

@@ -6,22 +6,27 @@ import { v2 as cloudinary } from 'cloudinary';
 // ── GET /api/salon-admin/broadcast/contacts ───────────────────────────────────
 // Returns deduplicated contacts (name + phone) from users and appointments
 // belonging to the authenticated salon only.
+// Supports ?page=1&limit=200 for pagination (default limit 200, max 500).
 export const getBroadcastContacts = async (req, res) => {
   try {
     const { shopId } = req.salonAdmin;
+    const page  = Math.max(1, parseInt(req.query.page  || '1', 10));
+    const limit = Math.min(500, Math.max(1, parseInt(req.query.limit || '200', 10)));
+    const skip  = (page - 1) * limit;
 
-    // 1. Users who registered via this salon
-    const users = await userModel.find({ shopId }, 'name phone').lean();
+    // 1. Fetch users in pages — project only name + phone
+    const [users, appts] = await Promise.all([
+      userModel
+        .find({ shopId }, 'name phone')
+        .sort({ name: 1 })
+        .lean(),
+      appointmentModel
+        .find({ shopId, 'userData.phone': { $exists: true, $ne: '' } })
+        .select('userData.name userData.phone')
+        .lean(),
+    ]);
 
-    // 2. Appointment bookers — use denormalized userData (covers guests / different-salon users)
-    const appts = await appointmentModel
-      .find({ shopId, 'userData.phone': { $exists: true, $ne: '' } })
-      .select('userData.name userData.phone')
-      .lean();
-
-    // Merge into a map keyed by trimmed phone number to deduplicate.
-    // Priority: user account record first; appointment fills gaps (new phone)
-    // or fills an empty name if the registered user has none.
+    // 2. Merge into a map keyed by trimmed phone — users take priority over appointment data
     const phoneMap = new Map();
 
     for (const { name, phone } of users) {
@@ -34,7 +39,6 @@ export const getBroadcastContacts = async (req, res) => {
       if (!p) continue;
       const apptName = (userData.name || '').trim();
       if (phoneMap.has(p)) {
-        // Contact already exists — fill in name only if it is currently empty
         const existing = phoneMap.get(p);
         if (!existing.name && apptName) existing.name = apptName;
       } else {
@@ -42,11 +46,15 @@ export const getBroadcastContacts = async (req, res) => {
       }
     }
 
-    const contacts = Array.from(phoneMap.values()).sort((a, b) =>
+    // 3. Sort all merged contacts, then paginate in-memory
+    const all = Array.from(phoneMap.values()).sort((a, b) =>
       (a.name || a.phone).localeCompare(b.name || b.phone)
     );
 
-    res.json({ success: true, contacts });
+    const total    = all.length;
+    const contacts = all.slice(skip, skip + limit);
+
+    res.json({ success: true, contacts, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

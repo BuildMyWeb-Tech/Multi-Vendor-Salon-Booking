@@ -95,7 +95,11 @@ const Broadcast = () => {
 
   // contacts
   const [contacts, setContacts]             = useState([]);
+  const [contactsTotal, setContactsTotal]   = useState(0);
+  const [contactsPage, setContactsPage]     = useState(1);
+  const [contactsPages, setContactsPages]   = useState(1);
   const [contactsLoading, setContactsLoading] = useState(true);
+  const [contactsLoadingMore, setContactsLoadingMore] = useState(false);
   const [search, setSearch]                 = useState('');
   const [selected, setSelected]             = useState(new Set());
 
@@ -119,14 +123,21 @@ const Broadcast = () => {
 
   useEffect(() => { loadContacts(); loadHistory(); }, []);
 
-  const loadContacts = async () => {
-    setContactsLoading(true);
+  const loadContacts = async (page = 1, append = false) => {
+    if (page === 1) setContactsLoading(true); else setContactsLoadingMore(true);
     try {
-      const { data } = await axios.get(`${backendUrl}/api/salon-admin/broadcast/contacts`, { headers: hdrs() });
-      if (data.success) setContacts(data.contacts);
-      else toast.error(data.message);
+      const { data } = await axios.get(
+        `${backendUrl}/api/salon-admin/broadcast/contacts?page=${page}&limit=200`,
+        { headers: hdrs() }
+      );
+      if (data.success) {
+        setContacts(prev => append ? [...prev, ...data.contacts] : data.contacts);
+        setContactsTotal(data.total);
+        setContactsPage(data.page);
+        setContactsPages(data.pages);
+      } else toast.error(data.message);
     } catch { toast.error('Failed to load contacts'); }
-    finally { setContactsLoading(false); }
+    finally { setContactsLoading(false); setContactsLoadingMore(false); }
   };
 
   const loadHistory = async () => {
@@ -336,6 +347,17 @@ const Broadcast = () => {
                     onToggle={() => toggleContact(c.phone)}
                   />
                 ))
+              )}
+              {!search && contactsPage < contactsPages && (
+                <button
+                  onClick={() => loadContacts(contactsPage + 1, true)}
+                  disabled={contactsLoadingMore}
+                  className="w-full py-2.5 text-xs text-primary font-medium hover:bg-primary/5 border-t border-gray-100 flex items-center justify-center gap-1.5"
+                >
+                  {contactsLoadingMore
+                    ? <><Loader2 size={13} className="animate-spin" /> Loading…</>
+                    : `Load more (${contactsTotal - contacts.length} remaining)`}
+                </button>
               )}
             </div>
 

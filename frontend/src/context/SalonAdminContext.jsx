@@ -65,14 +65,27 @@ const SalonAdminContextProvider = ({ children }) => {
     return () => sock.off('admin_notification', handler);
   }, [shopInfo?.shopId]);
 
-  const fetchShopInfo = async () => {
+  const SHOP_INFO_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+  const fetchShopInfo = async ({ force = false } = {}) => {
     try {
+      // Skip the network call if cached data is fresh enough
+      if (!force) {
+        const cached   = localStorage.getItem('shopInfo');
+        const cachedAt = parseInt(localStorage.getItem('shopInfoFetchedAt') || '0', 10);
+        if (cached && Date.now() - cachedAt < SHOP_INFO_TTL_MS) {
+          const parsed = JSON.parse(cached);
+          setShopInfo(parsed);
+          return;
+        }
+      }
       const { data } = await axios.get(`${backendUrl}/api/salon-admin/shop-info`, {
         headers: headers(),
       });
       if (data.success) {
         setShopInfo(data.shop);
         localStorage.setItem('shopInfo', JSON.stringify(data.shop));
+        localStorage.setItem('shopInfoFetchedAt', String(Date.now()));
       }
     } catch {}
   };
@@ -381,6 +394,7 @@ const SalonAdminContextProvider = ({ children }) => {
     setShopInfo(null);
     localStorage.removeItem('saAdminToken');
     localStorage.removeItem('shopInfo');
+    localStorage.removeItem('shopInfoFetchedAt');
   };
 
   const value = {

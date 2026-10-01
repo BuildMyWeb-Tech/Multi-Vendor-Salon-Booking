@@ -144,7 +144,15 @@ appointmentSchema.index(
   { unique: true, partialFilterExpression: { cancelled: false } }
 );
 
-// Indexes for efficient querying
+// Per-salon list queries (dashboard, admin appointment list)
+appointmentSchema.index({ shopId: 1, slotDate: 1 });
+// Per-salon user history
+appointmentSchema.index({ shopId: 1, userId: 1 });
+// Per-salon stylist schedule
+appointmentSchema.index({ shopId: 1, doctorId: 1 });
+// Sort by booking time within a salon
+appointmentSchema.index({ shopId: 1, createdAt: -1 });
+// Legacy indexes kept
 appointmentSchema.index({ userId: 1, isCompleted: 1 });
 appointmentSchema.index({ doctorId: 1, isCompleted: 1 });
 
