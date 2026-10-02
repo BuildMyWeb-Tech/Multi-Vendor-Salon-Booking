@@ -16,6 +16,8 @@ const WHATSAPP_NUMBER = '919344095727';
 const WHATSAPP_MSG = encodeURIComponent('Hi, I want salon booking app pricing for my salon');
 const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
 
+const DEMO_DRIVE_FILE_ID = '1yylITP3C7QWnNSpvcPtP3jUftL3pQe15';
+
 const featureCategories = [
   {
     id: 'salon', label: 'Core Salon System', icon: Building2,
@@ -115,64 +117,10 @@ const featureCategories = [
   },
 ];
 
-const pricingPlans = [
-  {
-    id: 'starter',
-    title: 'Starter',
-    subtitle: 'Perfect for single-location salons just getting started',
-    price: 999,
-    period: '/ month',
-    items: [
-      'Online booking page with your salon URL',
-      'Up to 3 stylists',
-      'Appointment management',
-      'WhatsApp booking notifications',
-      'Basic service catalogue',
-    ],
-    callToAction: { text: 'Get Started', href: whatsappLink, target: '_blank' },
-    hasRibbon: false,
-  },
-  {
-    id: 'growth',
-    title: 'Growth',
-    subtitle: 'For growing salons that need full features',
-    price: 1999,
-    period: '/ month',
-    items: [
-      'Everything in Starter',
-      'Up to 10 stylists',
-      'POS billing (service + products)',
-      'Coupons & packages',
-      'UPI QR payment integration',
-      'Stylist individual panel',
-      'Analytics & reports',
-    ],
-    callToAction: { text: 'Get Started', href: whatsappLink, target: '_blank' },
-    hasRibbon: true,
-    ribbonTitle: 'Popular',
-  },
-  {
-    id: 'enterprise',
-    title: 'Enterprise',
-    subtitle: 'For salon chains and high-volume businesses',
-    price: 3999,
-    period: '/ month',
-    items: [
-      'Everything in Growth',
-      'Unlimited stylists',
-      'Bulk SMS / WhatsApp broadcast',
-      'Multi-branch support',
-      'Priority onboarding & support',
-      'Custom branding',
-    ],
-    callToAction: { text: 'Contact Us', href: whatsappLink, target: '_blank' },
-    hasRibbon: false,
-  },
-];
 
 const faqs = [
   {
-    q: 'How do I get my salon listed on StyleSlot?',
+    q: 'How do I get my salon listed on Salvexa?',
     a: 'Click "List Your Salon" and fill in your salon details. Our Super Admin team reviews your submission and approves it within 24–48 hours. Once approved, you get your own booking URL.',
   },
   {
@@ -189,7 +137,7 @@ const faqs = [
   },
   {
     q: 'Can the same stylist handle multiple salons?',
-    a: 'Each stylist has a personal login per salon. If the same person works at multiple salons, they will have separate logins for each — keeping appointment and earnings data isolated.',
+    a: 'Each stylist has a personal login per salon on Salvexa. If the same person works at multiple salons, they will have separate logins for each — keeping appointment and earnings data isolated.',
   },
   {
     q: 'What payment methods do clients use to book?',
@@ -207,7 +155,7 @@ const faqs = [
 
 const testimonials = [
   {
-    quote: "StyleSlot transformed how we run our salon. The booking page, stylist panel and POS billing all in one place — we reduced no-shows by 60% and doubled our revenue tracking.",
+    quote: "Salvexa transformed how we run our salon. The booking page, stylist panel and POS billing all in one place — we reduced no-shows by 60% and doubled our revenue tracking.",
     name: 'Priya Menon',
     role: 'Owner, Glamour Studio — Chennai',
     initials: 'PM',
@@ -221,7 +169,7 @@ const testimonials = [
     color: 'bg-blue-500',
   },
   {
-    quote: "The coupons and package features have helped us run promotions very effectively. Our repeat client rate has improved significantly since we started using StyleSlot.",
+    quote: "The coupons and package features have helped us run promotions very effectively. Our repeat client rate has improved significantly since we started using Salvexa.",
     name: 'Ananya Singh',
     role: 'Owner, Blush & Bloom — Mumbai',
     initials: 'AS',
@@ -232,7 +180,7 @@ const testimonials = [
 const navLinks = [
   { label: 'Features', href: '#features' },
   { label: 'How it Works', href: '#how-it-works' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'Demo', href: '#demo' },
   { label: 'FAQs', href: '#faqs' },
   { label: 'Contact', href: '#contact' },
 ];
@@ -243,7 +191,7 @@ const footerLinks = [
     links: [
       { text: 'Features', href: '#features' },
       { text: 'How it Works', href: '#how-it-works' },
-      { text: 'Pricing', href: '#pricing' },
+      { text: 'Demo', href: '#demo' },
       { text: 'FAQs', href: '#faqs' },
     ],
   },
@@ -312,11 +260,29 @@ const PlatformRoot = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const videoRef = useRef(null);
+  const videoSectionRef = useRef(null);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handler);
     return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  useEffect(() => {
+    const el = videoSectionRef.current;
+    if (!el) return;
+    const driveBase = `https://drive.google.com/file/d/${DEMO_DRIVE_FILE_ID}/preview`;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (videoRef.current) {
+          videoRef.current.src = entry.isIntersecting ? `${driveBase}?autoplay=1` : driveBase;
+        }
+      },
+      { threshold: 0.4 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
 
   const scrollTo = (href) => {
@@ -329,25 +295,34 @@ const PlatformRoot = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-
       {/* ── Announcement bar ─────────────────────────────────────────────── */}
       <div className="bg-primary text-white text-xs text-center py-2 px-4 font-medium">
-        🎉 StyleSlot v2 is live — smarter booking, POS billing and UPI payments all in one.&nbsp;
-        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="underline font-bold">Get Pricing on WhatsApp →</a>
+        🎉 Salvexa v2 is live — smarter booking, POS billing and UPI payments all in one.&nbsp;
+        <a
+          href="#demo"
+          onClick={(e) => {
+            e.preventDefault();
+            document.querySelector('#demo')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="underline font-bold cursor-pointer"
+        >
+          Watch Demo →
+        </a>
       </div>
 
       {/* ── Sticky Header ────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-30 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur-sm border-b border-gray-100'}`}>
+      <header
+        className={`sticky top-0 z-30 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur-sm border-b border-gray-100'}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-
           {/* Logo */}
           <a href="/" className="flex items-center gap-2.5 no-underline">
             <div className="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-primary/30 flex-shrink-0">
               <Scissors size={17} className="text-white" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-lg font-extrabold text-gray-900 tracking-tight">StyleSlot</span>
-              <span className="text-[10px] text-gray-400 font-medium -mt-0.5">by BuildMyWeb</span>
+              <span className="text-lg font-extrabold text-gray-900 tracking-tight">Salvexa</span>
+              {/* <span className="text-[10px] text-gray-400 font-medium -mt-0.5">by BuildMyWeb</span> */}
             </div>
           </a>
 
@@ -374,12 +349,14 @@ const PlatformRoot = () => {
               List Your Salon
             </a>
             <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+              href="#demo"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollTo('#demo');
+              }}
+              className="flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
             >
-              <MessageCircle size={14} /> Get Pricing
+              <Play size={14} /> Watch Demo
             </a>
           </div>
 
@@ -388,7 +365,11 @@ const PlatformRoot = () => {
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            {menuOpen ? <X size={20} className="text-gray-700" /> : <Menu size={20} className="text-gray-700" />}
+            {menuOpen ? (
+              <X size={20} className="text-gray-700" />
+            ) : (
+              <Menu size={20} className="text-gray-700" />
+            )}
           </button>
         </div>
 
@@ -405,11 +386,22 @@ const PlatformRoot = () => {
               </button>
             ))}
             <div className="pt-3 border-t border-gray-100 space-y-2">
-              <a href="/create-salon" className="block w-full text-center text-sm font-semibold text-primary border border-primary/30 px-4 py-2.5 rounded-lg hover:bg-primary/5 transition-all">
+              <a
+                href="/create-salon"
+                className="block w-full text-center text-sm font-semibold text-primary border border-primary/30 px-4 py-2.5 rounded-lg hover:bg-primary/5 transition-all"
+              >
                 List Your Salon
               </a>
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-sm font-semibold bg-primary text-white px-4 py-2.5 rounded-lg hover:bg-primary/90 transition-all">
-                Get Pricing on WhatsApp
+              <a
+                href="#demo"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMenuOpen(false);
+                  document.querySelector('#demo')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="block w-full text-center text-sm font-semibold bg-primary text-white px-4 py-2.5 rounded-lg hover:bg-primary/90 transition-all cursor-pointer"
+              >
+                Watch Demo
               </a>
             </div>
           </div>
@@ -439,18 +431,20 @@ const PlatformRoot = () => {
           </h1>
 
           <p className="text-white/75 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            StyleSlot powers complete salon businesses — from customer bookings to POS billing,
-            UPI payments, stylist management, coupons, packages and beyond.
+            Salvexa powers complete salon businesses — from customer bookings to POS billing, UPI
+            payments, stylist management, coupons, packages and beyond.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
             <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3.5 rounded-xl hover:bg-yellow-50 transition-all shadow-lg shadow-black/20 text-sm w-full sm:w-auto justify-center"
+              href="#demo"
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector('#demo')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3.5 rounded-xl hover:bg-yellow-50 transition-all shadow-lg shadow-black/20 text-sm w-full sm:w-auto justify-center cursor-pointer"
             >
-              <MessageCircle size={16} /> Get Pricing on WhatsApp
+              <Play size={16} /> Watch Demo
             </a>
             <a
               href="/create-salon"
@@ -469,7 +463,10 @@ const PlatformRoot = () => {
               { icon: <Receipt size={13} />, text: 'POS billing' },
               { icon: <Shield size={13} />, text: 'Super Admin panel' },
             ].map(({ icon, text }) => (
-              <div key={text} className="flex items-center gap-1.5">{icon}{text}</div>
+              <div key={text} className="flex items-center gap-1.5">
+                {icon}
+                {text}
+              </div>
             ))}
           </div>
         </div>
@@ -490,7 +487,9 @@ const PlatformRoot = () => {
             { value: '1-click', label: 'Booking Experience' },
           ].map(({ value, label }) => (
             <div key={label} className="group">
-              <div className="text-2xl sm:text-3xl font-extrabold text-primary mb-1 group-hover:scale-110 transition-transform duration-200">{value}</div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-primary mb-1 group-hover:scale-110 transition-transform duration-200">
+                {value}
+              </div>
               <div className="text-xs text-gray-500 font-medium">{label}</div>
             </div>
           ))}
@@ -500,7 +499,9 @@ const PlatformRoot = () => {
       {/* ── Features ─────────────────────────────────────────────────────── */}
       <section id="features" className="max-w-7xl mx-auto w-full px-6 py-20">
         <div className="text-center mb-14">
-          <SectionLabel><Sparkles size={11} /> Platform Capabilities</SectionLabel>
+          <SectionLabel>
+            <Sparkles size={11} /> Platform Capabilities
+          </SectionLabel>
           <SectionHeading
             title="Everything Your Salon Needs"
             subtitle="A complete end-to-end platform — from online booking to POS billing, for every type of salon."
@@ -508,29 +509,43 @@ const PlatformRoot = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {featureCategories.map(({ id, label, icon: CatIcon, gradient, lightBg, iconColor, borderColor, hoverBorder, items }) => (
-            <div
-              key={id}
-              className={`group bg-white rounded-2xl border ${borderColor} ${hoverBorder} shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden`}
-            >
-              <div className={`bg-gradient-to-br ${gradient} p-5`}>
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
-                  <CatIcon size={20} className="text-white" />
-                </div>
-                <h3 className="text-white font-bold text-base leading-snug">{label}</h3>
-              </div>
-              <div className="p-4 space-y-2.5">
-                {items.map(({ icon: ItemIcon, text }) => (
-                  <div key={text} className="flex items-start gap-2.5">
-                    <div className={`w-6 h-6 ${lightBg} rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                      <ItemIcon size={12} className={iconColor} />
-                    </div>
-                    <span className="text-gray-600 text-xs leading-snug">{text}</span>
+          {featureCategories.map(
+            ({
+              id,
+              label,
+              icon: CatIcon,
+              gradient,
+              lightBg,
+              iconColor,
+              borderColor,
+              hoverBorder,
+              items,
+            }) => (
+              <div
+                key={id}
+                className={`group bg-white rounded-2xl border ${borderColor} ${hoverBorder} shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden`}
+              >
+                <div className={`bg-gradient-to-br ${gradient} p-5`}>
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                    <CatIcon size={20} className="text-white" />
                   </div>
-                ))}
+                  <h3 className="text-white font-bold text-base leading-snug">{label}</h3>
+                </div>
+                <div className="p-4 space-y-2.5">
+                  {items.map(({ icon: ItemIcon, text }) => (
+                    <div key={text} className="flex items-start gap-2.5">
+                      <div
+                        className={`w-6 h-6 ${lightBg} rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5`}
+                      >
+                        <ItemIcon size={12} className={iconColor} />
+                      </div>
+                      <span className="text-gray-600 text-xs leading-snug">{text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </section>
 
@@ -538,7 +553,9 @@ const PlatformRoot = () => {
       <section id="how-it-works" className="bg-gradient-to-br from-gray-50 to-blue-50/50 py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-14">
-            <SectionLabel color="bg-blue-100 text-blue-700"><Zap size={11} /> Simple Process</SectionLabel>
+            <SectionLabel color="bg-blue-100 text-blue-700">
+              <Zap size={11} /> Simple Process
+            </SectionLabel>
             <SectionHeading
               title="How It Works"
               subtitle="From discovery to booking — three simple steps for your clients."
@@ -551,24 +568,32 @@ const PlatformRoot = () => {
 
             {[
               {
-                icon: Search, step: '01', title: 'Find Your Salon',
-                desc: "Visit your salon's unique StyleSlot URL to see all services, stylists and available time slots.",
+                icon: Search,
+                step: '01',
+                title: 'Find Your Salon',
+                desc: "Visit your salon's unique Salvexa URL to see all services, stylists and available time slots.",
                 color: 'bg-blue-500',
               },
               {
-                icon: Calendar, step: '02', title: 'Pick a Slot',
+                icon: Calendar,
+                step: '02',
+                title: 'Pick a Slot',
                 desc: 'Choose a stylist, date and time. Apply coupons or packages for a better deal.',
                 color: 'bg-violet-500',
               },
               {
-                icon: CheckCircle, step: '03', title: 'Confirm & Pay',
+                icon: CheckCircle,
+                step: '03',
+                title: 'Confirm & Pay',
                 desc: 'Pay via UPI QR or at the salon. Receive instant booking confirmation and reminders.',
                 color: 'bg-emerald-500',
               },
             ].map(({ icon: Icon, step, title, desc, color }) => (
               <div key={step} className="group text-center relative z-10">
                 <div className="relative inline-flex mb-5">
-                  <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto`}>
+                  <div
+                    className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto`}
+                  >
                     <Icon size={26} className="text-white" />
                   </div>
                   <span className="absolute -top-2 -right-2 w-7 h-7 bg-yellow-400 text-gray-900 text-xs font-black rounded-full flex items-center justify-center shadow">
@@ -583,20 +608,47 @@ const PlatformRoot = () => {
 
           {/* Admin steps */}
           <div className="mt-16 pt-12 border-t border-gray-200">
-            <p className="text-center text-xs text-gray-400 font-semibold uppercase tracking-widest mb-8">For Salon Owners</p>
+            <p className="text-center text-xs text-gray-400 font-semibold uppercase tracking-widest mb-8">
+              For Salon Owners
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
               {[
-                { icon: Store, n: '1', title: 'Submit Salon', desc: 'Fill the listing form with your salon details.' },
-                { icon: BadgeCheck, n: '2', title: 'Get Approved', desc: 'Our team reviews and approves within 24h.' },
-                { icon: Settings, n: '3', title: 'Configure', desc: 'Set up services, stylists, slots & pricing.' },
-                { icon: TrendingUp, n: '4', title: 'Go Live', desc: 'Your booking page is live. Start accepting clients!' },
+                {
+                  icon: Store,
+                  n: '1',
+                  title: 'Submit Salon',
+                  desc: 'Fill the listing form with your salon details.',
+                },
+                {
+                  icon: BadgeCheck,
+                  n: '2',
+                  title: 'Get Approved',
+                  desc: 'Our team reviews and approves within 24h.',
+                },
+                {
+                  icon: Settings,
+                  n: '3',
+                  title: 'Configure',
+                  desc: 'Set up services, stylists, slots & pricing.',
+                },
+                {
+                  icon: TrendingUp,
+                  n: '4',
+                  title: 'Go Live',
+                  desc: 'Your booking page is live. Start accepting clients!',
+                },
               ].map(({ icon: Icon, n, title, desc }) => (
-                <div key={n} className="flex items-start gap-3 bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div
+                  key={n}
+                  className="flex items-start gap-3 bg-white rounded-xl p-4 border border-gray-100 shadow-sm"
+                >
                   <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Icon size={16} className="text-primary" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">Step {n}</p>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">
+                      Step {n}
+                    </p>
                     <p className="font-bold text-gray-800 text-sm">{title}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                   </div>
@@ -607,11 +659,62 @@ const PlatformRoot = () => {
         </div>
       </section>
 
+      {/* ── Product Demo Video ───────────────────────────────────────────── */}
+      <section
+        id="demo"
+        ref={videoSectionRef}
+        className="py-20 bg-gradient-to-br from-slate-900 via-primary/90 to-blue-900"
+      >
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white/90 text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+              <Play size={11} /> Product Demo
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 tracking-tight">
+              See Salvexa in Action
+            </h2>
+            <p className="text-white/65 text-lg max-w-xl mx-auto">
+              Watch how salons manage bookings, billing and stylists — all from one dashboard.
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/40 bg-black aspect-video">
+            <iframe
+              ref={videoRef}
+              src={`https://drive.google.com/file/d/1yylITP3C7QWnNSpvcPtP3jUftL3pQe15/preview`}
+              title="Salvexa Product Demo"
+              allow="autoplay"
+              allowFullScreen
+              className="w-full h-full absolute inset-0"
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+            <a
+              href="/create-salon"
+              className="inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3.5 rounded-xl hover:bg-yellow-50 transition-all shadow-lg shadow-black/20 text-sm w-full sm:w-auto justify-center"
+            >
+              <Store size={15} /> List Your Salon <ArrowRight size={14} />
+            </a>
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white/15 border border-white/30 text-white font-semibold px-7 py-3.5 rounded-xl hover:bg-white/25 transition-all text-sm w-full sm:w-auto justify-center"
+            >
+              <MessageCircle size={15} /> Chat with Us
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ── Services We Cover ────────────────────────────────────────────── */}
       <section className="py-20 overflow-hidden">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
-            <SectionLabel color="bg-amber-100 text-amber-700"><Scissors size={11} /> Service Types</SectionLabel>
+            <SectionLabel color="bg-amber-100 text-amber-700">
+              <Scissors size={11} /> Service Types
+            </SectionLabel>
             <SectionHeading
               title="Services We Cover"
               subtitle="From everyday haircuts to bridal looks — every service, every salon."
@@ -622,22 +725,30 @@ const PlatformRoot = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {[
               {
-                icon: Scissors, label: 'Haircuts & Styling', tag: 'Most Popular',
+                icon: Scissors,
+                label: 'Haircuts & Styling',
+                tag: 'Most Popular',
                 desc: 'Precision cuts, blowouts and everyday styling for all hair types.',
                 gradient: 'from-blue-500 to-blue-600',
               },
               {
-                icon: Sparkles, label: 'Colour & Highlights', tag: 'Trending',
+                icon: Sparkles,
+                label: 'Colour & Highlights',
+                tag: 'Trending',
                 desc: 'Balayage, ombré, full colour and toning treatments.',
                 gradient: 'from-violet-500 to-purple-600',
               },
               {
-                icon: Star, label: 'Bridal & Makeup', tag: 'Premium',
+                icon: Star,
+                label: 'Bridal & Makeup',
+                tag: 'Premium',
                 desc: 'Complete bridal packages — hair, makeup and trials included.',
                 gradient: 'from-pink-500 to-rose-500',
               },
               {
-                icon: Award, label: 'Spa & Treatments', tag: 'Relaxing',
+                icon: Award,
+                label: 'Spa & Treatments',
+                tag: 'Relaxing',
                 desc: 'Deep conditioning, keratin, scalp treatments and more.',
                 gradient: 'from-emerald-500 to-teal-500',
               },
@@ -676,77 +787,12 @@ const PlatformRoot = () => {
                 <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <Icon size={12} className="text-primary" />
                 </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-primary transition-colors">{label}</span>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-primary transition-colors">
+                  {label}
+                </span>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      <section id="pricing" className="bg-gradient-to-br from-slate-50 to-blue-50/40 py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <SectionLabel color="bg-violet-100 text-violet-700"><Zap size={11} /> Flexible Plans</SectionLabel>
-            <SectionHeading
-              title="Simple, Transparent Pricing"
-              subtitle="No hidden fees. Choose the plan that fits your salon's size and ambition."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {pricingPlans.map(({ id, title, subtitle, price, period, items, callToAction, hasRibbon, ribbonTitle }) => (
-              <div
-                key={id}
-                className={`relative bg-white rounded-2xl border shadow-sm flex flex-col ${
-                  hasRibbon ? 'border-primary shadow-lg shadow-primary/10 scale-[1.02]' : 'border-gray-200 hover:shadow-md'
-                } transition-all duration-300`}
-              >
-                {hasRibbon && ribbonTitle && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-black uppercase px-4 py-1 rounded-full tracking-widest shadow">
-                    {ribbonTitle}
-                  </div>
-                )}
-                <div className="p-7 flex-1">
-                  <h3 className="text-xl font-bold text-gray-800 mb-1">{title}</h3>
-                  <p className="text-sm text-gray-500 mb-6 leading-snug">{subtitle}</p>
-                  <div className="flex items-end gap-1 mb-6">
-                    <span className="text-3xl font-black text-gray-900">₹{price.toLocaleString('en-IN')}</span>
-                    <span className="text-gray-400 text-sm mb-1">{period}</span>
-                  </div>
-                  <ul className="space-y-3">
-                    {items.map((item) => (
-                      <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
-                        <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check size={11} className="text-primary" strokeWidth={3} />
-                        </div>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="px-7 pb-7">
-                  <a
-                    href={callToAction.href}
-                    target={callToAction.target}
-                    rel="noopener noreferrer"
-                    className={`block w-full text-center py-3 rounded-xl font-bold text-sm transition-all ${
-                      hasRibbon
-                        ? 'bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/25'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {callToAction.text}
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-center text-sm text-gray-400 mt-8">
-            All prices are exclusive of GST. Annual billing available at 2 months free.&nbsp;
-            <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">Contact us for custom enterprise pricing →</a>
-          </p>
         </div>
       </section>
 
@@ -754,20 +800,27 @@ const PlatformRoot = () => {
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
-            <SectionLabel color="bg-emerald-100 text-emerald-700"><Star size={11} /> Happy Salon Owners</SectionLabel>
+            <SectionLabel color="bg-emerald-100 text-emerald-700">
+              <Star size={11} /> Happy Salon Owners
+            </SectionLabel>
             <SectionHeading
               title="What Salon Owners Say"
-              subtitle="Real results from real salons that use StyleSlot every day."
+              subtitle="Real results from real salons that use Salvexa every day."
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map(({ quote, name, role, initials, color }) => (
-              <div key={name} className="bg-white border border-gray-200 rounded-2xl p-7 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col">
+              <div
+                key={name}
+                className="bg-white border border-gray-200 rounded-2xl p-7 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
+              >
                 <Quote size={24} className="text-primary/20 mb-4" />
                 <p className="text-gray-700 text-sm leading-relaxed flex-1 mb-5">"{quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 ${color} rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                  <div
+                    className={`w-10 h-10 ${color} rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
+                  >
                     {initials}
                   </div>
                   <div>
@@ -785,7 +838,9 @@ const PlatformRoot = () => {
       <section id="faqs" className="bg-gradient-to-br from-gray-50 to-slate-50 py-20">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-12">
-            <SectionLabel color="bg-orange-100 text-orange-700"><MessageCircle size={11} /> Common Questions</SectionLabel>
+            <SectionLabel color="bg-orange-100 text-orange-700">
+              <MessageCircle size={11} /> Common Questions
+            </SectionLabel>
             <SectionHeading title="Frequently Asked Questions" />
           </div>
 
@@ -820,19 +875,39 @@ const PlatformRoot = () => {
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-              <SectionLabel><MessageCircle size={11} /> Get in Touch</SectionLabel>
+              <SectionLabel>
+                <MessageCircle size={11} /> Get in Touch
+              </SectionLabel>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
-                Ready to Take <br />Your Salon Online?
+                Ready to Take <br />
+                Your Salon Online?
               </h2>
               <p className="text-gray-500 text-base mb-8 leading-relaxed">
-                Reach out via WhatsApp for the fastest response. We'll walk you through the platform,
-                answer all your questions and help you get listed today.
+                Reach out via WhatsApp for the fastest response. We'll walk you through the
+                platform, answer all your questions and help you get listed today.
               </p>
               <div className="space-y-4">
                 {[
-                  { icon: MessageCircle, label: 'WhatsApp', value: '+91 93440 95727', href: whatsappLink, target: '_blank' },
-                  { icon: Mail, label: 'Email', value: 'buildmyweb2024@gmail.com', href: 'mailto:buildmyweb2024@gmail.com' },
-                  { icon: Globe, label: 'Website', value: 'www.buildmyweb.info', href: 'https://www.buildmyweb.info', target: '_blank' },
+                  {
+                    icon: MessageCircle,
+                    label: 'WhatsApp',
+                    value: '+91 93440 95727',
+                    href: whatsappLink,
+                    target: '_blank',
+                  },
+                  {
+                    icon: Mail,
+                    label: 'Email',
+                    value: 'buildmyweb2024@gmail.com',
+                    href: 'mailto:buildmyweb2024@gmail.com',
+                  },
+                  {
+                    icon: Globe,
+                    label: 'Website',
+                    value: 'www.buildmyweb.info',
+                    href: 'https://www.buildmyweb.info',
+                    target: '_blank',
+                  },
                 ].map(({ icon: Icon, label, value, href, target }) => (
                   <a
                     key={label}
@@ -846,9 +921,14 @@ const PlatformRoot = () => {
                     </div>
                     <div>
                       <p className="text-xs text-gray-400 font-medium mb-0.5">{label}</p>
-                      <p className="text-gray-800 font-semibold text-sm group-hover:text-primary transition-colors">{value}</p>
+                      <p className="text-gray-800 font-semibold text-sm group-hover:text-primary transition-colors">
+                        {value}
+                      </p>
                     </div>
-                    <ChevronRight size={16} className="text-gray-300 group-hover:text-primary ml-auto transition-colors" />
+                    <ChevronRight
+                      size={16}
+                      className="text-gray-300 group-hover:text-primary ml-auto transition-colors"
+                    />
                   </a>
                 ))}
               </div>
@@ -862,7 +942,9 @@ const PlatformRoot = () => {
                 <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
                   <Store size={22} className="text-white" />
                 </div>
-                <h3 className="text-2xl font-extrabold mb-3 tracking-tight">Ready to Grow Your Salon?</h3>
+                <h3 className="text-2xl font-extrabold mb-3 tracking-tight">
+                  Ready to Grow Your Salon?
+                </h3>
                 <p className="text-white/75 text-sm mb-6 leading-relaxed">
                   Submit your salon for review and go live with your own booking page, UPI payments,
                   stylist panel and POS billing — all in one platform.
@@ -884,7 +966,12 @@ const PlatformRoot = () => {
                   </a>
                 </div>
                 <div className="flex flex-wrap gap-3 mt-6 text-white/60 text-xs">
-                  {['No setup fee', 'Quick approval', 'Your own booking URL', 'Full admin dashboard'].map((t) => (
+                  {[
+                    'No setup fee',
+                    'Quick approval',
+                    'Your own booking URL',
+                    'Full admin dashboard',
+                  ].map((t) => (
                     <div key={t} className="flex items-center gap-1">
                       <CheckCircle size={11} /> {t}
                     </div>
@@ -907,8 +994,8 @@ const PlatformRoot = () => {
                   <Scissors size={17} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-extrabold text-lg leading-none">StyleSlot</p>
-                  <p className="text-slate-400 text-[10px] mt-0.5">by BuildMyWeb</p>
+                  <p className="text-white font-extrabold text-lg leading-none">Salvexa</p>
+                  {/* <p className="text-slate-400 text-[10px] mt-0.5">by BuildMyWeb</p> */}
                 </div>
               </div>
               <p className="text-slate-400 text-sm leading-relaxed mb-4">
@@ -937,13 +1024,17 @@ const PlatformRoot = () => {
             {/* Link columns */}
             {footerLinks.map(({ title, links }) => (
               <div key={title}>
-                <p className="text-white font-bold text-sm mb-4 uppercase tracking-wider">{title}</p>
+                <p className="text-white font-bold text-sm mb-4 uppercase tracking-wider">
+                  {title}
+                </p>
                 <ul className="space-y-2.5">
                   {links.map(({ text, href, external }) => (
                     <li key={text}>
                       {href.startsWith('#') ? (
                         <button
-                          onClick={() => document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })}
+                          onClick={() =>
+                            document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+                          }
                           className="text-slate-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer p-0"
                         >
                           {text}
@@ -967,20 +1058,28 @@ const PlatformRoot = () => {
 
           <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-slate-500 text-xs">
-              © {new Date().getFullYear()} StyleSlot · Built by{' '}
-              <a href="https://www.buildmyweb.info" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">
+              © {new Date().getFullYear()} Salvexa · Built by{' '}
+              <a
+                href="https://www.buildmyweb.info"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline font-semibold"
+              >
                 BuildMyWeb
               </a>
               . All rights reserved.
             </p>
             <div className="flex items-center gap-5 text-xs text-slate-500">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-white transition-colors">
+                Privacy Policy
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Terms of Service
+              </a>
             </div>
           </div>
         </div>
       </footer>
-
     </div>
   );
 };
