@@ -67,7 +67,8 @@ const SuperAdminSalons = () => {
       couponEnabled:        salon.couponEnabled        || false,
       packageEnabled:       salon.packageEnabled       || false,
       stylistPanelEnabled:  salon.stylistPanelEnabled  || false,
-      broadcastEnabled:     salon.broadcastEnabled     || false,
+      broadcastEnabled:       salon.broadcastEnabled       || false,
+      offlineBookingEnabled:  salon.offlineBookingEnabled  || false,
     });
     setEditLogoFile(null);
     setEditLogoPreview(salon.logo || null);
@@ -472,7 +473,8 @@ const SuperAdminSalons = () => {
                   { key: 'couponEnabled',       icon: Tag,          label: 'Discount / Coupon',    desc: 'Allow admin to create coupon codes for customers' },
                   { key: 'packageEnabled',      icon: Gift,         label: 'Package Discount',     desc: 'Auto-apply discount on configured service packages' },
                   { key: 'stylistPanelEnabled', icon: Users,        label: 'Stylist Panel',         desc: 'Give stylists their own login portal at /{salon}/stylist' },
-                  { key: 'broadcastEnabled',    icon: MessageCircle, label: 'WhatsApp Broadcast',   desc: 'Let admin send bulk WhatsApp messages to salon customers' },
+                  { key: 'broadcastEnabled',      icon: MessageCircle, label: 'WhatsApp Broadcast',       desc: 'Let admin send bulk WhatsApp messages to salon customers' },
+                  { key: 'offlineBookingEnabled', icon: Users,         label: 'Walk-in / Offline Booking', desc: 'Admin can create offline bookings for walk-in customers' },
                 ].map(({ key, icon: Icon, label, desc }) => (
                   <label key={key} className="flex items-center gap-3 cursor-pointer select-none">
                     <div

@@ -5,6 +5,7 @@ import upload from '../middleware/multer.js';
 import {
   loginSalonAdmin,
   getShopInfo,
+  updateBillingTax,
   getSalonDashboard,
   getSalonAppointments,
   cancelSalonAppointment,
@@ -32,10 +33,12 @@ import {
   deleteSalonService,
   getSalonAdminNotifications,
   markSalonAdminNotificationsRead,
+  createOfflineAppointment,
+  getTaxes, createTax, updateTax, deleteTax,
 } from '../controllers/salonAdminController.js';
 import {
   createProduct, getProducts, getProductById, updateProduct, deleteProduct,
-  getInventory,
+  getInventory, addStock,
   createBill, getBills, getBillById, cancelBill,
 } from '../controllers/billingController.js';
 import {
@@ -67,6 +70,7 @@ salonAdminRouter.post('/login', loginSalonAdmin);
 
 /* ──────────── SHOP ──────────── */
 salonAdminRouter.get('/shop-info', authSalonAdmin, getShopInfo);
+salonAdminRouter.patch('/billing-tax', authSalonAdmin, updateBillingTax);
 
 /* ──────────── DASHBOARD ──────────── */
 salonAdminRouter.get('/dashboard', authSalonAdmin, getSalonDashboard);
@@ -107,6 +111,15 @@ salonAdminRouter.delete('/services/:id', authSalonAdmin, deleteSalonService);
 salonAdminRouter.get('/notifications', authSalonAdmin, getSalonAdminNotifications);
 salonAdminRouter.post('/notifications/read', authSalonAdmin, markSalonAdminNotificationsRead);
 
+/* ──────────── OFFLINE / WALK-IN BOOKING ──────────── */
+salonAdminRouter.post('/offline-appointment', authSalonAdmin, createOfflineAppointment);
+
+/* ──────────── TAXES ──────────── */
+salonAdminRouter.get('/taxes', authSalonAdmin, getTaxes);
+salonAdminRouter.post('/taxes', authSalonAdmin, createTax);
+salonAdminRouter.put('/taxes/:id', authSalonAdmin, updateTax);
+salonAdminRouter.delete('/taxes/:id', authSalonAdmin, deleteTax);
+
 /* ──────────── BILLING — PRODUCTS ──────────── */
 salonAdminRouter.post('/billing/products', authSalonAdmin, createProduct);
 salonAdminRouter.get('/billing/products', authSalonAdmin, getProducts);
@@ -116,6 +129,7 @@ salonAdminRouter.delete('/billing/products/:id', authSalonAdmin, deleteProduct);
 
 /* ──────────── BILLING — INVENTORY ──────────── */
 salonAdminRouter.get('/billing/inventory', authSalonAdmin, getInventory);
+salonAdminRouter.post('/billing/inventory/add-stock', authSalonAdmin, addStock);
 
 /* ──────────── BILLING — BILLS ──────────── */
 salonAdminRouter.post('/billing/bills', authSalonAdmin, createBill);

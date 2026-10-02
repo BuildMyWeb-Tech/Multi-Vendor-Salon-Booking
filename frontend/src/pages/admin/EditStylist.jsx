@@ -555,7 +555,7 @@ const EditStylist = () => {
                 <div className="mt-6">
                     <label className='text-sm font-medium text-gray-700 flex items-center mb-1.5'>
                         <FileText size={16} className="mr-1.5" /> About The Stylist
-                        <span className="text-red-500 ml-1">*</span>
+                        <span className="text-gray-400 text-xs ml-1">(optional)</span>
                     </label>
                     <textarea
                         onChange={e => setAbout(e.target.value)}
@@ -563,7 +563,6 @@ const EditStylist = () => {
                         className='w-full px-4 pt-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary'
                         rows={4}
                         placeholder="Describe the stylist's expertise, style philosophy, and approach to client service"
-                        required
                     ></textarea>
                     <p className="text-xs text-gray-500 mt-1">
                         Include relevant experience, specializations, and unique styling approach to help clients connect with the stylist

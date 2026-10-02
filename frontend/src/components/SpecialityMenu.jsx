@@ -132,7 +132,7 @@ const SpecialityMenu = () => {
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                       {item.basePrice ? (
                         <div>
-                          <p className="text-xs text-gray-500">Starting from</p>
+                          {/* <p className="text-xs text-gray-500">Starting from</p> */}
                           <p className="text-lg font-bold text-primary">
                             ₹{item.basePrice}
                           </p>

@@ -3,14 +3,16 @@ import axios from "axios";
 import { createContext, useState, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import { AdminContext } from "./AdminContext";
+import { SalonAdminContext } from "./SalonAdminContext";
 
 export const SlotManagementContext = createContext();
 
 const SlotManagementContextProvider = (props) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-  // Get aToken from AdminContext instead of managing it separately
   const { aToken } = useContext(AdminContext);
+  const { saAdminToken } = useContext(SalonAdminContext);
+  const activeToken = aToken || saAdminToken;
 
   // State variables for slot management
   const [loading, setLoading] = useState(false);
@@ -37,15 +39,15 @@ const SlotManagementContextProvider = (props) => {
 
   // Fetch slot settings
   const fetchSettings = async () => {
-    if (!aToken) {
+    if (!activeToken) {
       console.log('No admin token available');
       return;
     }
 
     setLoading(true);
     try {
-      const { data } = await axios.get(`${backendUrl}/api/admin/slot-settings`, {
-        headers: { aToken }
+      const { data } = await axios.get(`${backendUrl}/api/salon-admin/slot-settings`, {
+        headers: { satoken: activeToken }
       });
 
       if (data.success) {
@@ -74,7 +76,7 @@ const SlotManagementContextProvider = (props) => {
 
   // Save slot settings
   const saveSettings = async (settingsData) => {
-    if (!aToken) {
+    if (!activeToken) {
       toast.error('Not authorized. Please login again.');
       return;
     }
@@ -82,9 +84,9 @@ const SlotManagementContextProvider = (props) => {
     setLoading(true);
     try {
       const { data } = await axios.post(
-        `${backendUrl}/api/admin/slot-settings`,
+        `${backendUrl}/api/salon-admin/slot-settings`,
         settingsData,
-        { headers: { aToken } }
+        { headers: { satoken: activeToken } }
       );
 
       if (data.success) {
@@ -103,16 +105,16 @@ const SlotManagementContextProvider = (props) => {
 
   // Add a blocked date
   const addBlockedDate = async (date, reason) => {
-    if (!aToken) {
+    if (!activeToken) {
       toast.error('Not authorized. Please login again.');
       return null;
     }
 
     try {
       const { data } = await axios.post(
-        `${backendUrl}/api/admin/blocked-dates`,
+        `${backendUrl}/api/salon-admin/blocked-dates`,
         { date, reason },
-        { headers: { aToken } }
+        { headers: { satoken: activeToken } }
       );
 
       if (data.success) {
@@ -132,15 +134,15 @@ const SlotManagementContextProvider = (props) => {
 
   // Remove a blocked date
   const removeBlockedDate = async (id) => {
-    if (!aToken) {
+    if (!activeToken) {
       toast.error('Not authorized. Please login again.');
       return false;
     }
 
     try {
       const { data } = await axios.delete(
-        `${backendUrl}/api/admin/blocked-dates/${id}`,
-        { headers: { aToken } }
+        `${backendUrl}/api/salon-admin/blocked-dates/${id}`,
+        { headers: { satoken: activeToken } }
       );
 
       if (data.success) {
@@ -160,16 +162,16 @@ const SlotManagementContextProvider = (props) => {
 
   // Add a recurring holiday
   const addRecurringHoliday = async (name, type, value) => {
-    if (!aToken) {
+    if (!activeToken) {
       toast.error('Not authorized. Please login again.');
       return null;
     }
 
     try {
       const { data } = await axios.post(
-        `${backendUrl}/api/admin/recurring-holidays`,
+        `${backendUrl}/api/salon-admin/recurring-holidays`,
         { name, type, value },
-        { headers: { aToken } }
+        { headers: { satoken: activeToken } }
       );
 
       if (data.success) {
@@ -189,15 +191,15 @@ const SlotManagementContextProvider = (props) => {
 
   // Remove a recurring holiday
   const removeRecurringHoliday = async (id) => {
-    if (!aToken) {
+    if (!activeToken) {
       toast.error('Not authorized. Please login again.');
       return false;
     }
 
     try {
       const { data } = await axios.delete(
-        `${backendUrl}/api/admin/recurring-holidays/${id}`,
-        { headers: { aToken } }
+        `${backendUrl}/api/salon-admin/recurring-holidays/${id}`,
+        { headers: { satoken: activeToken } }
       );
 
       if (data.success) {
@@ -217,16 +219,16 @@ const SlotManagementContextProvider = (props) => {
 
   // Add a special working day
   const addSpecialWorkingDay = async (date) => {
-    if (!aToken) {
+    if (!activeToken) {
       toast.error('Not authorized. Please login again.');
       return null;
     }
 
     try {
       const { data } = await axios.post(
-        `${backendUrl}/api/admin/special-working-days`,
+        `${backendUrl}/api/salon-admin/special-working-days`,
         { date },
-        { headers: { aToken } }
+        { headers: { satoken: activeToken } }
       );
 
       if (data.success) {
@@ -246,15 +248,15 @@ const SlotManagementContextProvider = (props) => {
 
   // Remove a special working day
   const removeSpecialWorkingDay = async (id) => {
-    if (!aToken) {
+    if (!activeToken) {
       toast.error('Not authorized. Please login again.');
       return false;
     }
 
     try {
       const { data } = await axios.delete(
-        `${backendUrl}/api/admin/special-working-days/${id}`,
-        { headers: { aToken } }
+        `${backendUrl}/api/salon-admin/special-working-days/${id}`,
+        { headers: { satoken: activeToken } }
       );
 
       if (data.success) {
@@ -294,12 +296,12 @@ const SlotManagementContextProvider = (props) => {
     }
   };
 
-  // Load settings when aToken becomes available
+  // Load settings when token becomes available
   useEffect(() => {
-    if (aToken) {
+    if (activeToken) {
       fetchSettings();
     }
-  }, [aToken]);
+  }, [activeToken]);
 
   const value = {
     loading,

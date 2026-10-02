@@ -156,6 +156,24 @@ export const deletePackage = async (req, res) => {
 
 // ── PACKAGE MATCHING (user-facing) ───────────────────────────────────────────
 
+export const getPublicPackages = async (req, res) => {
+  try {
+    const { shopId, shopSlug } = req.query;
+    if (!shopId && !shopSlug) return res.json({ success: false, message: 'shopId or shopSlug required.' });
+    let resolvedShopId = shopId;
+    if (!resolvedShopId && shopSlug) {
+      const { default: shopModel } = await import('../models/shopModel.js');
+      const shop = await shopModel.findOne({ slug: shopSlug }).lean();
+      if (!shop) return res.json({ success: false, packages: [] });
+      resolvedShopId = shop.shopId;
+    }
+    const packages = await packageModel.find({ shopId: resolvedShopId, isActive: true }).sort({ createdAt: -1 }).lean();
+    res.json({ success: true, packages });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export const matchPackage = async (req, res) => {
   try {
     const { shopId, serviceIds } = req.body;

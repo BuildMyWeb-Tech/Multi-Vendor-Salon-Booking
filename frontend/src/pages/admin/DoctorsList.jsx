@@ -22,6 +22,7 @@ import {
   Loader2,
   CalendarDays,
   CheckCircle2,
+  User,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -564,11 +565,17 @@ const StylistsList = () => {
                 >
                   {/* IMAGE WITH STATUS OVERLAY */}
                   <div className="aspect-[4/3] bg-gray-100 relative">
-                    <img
-                      src={stylist.image}
-                      alt={stylist.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {stylist.image ? (
+                      <img
+                        src={stylist.image}
+                        alt={stylist.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-blue-50">
+                        <User size={48} className="text-primary/30" />
+                      </div>
+                    )}
                     {/* Status Badge */}
                     <div
                       className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ${

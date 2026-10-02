@@ -1,6 +1,33 @@
 import productModel from '../models/productModel.js';
 import billModel from '../models/billModel.js';
 import appointmentModel from '../models/appointmentModel.js';
+import AdminNotification from '../models/AdminNotification.js';
+import { emitToShop } from '../config/socket.js';
+
+// After any stock change, create a DB notification and push it via Socket.IO
+// if the variant is now low/out-of-stock. Deduplicates unread alerts.
+const checkAndNotifyStock = async (shopId, productName, variantSize, stock, lowStockThreshold) => {
+  try {
+    let type, title, message;
+    if (stock === 0) {
+      type = 'out_of_stock';
+      title = `Out of Stock: ${productName} (${variantSize})`;
+      message = `${productName} – ${variantSize} is completely out of stock. Restock immediately.`;
+    } else if (stock <= lowStockThreshold) {
+      type = 'low_stock';
+      title = `Low Stock: ${productName} (${variantSize})`;
+      message = `${productName} – ${variantSize} has only ${stock} unit(s) left (threshold: ${lowStockThreshold}).`;
+    } else {
+      return;
+    }
+    // Deduplicate: skip if identical unread notification exists
+    const existing = await AdminNotification.findOne({ shopId, type, title, read: false });
+    if (existing) return;
+    const notif = await AdminNotification.create({ shopId, type, title, message });
+    // Push real-time to admin panel — no page refresh needed
+    emitToShop(shopId, notif.toObject());
+  } catch (_) {}
+};
 
 // ── PRODUCTS ─────────────────────────────────────────────────────────────────
 
@@ -138,6 +165,26 @@ export const getInventory = async (req, res) => {
   }
 };
 
+export const addStock = async (req, res) => {
+  try {
+    const shopId = req.salonAdmin.shopId;
+    const { productId, variantId, quantity } = req.body;
+    if (!productId || !variantId || !quantity || quantity < 1) {
+      return res.json({ success: false, message: 'productId, variantId, and quantity (≥1) required.' });
+    }
+    const product = await productModel.findOne({ _id: productId, shopId });
+    if (!product) return res.json({ success: false, message: 'Product not found.' });
+    const variant = product.variants.id(variantId);
+    if (!variant) return res.json({ success: false, message: 'Variant not found.' });
+    variant.stock += parseInt(quantity, 10);
+    await product.save();
+    await checkAndNotifyStock(shopId, product.name, variant.size, variant.stock, variant.lowStockThreshold);
+    res.json({ success: true, message: 'Stock updated.', newStock: variant.stock });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 // ── BILLS ──────────────────────────────────────────────────────────────────────
 
 export const createBill = async (req, res) => {
@@ -150,6 +197,7 @@ export const createBill = async (req, res) => {
       appointmentId,
       services, products,
       discount, discountType, taxPercent,
+      taxes,
       paymentMethod,
     } = req.body;
 
@@ -169,6 +217,7 @@ export const createBill = async (req, res) => {
       variant.stock -= item.quantity;
       await product.save();
       stockRollbacks.push({ product, variantId: item.variantId, qty: item.quantity });
+      await checkAndNotifyStock(shopId, product.name, variant.size, variant.stock, variant.lowStockThreshold);
 
       enrichedProducts.push({
         productId: product._id,
@@ -191,7 +240,25 @@ export const createBill = async (req, res) => {
       : parseFloat(discount) || 0;
 
     const afterDiscount = subtotal - discountAmt;
-    const taxAmt = Math.round((afterDiscount * (parseFloat(taxPercent) || 0)) / 100 * 100) / 100;
+
+    // Support multi-tax breakdown (new) or legacy single taxPercent
+    let taxBreakdown = [];
+    let taxAmt = 0;
+    const parsedTaxes = taxes
+      ? (typeof taxes === 'string' ? JSON.parse(taxes) : taxes)
+      : null;
+    if (parsedTaxes && parsedTaxes.length > 0) {
+      taxBreakdown = parsedTaxes.map(t => {
+        const amt = Math.round(afterDiscount * t.percent) / 100;
+        taxAmt += amt;
+        return { name: t.name, percent: t.percent, amount: amt };
+      });
+    } else {
+      taxAmt = Math.round((afterDiscount * (parseFloat(taxPercent) || 0)) / 100 * 100) / 100;
+    }
+    const totalTaxPercent = taxBreakdown.length > 0
+      ? taxBreakdown.reduce((s, t) => s + t.percent, 0)
+      : parseFloat(taxPercent) || 0;
     const total = afterDiscount + taxAmt;
 
     const enrichedServices = parsedServices.map((s) => ({
@@ -217,7 +284,8 @@ export const createBill = async (req, res) => {
       discount: discountAmt,
       discountType: discountType || 'flat',
       tax: taxAmt,
-      taxPercent: parseFloat(taxPercent) || 0,
+      taxPercent: totalTaxPercent,
+      taxBreakdown,
       total,
       paymentMethod: paymentMethod || 'cash',
       utrNumber: '',

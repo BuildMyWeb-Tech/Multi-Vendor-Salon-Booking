@@ -6,7 +6,7 @@ import { SalonAdminContext } from '../../context/SalonAdminContext';
 import {
   Calendar, UserPlus2, ChevronLeft, ChevronRight, MenuIcon, X,
   Scissors, LayoutGrid, CalendarClock, UserCog, LayoutDashboard,
-  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt, Tag, Gift, MessageCircle,
+  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt, Tag, Gift, MessageCircle, Percent,
 } from 'lucide-react';
 
 const iconClass = 'min-w-[23px] w-[23px] h-[23px]';
@@ -21,30 +21,47 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const serviceBilling      = shopInfo?.serviceBillingEnabled;
-  const productBilling      = shopInfo?.productBillingEnabled;
-  const showBilling         = serviceBilling || productBilling;
-  const couponEnabled       = shopInfo?.couponEnabled;
-  const packageEnabled      = shopInfo?.packageEnabled;
-  const stylistPanelEnabled = shopInfo?.stylistPanelEnabled;
-  const broadcastEnabled    = shopInfo?.broadcastEnabled;
+  const serviceBilling        = shopInfo?.serviceBillingEnabled;
+  const productBilling        = shopInfo?.productBillingEnabled;
+  const showBilling           = serviceBilling || productBilling;
+  const couponEnabled         = shopInfo?.couponEnabled;
+  const packageEnabled        = shopInfo?.packageEnabled;
+  const stylistPanelEnabled   = shopInfo?.stylistPanelEnabled;
+  const broadcastEnabled      = shopInfo?.broadcastEnabled;
+  const offlineBookingEnabled = shopInfo?.offlineBookingEnabled;
 
   const adminLinks = [
     { to: `/${slug}/admin/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
     { to: `/${slug}/admin/appointments`, label: 'Appointments', icon: Calendar },
     { to: `/${slug}/admin/stylists`, label: 'Stylists', icon: UserCog },
-    
+
     { to: `/${slug}/admin/services`, label: 'Services', icon: LayoutGrid },
+
+    ...(showBilling
+      ? [{ to: `/${slug}/admin/billing`, label: 'Billing / POS', icon: ShoppingCart }]
+      : []),
+    ...(offlineBookingEnabled
+      ? [{ to: `/${slug}/admin/offline-booking`, label: 'Walk-in Booking', icon: UserPlus2 }]
+      : []),
+    ...(productBilling
+      ? [
+          { to: `/${slug}/admin/products`, label: 'Products', icon: Package },
+          { to: `/${slug}/admin/inventory`, label: 'Inventory', icon: Boxes },
+        ]
+      : []),
+
+    ...(couponEnabled ? [{ to: `/${slug}/admin/coupons`, label: 'Coupons', icon: Tag }] : []),
+    ...(packageEnabled ? [{ to: `/${slug}/admin/packages`, label: 'Packages', icon: Gift }] : []),
+    ...(broadcastEnabled
+      ? [{ to: `/${slug}/admin/broadcast`, label: 'WhatsApp Broadcast', icon: MessageCircle }]
+      : []),
+    ...(showBilling
+      ? [
+          { to: `/${slug}/admin/bills`, label: 'Bills', icon: Receipt },
+          { to: `/${slug}/admin/tax-settings`, label: 'Tax Settings', icon: Percent },
+        ]
+      : []),
     { to: `/${slug}/admin/slot-management`, label: 'Slots', icon: CalendarClock },
-    ...(showBilling ? [{ to: `/${slug}/admin/billing`, label: 'Billing / POS', icon: ShoppingCart }] : []),
-    ...(productBilling ? [
-      { to: `/${slug}/admin/products`, label: 'Products', icon: Package },
-      { to: `/${slug}/admin/inventory`, label: 'Inventory', icon: Boxes },
-    ] : []),
-    ...(showBilling ? [{ to: `/${slug}/admin/bills`, label: 'Bills', icon: Receipt }] : []),
-    ...(couponEnabled     ? [{ to: `/${slug}/admin/coupons`,    label: 'Coupons',             icon: Tag            }] : []),
-    ...(packageEnabled    ? [{ to: `/${slug}/admin/packages`,   label: 'Packages',            icon: Gift           }] : []),
-    ...(broadcastEnabled  ? [{ to: `/${slug}/admin/broadcast`,  label: 'WhatsApp Broadcast',  icon: MessageCircle  }] : []),
   ];
 
   const stylistLinks = [
@@ -197,7 +214,8 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
               ...(showBilling    ? [{ to: `/${slug}/admin/billing`,   icon: ShoppingCart,  label: 'Billing'   }] : []),
               ...(couponEnabled  ? [{ to: `/${slug}/admin/coupons`,   icon: Tag,           label: 'Coupons'   }] : []),
               ...(packageEnabled ? [{ to: `/${slug}/admin/packages`,  icon: Gift,          label: 'Packages'  }] : []),
-              ...(broadcastEnabled ? [{ to: `/${slug}/admin/broadcast`, icon: MessageCircle, label: 'Broadcast' }] : []),
+              ...(broadcastEnabled      ? [{ to: `/${slug}/admin/broadcast`,       icon: MessageCircle, label: 'Broadcast' }] : []),
+              ...(offlineBookingEnabled ? [{ to: `/${slug}/admin/offline-booking`, icon: UserPlus2,      label: 'Walk-in'   }] : []),
             ].map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}

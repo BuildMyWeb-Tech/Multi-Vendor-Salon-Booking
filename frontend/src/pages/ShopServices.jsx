@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
-import { Scissors, Loader2, Search, Plus, Tag, Star, SlidersHorizontal, ArrowRight } from 'lucide-react';
+import { Scissors, Loader2, Search, ArrowRight, IndianRupee, Calendar, Sparkles } from 'lucide-react';
 
 const ShopServices = () => {
   const { shopSlug } = useParams();
@@ -86,8 +86,8 @@ const ShopServices = () => {
             Showing <span className="font-semibold text-gray-700">{filtered.length}</span> services
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-            {filtered.map((svc, idx) => (
-              <ServiceCard key={svc._id} svc={svc} idx={idx} shopSlug={shopSlug} navigate={navigate} />
+            {filtered.map((svc) => (
+              <ServiceCard key={svc._id} svc={svc} shopSlug={shopSlug} navigate={navigate} />
             ))}
           </div>
         </>
@@ -112,64 +112,51 @@ const ShopServices = () => {
   );
 };
 
-const ServiceCard = ({ svc, idx, shopSlug, navigate }) => {
-  const isPopular = idx < 2; // first two treated as popular for demo
-
-  return (
-    <div
-      onClick={() => navigate(`/${shopSlug}/stylists`)}
-      className="bg-white rounded-2xl overflow-hidden cursor-pointer group border border-gray-100 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
-    >
-      {/* Image */}
-      <div className="relative overflow-hidden" style={{ height: '160px' }}>
-        {svc.imageUrl ? (
-          <img
-            src={svc.imageUrl}
-            alt={svc.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/10 via-blue-50 to-indigo-50 flex items-center justify-center">
-            <div className="w-16 h-16 rounded-2xl bg-white shadow-md flex items-center justify-center">
-              <Scissors size={28} className="text-primary/60" />
-            </div>
+const ServiceCard = ({ svc, shopSlug, navigate }) => (
+  <div
+    onClick={() => navigate(`/${shopSlug}/stylists`)}
+    className="bg-white rounded-2xl overflow-hidden cursor-pointer group border border-gray-100 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col"
+  >
+    {/* Image / Icon area */}
+    <div className="overflow-hidden" style={{ height: '160px' }}>
+      {svc.imageUrl ? (
+        <img
+          src={svc.imageUrl}
+          alt={svc.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-primary/8 via-blue-50 to-indigo-50 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-primary/10 flex items-center justify-center">
+            <Scissors size={28} className="text-primary/50" />
           </div>
-        )}
-
-        {/* Popular badge */}
-        {isPopular && (
-          <span className="absolute top-3 right-3 bg-amber-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
-            <Star size={9} fill="white" />
-            Popular
-          </span>
-        )}
-      </div>
-
-      {/* Details */}
-      <div className="p-4">
-        <div className="flex items-start gap-2 mb-1">
-          <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Scissors size={12} className="text-primary" />
-          </div>
-          <p className="font-semibold text-gray-800 text-sm leading-tight">{svc.name}</p>
         </div>
+      )}
+    </div>
 
-        {svc.description && (
-          <p className="text-xs text-gray-400 mt-1.5 line-clamp-2 pl-8">{svc.description}</p>
-        )}
+    {/* Details */}
+    <div className="p-4 flex flex-col gap-2 flex-1">
+      <p className="font-bold text-gray-900 text-base leading-tight">{svc.name}</p>
 
-        <div className="flex items-center justify-between mt-3 pl-8">
-          <div>
-            <p className="text-[10px] text-gray-400 font-medium">Starting from</p>
-            <p className="text-primary font-bold text-sm">₹{svc.basePrice}</p>
-          </div>
-          <button className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm">
-            <Plus size={16} />
-          </button>
+      {svc.description && (
+        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{svc.description}</p>
+      )}
+
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+        <div className="flex items-center gap-0.5 text-primary font-bold text-base">
+          <IndianRupee size={14} className="mt-0.5" />
+          <span>{svc.basePrice}</span>
         </div>
+        <button
+          className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+          onClick={e => { e.stopPropagation(); navigate(`/${shopSlug}/stylists`); }}
+        >
+          <Calendar size={12} />
+          Book
+        </button>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default ShopServices;

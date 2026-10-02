@@ -54,6 +54,8 @@ const shopSchema = new mongoose.Schema(
     // POS / Billing feature toggles
     serviceBillingEnabled: { type: Boolean, default: false },
     productBillingEnabled: { type: Boolean, default: false },
+    billingTaxPercent: { type: Number, default: 0 },
+    billingTaxName: { type: String, default: 'Tax' },
 
     // Discount / Coupon & Package feature toggles
     couponEnabled: { type: Boolean, default: false },
@@ -64,6 +66,9 @@ const shopSchema = new mongoose.Schema(
 
     // WhatsApp Broadcast toggle
     broadcastEnabled: { type: Boolean, default: false },
+
+    // Walk-in / Offline Booking toggle
+    offlineBookingEnabled: { type: Boolean, default: false },
 
     status: {
       type: String,

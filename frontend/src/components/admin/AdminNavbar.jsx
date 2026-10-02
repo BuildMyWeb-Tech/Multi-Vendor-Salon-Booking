@@ -3,7 +3,7 @@ import { DoctorContext } from '../../context/DoctorContext'
 import { AdminContext } from '../../context/AdminContext'
 import { SalonAdminContext } from '../../context/SalonAdminContext'
 import { useNavigate, useParams } from 'react-router-dom'
-import { LogOut, User, Menu, X, Scissors, Bell, CheckCheck, Calendar, RefreshCw, XCircle } from 'lucide-react'
+import { LogOut, User, Menu, X, Scissors, Bell, CheckCheck, Calendar, RefreshCw, XCircle, AlertTriangle, PackageX } from 'lucide-react'
 
 const AdminNavbar = ({ shopSlug: shopSlugProp }) => {
   const { dToken, setDToken } = useContext(DoctorContext)
@@ -62,6 +62,8 @@ const AdminNavbar = ({ shopSlug: shopSlugProp }) => {
   const notifIcon = (type) => {
     if (type === 'booking_cancelled') return <XCircle size={14} className="text-red-500" />
     if (type === 'booking_rescheduled') return <RefreshCw size={14} className="text-purple-500" />
+    if (type === 'low_stock') return <AlertTriangle size={14} className="text-amber-500" />
+    if (type === 'out_of_stock') return <PackageX size={14} className="text-red-500" />
     return <Calendar size={14} className="text-primary" />
   }
 

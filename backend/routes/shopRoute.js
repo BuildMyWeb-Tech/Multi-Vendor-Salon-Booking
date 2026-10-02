@@ -42,7 +42,7 @@ const generateUpiQr = (upiId, name, amount) =>
 // are intentionally excluded — use authenticated /api/salon-admin routes for those.
 const PUBLIC_SHOP_FIELDS =
   'shopId shopName slug logo tagline phone whatsapp email address city state pincode ' +
-  'workingHours status couponEnabled packageEnabled paymentIntegrationEnabled broadcastEnabled';
+  'workingHours status couponEnabled packageEnabled paymentIntegrationEnabled broadcastEnabled offlineBookingEnabled billingTaxPercent billingTaxName';
 
 shopRouter.get('/:slug', async (req, res) => {
   try {

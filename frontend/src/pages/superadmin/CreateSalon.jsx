@@ -4,7 +4,7 @@ import { SuperAdminContext } from '../../context/SuperAdminContext';
 import {
   Store, User, Phone, Mail, MapPin,
   Smartphone, Eye, EyeOff, Upload, Check, X,
-  ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap, Tag, Gift, Users, MessageCircle,
+  ArrowLeft, Sparkles, QrCode, ShoppingCart, Package, Zap, Tag, Gift, Users, MessageCircle, UserPlus,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
@@ -60,6 +60,7 @@ const CreateSalon = () => {
     packageEnabled: false,
     stylistPanelEnabled: false,
     broadcastEnabled: false,
+    offlineBookingEnabled: false,
     adminName: '', adminId: '', adminEmail: '', password: '',
   });
 
@@ -145,7 +146,7 @@ const CreateSalon = () => {
 
           <div className="flex gap-3">
             <button
-              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',serviceBillingEnabled:false,productBillingEnabled:false,couponEnabled:false,packageEnabled:false,broadcastEnabled:false,stylistPanelEnabled:false,adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); }}
+              onClick={() => { setSuccess(null); setForm({ shopName:'',slug:'',address:'',city:'',state:'',pincode:'',phone:'',email:'',whatsapp:'',businessName:'',gstNumber:'',paymentIntegrationEnabled:false,upiName:'',upiMobileNumber:'',upiId:'',bankName:'',serviceBillingEnabled:false,productBillingEnabled:false,couponEnabled:false,packageEnabled:false,broadcastEnabled:false,offlineBookingEnabled:false,stylistPanelEnabled:false,adminName:'',adminId:'',adminEmail:'',password:'' }); setLogoPreview(null); setLogoFile(null); }}
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all"
             >
               Create Another
@@ -398,7 +399,8 @@ const CreateSalon = () => {
               { key: 'couponEnabled',       icon: Tag,   label: 'Discount / Coupon',  desc: 'Allow admin to create coupon codes for customer discounts' },
               { key: 'packageEnabled',      icon: Gift,  label: 'Package Discount',   desc: 'Auto-apply discount when customers select a configured service package' },
               { key: 'stylistPanelEnabled', icon: Users, label: 'Stylist Panel',       desc: 'Give stylists a dedicated login portal at /{salon}/stylist' },
-              { key: 'broadcastEnabled',    icon: MessageCircle, label: 'WhatsApp Broadcast', desc: 'Let admin send bulk WhatsApp messages to salon customers' },
+              { key: 'broadcastEnabled',      icon: MessageCircle, label: 'WhatsApp Broadcast',       desc: 'Let admin send bulk WhatsApp messages to salon customers' },
+              { key: 'offlineBookingEnabled', icon: UserPlus,      label: 'Walk-in / Offline Booking', desc: 'Admin can create offline bookings for walk-in customers' },
             ].map(({ key, icon: Icon, label, desc }) => (
               <label key={key} className="flex items-center gap-4 cursor-pointer select-none">
                 <div

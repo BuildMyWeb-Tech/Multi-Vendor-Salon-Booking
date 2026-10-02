@@ -35,6 +35,13 @@ const billSchema = new mongoose.Schema(
     discountType: { type: String, enum: ['flat', 'percent'], default: 'flat' },
     tax: { type: Number, default: 0 },
     taxPercent: { type: Number, default: 0 },
+    taxBreakdown: [
+      {
+        name: { type: String },
+        percent: { type: Number },
+        amount: { type: Number },
+      },
+    ],
     total: { type: Number, default: 0 },
     paymentMethod: { type: String, enum: ['cash', 'upi'], default: 'cash' },
     utrNumber: { type: String, default: '' },

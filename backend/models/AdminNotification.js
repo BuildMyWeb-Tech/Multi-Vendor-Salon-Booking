@@ -14,6 +14,8 @@ const adminNotificationSchema = new mongoose.Schema(
         'booking_rescheduled',
         'reminder',
         'general',
+        'low_stock',
+        'out_of_stock',
       ],
       default: 'general',
     },

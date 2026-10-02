@@ -451,7 +451,7 @@ const ServiceCategory = () => {
                                         placeholder="Describe what this service includes and what clients can expect..."
                                         rows={4}
                                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none"
-                                        required
+                                        
                                     />
                                     
                                 </div>

@@ -32,7 +32,8 @@ const ShopContact = () => {
       icon: MapPin,
       label: 'Address',
       value: [currentShop.address, currentShop.city, currentShop.state, currentShop.pincode].filter(Boolean).join(', '),
-      href: null,
+      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([currentShop.address, currentShop.city, currentShop.state, currentShop.pincode].filter(Boolean).join(', '))}`,
+      target: '_blank',
     },
   ].filter(Boolean);
 
@@ -78,39 +79,45 @@ const ShopContact = () => {
           </div>
         </div>
 
-        {/* Map / Working Hours placeholder */}
+        {/* Right column */}
         <div className="flex flex-col gap-6">
-          {/* Working Hours */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Clock size={18} className="text-primary" /> Working Hours
-            </h2>
-            <div className="space-y-2 text-sm text-gray-600">
-              {currentShop?.workingHours ? (
-                Object.entries(currentShop.workingHours).map(([day, hours]) => (
-                  <div key={day} className="flex justify-between py-1.5 border-b border-gray-50 last:border-0">
-                    <span className="font-medium capitalize">{day}</span>
-                    <span>{hours || 'Closed'}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-400 text-sm text-center py-4">Contact us for working hours.</p>
-              )}
-            </div>
-          </div>
+          {/* Google Map */}
+          {(currentShop?.address || currentShop?.city) && (() => {
+            const addr = [currentShop.address, currentShop.city, currentShop.state, currentShop.pincode].filter(Boolean).join(', ');
+            const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(addr)}&output=embed`;
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-gray-50 flex items-center gap-2">
+                  <MapPin size={15} className="text-primary" />
+                  <span className="text-sm font-semibold text-gray-700">Our Location</span>
+                </div>
+                <iframe
+                  title={`${shopName} location`}
+                  src={mapSrc}
+                  width="100%"
+                  height="220"
+                  style={{ border: 0, display: 'block' }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className="px-5 py-3">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
+                  >
+                    <MapPin size={11} /> Open in Google Maps
+                  </a>
+                </div>
+              </div>
+            );
+          })()}
 
-          {/* CTA */}
-          <div className="bg-gradient-to-br from-primary to-blue-600 rounded-2xl p-6 text-white text-center">
-            <Scissors size={28} className="mx-auto mb-3 opacity-80" />
-            <h3 className="font-bold text-lg mb-2">Ready to Book?</h3>
-            <p className="text-white/70 text-sm mb-4">Browse our stylists and book your appointment online.</p>
-            <a
-              href={`/${shopSlug}/stylists`}
-              className="inline-block bg-white text-primary font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-white/90 transition"
-            >
-              Book Now
-            </a>
-          </div>
+
+
+          
         </div>
       </div>
     </div>

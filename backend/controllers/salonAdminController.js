@@ -13,6 +13,7 @@ import BlockedDate from '../models/BlockedDate.js';
 import RecurringHoliday from '../models/RecurringHoliday.js';
 import SpecialWorkingDay from '../models/SpecialWorkingDay.js';
 import AdminNotification from '../models/AdminNotification.js';
+import taxModel from '../models/taxModel.js';
 import ServiceCategory from '../models/ServiceCategory.js';
 import validator from 'validator';
 
@@ -87,6 +88,24 @@ export const getShopInfo = async (req, res) => {
     const shop = await shopModel.findOne({ shopId: req.salonAdmin.shopId }).lean();
     if (!shop) return res.json({ success: false, message: 'Shop not found.' });
     res.json({ success: true, shop });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ── PATCH /api/salon-admin/billing-tax ───────────────────────────────────────
+export const updateBillingTax = async (req, res) => {
+  try {
+    const { shopId } = req.salonAdmin;
+    const { billingTaxPercent, billingTaxName } = req.body;
+    if (billingTaxPercent === undefined || isNaN(billingTaxPercent)) {
+      return res.json({ success: false, message: 'billingTaxPercent is required.' });
+    }
+    const val = Math.max(0, Math.min(100, parseFloat(billingTaxPercent)));
+    const update = { billingTaxPercent: val };
+    if (billingTaxName !== undefined) update.billingTaxName = String(billingTaxName).trim() || 'Tax';
+    await shopModel.updateOne({ shopId }, update);
+    res.json({ success: true, billingTaxPercent: val, billingTaxName: update.billingTaxName });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -318,7 +337,6 @@ export const addSalonDoctor = async (req, res) => {
       const result = await cloudinary.uploader.upload(dataUri, { resource_type: 'image', folder: 'salon' });
       imageUrl = result.secure_url;
     }
-    if (!imageUrl) return res.json({ success: false, message: 'Stylist image is required.' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     let specialtyArr = [];
@@ -636,8 +654,8 @@ export const createSalonService = async (req, res) => {
     const { shopId } = req.salonAdmin;
     const { name, description, basePrice } = req.body;
 
-    if (!name || !description || basePrice === undefined) {
-      return res.json({ success: false, message: 'Name, description, and price are required.' });
+    if (!name || basePrice === undefined) {
+      return res.json({ success: false, message: 'Name and price are required.' });
     }
 
     let imageUrl = '';
@@ -668,7 +686,7 @@ export const updateSalonService = async (req, res) => {
 
     const { name, description, basePrice, isActive } = req.body;
     if (name) service.name = name;
-    if (description) service.description = description;
+    if (description !== undefined) service.description = description;
     if (basePrice !== undefined) service.basePrice = parseFloat(basePrice);
     if (isActive !== undefined) service.isActive = isActive === 'true' || isActive === true;
 
@@ -726,5 +744,88 @@ export const markSalonAdminNotificationsRead = async (req, res) => {
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
+};
+
+export const createOfflineAppointment = async (req, res) => {
+  try {
+    const { shopId } = req.salonAdmin;
+    const { doctorId, services, slotDate, slotTime, customerName, customerPhone } = req.body;
+
+    if (!doctorId || !slotDate || !slotTime || !customerName) {
+      return res.json({ success: false, message: 'Stylist, date, time and customer name are required.' });
+    }
+
+    const [year, month, day] = slotDate.split('-').map(Number);
+    const [h, m] = slotTime.split(':').map(Number);
+    const slotDateTime = new Date(year, month - 1, day, h, m, 0, 0);
+
+    const existing = await appointmentModel.findOne({ doctorId, slotDateTime, cancelled: false });
+    if (existing) return res.json({ success: false, message: 'This slot is already booked.' });
+
+    const svcList = Array.isArray(services) ? services : [];
+    const totalAmount = svcList.reduce((s, sv) => s + (Number(sv.price) || 0), 0);
+
+    const appt = new appointmentModel({
+      doctorId,
+      slotDate,
+      slotTime,
+      slotDateTime,
+      amount: totalAmount,
+      services: svcList,
+      service: svcList.map(s => s.name).join(', ') || 'Walk-in',
+      paymentMethod: 'cash',
+      shopId,
+      isOffline: true,
+      userData: { name: customerName, phone: customerPhone || '' },
+    });
+
+    await appt.save();
+    res.json({ success: true, message: 'Offline appointment created.', appointment: appt });
+  } catch (error) {
+    if (error.code === 11000) return res.json({ success: false, message: 'Slot already taken.' });
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ── TAX CRUD ──────────────────────────────────────────────────────────────────
+
+export const getTaxes = async (req, res) => {
+  try {
+    const { shopId } = req.salonAdmin;
+    const taxes = await taxModel.find({ shopId }).sort({ createdAt: 1 }).lean();
+    res.json({ success: true, taxes });
+  } catch (e) { res.json({ success: false, message: e.message }); }
+};
+
+export const createTax = async (req, res) => {
+  try {
+    const { shopId } = req.salonAdmin;
+    const { name, percent } = req.body;
+    if (!name || percent == null) return res.json({ success: false, message: 'name and percent required.' });
+    const tax = await taxModel.create({ shopId, name: name.trim(), percent: parseFloat(percent) });
+    res.json({ success: true, tax });
+  } catch (e) { res.json({ success: false, message: e.message }); }
+};
+
+export const updateTax = async (req, res) => {
+  try {
+    const { shopId } = req.salonAdmin;
+    const { name, percent, isActive } = req.body;
+    const update = {};
+    if (name !== undefined) update.name = name.trim();
+    if (percent !== undefined) update.percent = parseFloat(percent);
+    if (isActive !== undefined) update.isActive = isActive;
+    const tax = await taxModel.findOneAndUpdate({ _id: req.params.id, shopId }, update, { new: true });
+    if (!tax) return res.json({ success: false, message: 'Tax not found.' });
+    res.json({ success: true, tax });
+  } catch (e) { res.json({ success: false, message: e.message }); }
+};
+
+export const deleteTax = async (req, res) => {
+  try {
+    const { shopId } = req.salonAdmin;
+    await taxModel.findOneAndDelete({ _id: req.params.id, shopId });
+    res.json({ success: true });
+  } catch (e) { res.json({ success: false, message: e.message }); }
 };
 

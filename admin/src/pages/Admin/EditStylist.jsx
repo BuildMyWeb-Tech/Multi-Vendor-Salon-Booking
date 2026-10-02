@@ -584,7 +584,7 @@ const EditStylist = () => {
                         className='w-full px-4 pt-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary' 
                         rows={4} 
                         placeholder="Describe the stylist's expertise, style philosophy, and approach to client service"
-                        required
+                        
                     ></textarea>
                     <p className="text-xs text-gray-500 mt-1">
                         Include relevant experience, specializations, and unique styling approach to help clients connect with the stylist

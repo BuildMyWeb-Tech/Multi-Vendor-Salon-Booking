@@ -5,7 +5,7 @@ import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import {
   Search, Scissors, Loader2, Store, LayoutGrid, User,
-  Clock, Instagram, Calendar, SlidersHorizontal, Star
+  Calendar, SlidersHorizontal, Star, Instagram,
 } from 'lucide-react';
 
 const SORT_OPTIONS = ['Most Popular', 'Name A-Z', 'Experience'];
@@ -175,7 +175,7 @@ const ShopStylists = () => {
           <p className="text-gray-400">No stylists found.</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {filtered.map((doc) => (
             <StylistCard key={doc._id} doc={doc} shopSlug={shopSlug} navigate={navigate} />
           ))}
@@ -194,76 +194,41 @@ const ShopStylists = () => {
 const StylistCard = ({ doc, shopSlug, navigate }) => (
   <div
     onClick={() => navigate(`/${shopSlug}/appointment/${doc._id}`)}
-    className={`bg-white rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200 hover:shadow-xl hover:-translate-y-1 border-2 ${doc.available ? 'border-primary/30 hover:border-primary' : 'border-gray-100'}`}
+    className="bg-white rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border border-gray-100 shadow-sm"
   >
-    {/* Image */}
-    <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
-      {doc.image ? (
-        <img
-          src={doc.image}
-          alt={doc.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-      ) : (
-        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-blue-50 flex items-center justify-center">
-          <User size={40} className="text-primary/30" />
-        </div>
-      )}
-
-      {/* Available Today badge */}
-      {doc.available && (
-        <span className="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-          Available Today
-        </span>
-      )}
-
-      {/* Name + specialty overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-3 pb-3 pt-8">
-        <p className="text-white font-bold text-sm leading-tight">{doc.name}</p>
-        {doc.specialty?.length > 0 && (
-          <p className="text-white/75 text-[11px] mt-0.5 flex items-center gap-1">
-            <Scissors size={10} />
-            {doc.specialty.slice(0, 2).join(', ')}
-          </p>
-        )}
-      </div>
+    {/* Square image */}
+    <div className="relative overflow-hidden" style={{ aspectRatio: '1/1' }}>
+      {doc.image
+        ? <img src={doc.image} alt={doc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        : <div className="w-full h-full bg-gradient-to-br from-primary/10 to-blue-50 flex items-center justify-center"><User size={40} className="text-primary/30" /></div>
+      }
+      <span className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full border-2 border-white shadow ${doc.available !== false ? 'bg-emerald-400' : 'bg-gray-300'}`} />
     </div>
 
     {/* Details */}
-    <div className="px-3 py-3 space-y-1.5">
-      {doc.experience && (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <Calendar size={12} className="text-primary/60" />
-          <span>{doc.experience} Experience</span>
-        </div>
-      )}
-      {doc.instagram && (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <Instagram size={12} className="text-pink-400" />
-          <span>@{doc.instagram}</span>
-        </div>
-      )}
-      <div className="flex items-center gap-1.5 text-xs">
-        <span className={`w-2 h-2 rounded-full ${doc.available ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-        <span className={doc.available ? 'text-emerald-600' : 'text-gray-400'}>
-          {doc.available ? 'Currently Available' : 'Currently Not Available'}
-        </span>
-      </div>
-    </div>
+    <div className="px-3 pt-2.5 pb-3 space-y-1.5">
+      <p className="font-bold text-gray-900 text-sm leading-tight truncate">{doc.name}</p>
 
-    {/* CTA */}
-    <div className="px-3 pb-3">
-      {doc.available ? (
-        <button className="w-full bg-primary text-white text-xs font-semibold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors">
-          <Calendar size={13} />
-          Book Appointment
-        </button>
-      ) : (
-        <button disabled className="w-full bg-gray-100 text-gray-400 text-xs font-semibold py-2.5 rounded-xl cursor-not-allowed">
-          Not Available
-        </button>
+      {doc.specialty?.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {doc.specialty.map((s) => (
+            <span key={s} className="bg-primary/8 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full border border-primary/15">
+              {s}
+            </span>
+          ))}
+        </div>
       )}
+
+      {doc.experience && (
+        <p className="text-[11px] text-gray-400 flex items-center gap-1">
+          <Star size={10} className="text-amber-400 flex-shrink-0" />
+          {doc.experience}
+        </p>
+      )}
+
+      <button className="w-full mt-1 bg-primary text-white text-[11px] font-semibold py-2 rounded-xl flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors">
+        <Calendar size={11} /> Book Appointment
+      </button>
     </div>
   </div>
 );
@@ -278,26 +243,20 @@ const StylistListCard = ({ doc, shopSlug, navigate }) => (
         ? <img src={doc.image} alt={doc.name} className="w-full h-full object-cover" />
         : <div className="w-full h-full bg-primary/10 flex items-center justify-center"><User size={24} className="text-primary/40" /></div>
       }
-      {doc.available && (
-        <span className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
-      )}
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="font-bold text-gray-800">{doc.name}</p>
-          {doc.specialty?.length > 0 && (
-            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-              <Scissors size={10} /> {doc.specialty.slice(0, 3).join(', ')}
-            </p>
-          )}
-        </div>
-        {doc.available ? (
-          <span className="bg-emerald-50 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">Available Today</span>
-        ) : (
-          <span className="bg-gray-50 text-gray-400 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">Not Available</span>
-        )}
+        <p className="font-bold text-gray-800">{doc.name}</p>
       </div>
+      {doc.specialty?.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1">
+          {doc.specialty.map((s) => (
+            <span key={s} className="inline-flex items-center gap-0.5 bg-primary/8 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full border border-primary/15">
+              <Scissors size={8} />{s}
+            </span>
+          ))}
+        </div>
+      )}
       <div className="flex items-center gap-4 mt-2 flex-wrap">
         {doc.experience && (
           <span className="text-xs text-gray-500 flex items-center gap-1"><Calendar size={11} className="text-primary/60" />{doc.experience}</span>

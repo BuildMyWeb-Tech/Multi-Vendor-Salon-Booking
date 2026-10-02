@@ -379,6 +379,8 @@ const SalonAdminContextProvider = ({ children }) => {
       axios.delete(`${backendUrl}/api/salon-admin/billing/products/${id}`, { headers: headers() }),
     getInventory: () =>
       axios.get(`${backendUrl}/api/salon-admin/billing/inventory`, { headers: headers() }),
+    addStock: (data) =>
+      axios.post(`${backendUrl}/api/salon-admin/billing/inventory/add-stock`, data, { headers: headers() }),
     getBills: (params = {}) =>
       axios.get(`${backendUrl}/api/salon-admin/billing/bills`, { headers: headers(), params }),
     getBillById: (id) =>

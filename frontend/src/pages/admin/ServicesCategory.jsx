@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 import axios from 'axios'
 import { AdminContext } from '../../context/AdminContext'
 import { AppContext } from '../../context/AppContext'
+import { SalonAdminContext } from '../../context/SalonAdminContext'
 import {
   Pencil,
   Plus,
@@ -44,6 +45,9 @@ const ServiceCategory = () => {
 
     const { backendUrl } = useContext(AppContext)
     const { aToken } = useContext(AdminContext)
+    const { saAdminToken } = useContext(SalonAdminContext)
+    const authHeader = saAdminToken ? { satoken: saAdminToken } : { aToken }
+    const apiBase = `${backendUrl}/api/salon-admin/services`
 
     useEffect(() => {
         fetchServices()
@@ -62,10 +66,7 @@ const ServiceCategory = () => {
     const fetchServices = async () => {
         setLoading(true)
         try {
-            const { data } = await axios.get(
-                `${backendUrl}/api/admin/services`,
-                { headers: { aToken } }
-            )
+            const { data } = await axios.get(apiBase, { headers: authHeader })
             if (data.success) {
                 setServiceCategories(data.services)
             }
@@ -80,9 +81,6 @@ const ServiceCategory = () => {
         e.preventDefault();
 
         try {
-            if (!serviceImg && !isEditingService) {
-                return toast.error('Service Image Required');
-            }
 
             setSubmitting(true);
 
@@ -96,17 +94,9 @@ const ServiceCategory = () => {
 
             let response;
             if (isEditingService) {
-                response = await axios.put(
-                    `${backendUrl}/api/admin/services/${editServiceId}`,
-                    formData,
-                    { headers: { aToken } }
-                );
+                response = await axios.put(`${apiBase}/${editServiceId}`, formData, { headers: authHeader });
             } else {
-                response = await axios.post(
-                    `${backendUrl}/api/admin/services`,
-                    formData,
-                    { headers: { aToken } }
-                );
+                response = await axios.post(apiBase, formData, { headers: authHeader });
             }
 
             const { data } = response;
@@ -145,10 +135,7 @@ const ServiceCategory = () => {
 
         setDeleteLoading(true);
         try {
-            const { data } = await axios.delete(
-                `${backendUrl}/api/admin/services/${serviceToDelete._id}`,
-                { headers: { aToken } }
-            )
+            const { data } = await axios.delete(`${apiBase}/${serviceToDelete._id}`, { headers: authHeader })
             if (data.success) {
                 toast.success('Service deleted successfully');
                 setShowDeleteModal(false);
@@ -246,12 +233,16 @@ const ServiceCategory = () => {
                                     {filteredServices.map(service => (
                                         <tr key={service._id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
-                                                    <img
-                                                        src={service.imageUrl}
-                                                        alt={service.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
+                                                <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-100 border border-gray-200 shadow-sm flex items-center justify-center">
+                                                    {service.imageUrl ? (
+                                                        <img
+                                                            src={service.imageUrl}
+                                                            alt={service.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <ScissorsIcon size={24} className="text-gray-400" />
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -441,7 +432,7 @@ const ServiceCategory = () => {
 
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Description <span className="text-red-500">*</span>
+                                        Description <span className="text-gray-400 text-xs">(optional)</span>
                                     </label>
                                     <textarea
                                         value={serviceDescription}
@@ -449,7 +440,6 @@ const ServiceCategory = () => {
                                         placeholder="Describe what this service includes and what clients can expect..."
                                         rows={4}
                                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none"
-                                        required
                                     />
 
                                 </div>

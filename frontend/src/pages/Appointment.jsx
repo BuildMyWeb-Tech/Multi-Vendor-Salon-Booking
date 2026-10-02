@@ -10,7 +10,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import {
   ChevronLeft, CreditCard, CheckCircle, CheckCircle2, ArrowRight,
   Shield, AlertTriangle, Loader2, Clock, Calendar, Award, User, Scissors,
-  QrCode, Smartphone, Upload, X, ImageIcon, Tag
+  QrCode, Smartphone, Upload, X, ImageIcon, Tag, IndianRupee, Percent
 } from "lucide-react";
 
 // Lazy: only init Stripe when payment step is reached
@@ -21,76 +21,40 @@ const getStripe = () => {
 };
 
 // Memoized components remain the same
-const StylistProfile = memo(({ stylistInfo, slotSettings }) => {
+const StylistProfile = memo(({ stylistInfo }) => {
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-6 sm:p-8">
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="md:w-1/4 lg:w-1/5">
-          <div className="relative">
-            <img 
-              src={stylistInfo.image} 
-              alt={stylistInfo.name} 
-              className="w-full aspect-square object-cover rounded-2xl shadow-lg border-4 border-white" 
-            />
-            {stylistInfo.available && (
-              <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg flex items-center gap-1.5">
-                <CheckCircle size={14} />
-                Available 
-              </div>
+    <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-4 sm:p-5 border-b border-blue-100">
+      <div className="flex gap-4 items-center">
+        <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-white shadow-md">
+          {stylistInfo.image ? (
+            <img src={stylistInfo.image} alt={stylistInfo.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+              <User size={32} className="text-gray-400" />
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">{stylistInfo.name}</h1>
+            <img className="w-4 h-4" src={assets.verified_icon} alt="Verified" />
+          </div>
+          <p className="text-blue-600 font-semibold text-sm mt-0.5 truncate">{stylistInfo.specialty.join(' • ')}</p>
+          <div className="flex flex-wrap items-center gap-3 mt-1.5">
+            {stylistInfo.experience && (
+              <span className="flex items-center gap-1 text-xs text-gray-600">
+                <Award size={12} className="text-blue-500" />{stylistInfo.experience}
+              </span>
+            )}
+            {stylistInfo.workingHours && (
+              <span className="flex items-center gap-1 text-xs text-gray-600">
+                <Clock size={12} className="text-blue-500" />{stylistInfo.workingHours}
+              </span>
             )}
           </div>
-        </div>
-        
-        <div className="md:w-3/4 lg:w-4/5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">{stylistInfo.name}</h1>
-                <img className="w-6 h-6" src={assets.verified_icon} alt="Verified" />
-              </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-gray-600">
-                <p className="text-blue-600 font-semibold text-lg">{stylistInfo.specialty.join(' • ')}</p>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm">
-                  <Award size={16} className="text-blue-600" />
-                  <span className="font-medium">{stylistInfo.experience}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <User size={18} className="text-blue-600" />
-              <h3 className="font-semibold text-gray-900">About</h3>
-            </div>
-            <p className="text-gray-700 leading-relaxed">{stylistInfo.about}</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-            <div className="bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition-all border border-blue-100">
-              <div className="text-sm text-gray-600 flex items-center gap-2 mb-2">
-                <Award size={16} className="text-blue-600" />
-                Experience
-              </div>
-              <div className="text-2xl font-bold text-gray-900">{stylistInfo.experience}</div>
-            </div>
-            
-            <div className="bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition-all border border-blue-100">
-              <div className="text-sm text-gray-600 flex items-center gap-2 mb-2">
-                <Clock size={16} className="text-blue-600" />
-                Working Hours
-              </div>
-              <div className="text-lg font-bold text-gray-900">{stylistInfo.workingHours || `${slotSettings.slotStartTime} - ${slotSettings.slotEndTime}`}</div>
-            </div>
-
-            <div className="bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition-all border border-blue-100">
-              <div className="text-sm text-gray-600 flex items-center gap-2 mb-2">
-                <Scissors size={16} className="text-blue-600" />
-                Specialties
-              </div>
-              <div className="text-lg font-bold text-gray-900">{stylistInfo.specialty.length} Services</div>
-            </div>
-          </div>
+          {stylistInfo.about && (
+            <p className="text-xs text-gray-500 mt-1.5 line-clamp-1">{stylistInfo.about}</p>
+          )}
         </div>
       </div>
     </div>
@@ -104,32 +68,22 @@ const DateOption = memo(({ dateInfo, selectedDate, onDateSelect }) => {
   return (
     <div
       onClick={() => onDateSelect(dateInfo.date)}
-      className={`flex-shrink-0 w-28 p-4 rounded-2xl cursor-pointer transition-all border-2 ${
+      className={`flex-shrink-0 w-20 p-3 rounded-xl cursor-pointer transition-all border-2 ${
         isSelected
-          ? 'bg-blue-600 text-white border-blue-600 shadow-xl scale-105'
-          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:shadow-lg'
+          ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-105'
+          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:shadow-md'
       }`}
     >
       <div className="text-center">
-        <div className={`text-xs font-semibold mb-1 ${
-          isSelected ? 'text-blue-200' : 'text-gray-500'
-        }`}>
+        <div className={`text-[10px] font-semibold mb-0.5 ${isSelected ? 'text-blue-200' : 'text-gray-500'}`}>
           {dateInfo.isToday ? 'TODAY' : dateInfo.dayName}
         </div>
-        <div className="text-3xl font-bold mb-1">
-          {dateInfo.dayNumber}
-        </div>
-        <div className={`text-xs mb-2 ${
-          isSelected ? 'text-blue-200' : 'text-gray-600'
+        <div className="text-2xl font-bold mb-0.5">{dateInfo.dayNumber}</div>
+        <div className={`text-[10px] mb-1.5 ${isSelected ? 'text-blue-200' : 'text-gray-500'}`}>{monthName}</div>
+        <div className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+          isSelected ? 'bg-blue-500 text-white' : 'bg-green-100 text-green-700'
         }`}>
-          {monthName}
-        </div>
-        <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
-          isSelected
-            ? 'bg-blue-500 text-white'
-            : 'bg-green-100 text-green-700'
-        }`}>
-          {dateInfo.slotCount} slots
+          {dateInfo.slotCount}
         </div>
       </div>
     </div>
@@ -194,6 +148,39 @@ const filterPastTimeSlots = (slots, selectedDate) => {
   });
 };
 
+const CONFETTI_COLORS = ['#a855f7', '#3b82f6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
+const ConfettiOverlay = () => {
+  const pieces = Array.from({ length: 60 }, (_, i) => ({
+    id: i,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 1.2}s`,
+    duration: `${1.5 + Math.random() * 1.5}s`,
+    size: `${6 + Math.floor(Math.random() * 8)}px`,
+    rotate: `${Math.floor(Math.random() * 360)}deg`,
+  }));
+  return (
+    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+      <style>{`
+        @keyframes confettiFall {
+          0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
+      {pieces.map(p => (
+        <div key={p.id} style={{
+          position: 'absolute', top: 0, left: p.left,
+          width: p.size, height: p.size,
+          backgroundColor: p.color,
+          borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+          transform: `rotate(${p.rotate})`,
+          animation: `confettiFall ${p.duration} ${p.delay} ease-in forwards`,
+        }} />
+      ))}
+    </div>
+  );
+};
+
 // Main component with CRITICAL performance fixes
 const Appointment = () => {
   const { docId, shopSlug } = useParams();
@@ -219,6 +206,7 @@ const Appointment = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [slotSettings, setSlotSettings] = useState(null);
   const [allServices, setAllServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
@@ -230,6 +218,7 @@ const Appointment = () => {
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState(null);
   const screenshotInputRef = useRef(null);
+  const stepTopRef = useRef(null);
 
   // Discount state
   const [couponCode, setCouponCode]       = useState('');
@@ -239,6 +228,11 @@ const Appointment = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponOpen, setCouponOpen]       = useState(false);
   const [packageDiscount, setPackageDiscount] = useState(0); // percent
+
+  // Package selection
+  const [packages, setPackages] = useState([]);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [utrNumber, setUtrNumber] = useState('');
 
   const navigate = useNavigate();
 
@@ -344,14 +338,18 @@ const Appointment = () => {
   const fetchAllServices = useCallback(async () => {
     setServicesLoading(true);
     try {
-      const { data } = await axios.get(`${backendUrl}/api/user/services`, { params: { shopSlug } });
-      if (data.success) setAllServices(data.services);
+      const [svcRes, pkgRes] = await Promise.all([
+        axios.get(`${backendUrl}/api/user/services`, { params: { shopSlug } }),
+        axios.get(`${backendUrl}/api/user/packages?shopSlug=${shopSlug}`).catch(() => ({ data: { success: false } })),
+      ]);
+      if (svcRes.data.success) setAllServices(svcRes.data.services);
+      if (pkgRes.data.success) setPackages((pkgRes.data.packages || []).filter(p => p.isActive));
     } catch (error) {
       console.error("Error fetching services:", error);
     } finally {
       setServicesLoading(false);
     }
-  }, [backendUrl]);
+  }, [backendUrl, shopSlug]);
 
   const stylistServices = useMemo(() => {
     if (!stylistInfo || !allServices.length) return [];
@@ -513,16 +511,26 @@ const Appointment = () => {
   }, [docId, backendUrl, token, navigate]);
 
   const toggleService = useCallback((service) => {
+    setSelectedPackage(null); // deselect package when individual service toggled
     setSelectedServices(prevServices => {
       const isSelected = prevServices.find(s => s._id === service._id);
-      
-      if (isSelected) {
-        return prevServices.filter(s => s._id !== service._id);
-      } else {
-        return [...prevServices, service];
-      }
+      if (isSelected) return prevServices.filter(s => s._id !== service._id);
+      return [...prevServices, service];
     });
   }, []);
+
+  const selectPackage = useCallback((pkg) => {
+    if (selectedPackage?._id === pkg._id) {
+      setSelectedPackage(null);
+      setSelectedServices([]);
+      return;
+    }
+    const pkgServices = allServices.filter(s =>
+      pkg.serviceIds?.some(id => String(id) === String(s._id))
+    );
+    setSelectedPackage(pkg);
+    setSelectedServices(pkgServices);
+  }, [allServices, selectedPackage]);
 
   const handleDateSelect = useCallback((date) => {
     setSelectedDate(date);
@@ -579,6 +587,8 @@ const Appointment = () => {
 
       if (data.success) {
         toast.success(data.message || 'Appointment booked successfully!');
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3500);
         // Reset state before navigating — wrap in try so unmount errors don't show a false failure toast
         try {
           setSelectedSlotISO('');
@@ -588,7 +598,9 @@ const Appointment = () => {
           setUtrNumber('');
         } catch (_) { /* component may already be unmounting */ }
         setBookingLoading(false);
-        navigate(shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments');
+        setTimeout(() => {
+          navigate(shopSlug ? `/${shopSlug}/my-appointments` : '/my-appointments');
+        }, 2000);
         return; // prevent finally from running after navigate
       } else {
         toast.error(data.message || 'Booking failed.');
@@ -738,16 +750,17 @@ const Appointment = () => {
   }, [selectedServices, slotSettings, getFinalPrice, packageDiscount, couponDiscount]);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
-        <div className="mb-8 flex items-center">
+    <div className="bg-gray-50 min-h-screen relative">
+      {showConfetti && <ConfettiOverlay />}
+      <div className="max-w-3xl mx-auto px-4 py-4 md:py-6">
+        <div className="mb-4 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors mr-4"
+            className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-200 transition-colors"
           >
-            <ChevronLeft size={24} className="text-gray-500" />
+            <ChevronLeft size={20} className="text-gray-500" />
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Book Your Appointment</h1>
+          <h1 className="text-lg font-bold text-gray-800">Book Your Appointment</h1>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -771,9 +784,9 @@ const Appointment = () => {
               </div>
             </div>
           ) : (
-            <StylistProfile stylistInfo={stylistInfo} slotSettings={slotSettings || { slotStartTime: '--', slotEndTime: '--' }} />
+            <StylistProfile stylistInfo={stylistInfo} />
           )}
-          
+
           {/* Show booking section skeleton until stylist is ready */}
           {!stylistInfo && (
             <div className="p-6 sm:p-8 animate-pulse space-y-4">
@@ -785,528 +798,764 @@ const Appointment = () => {
                 <div className="w-10 h-10 rounded-full bg-gray-200" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
-                {[1,2,3].map(i => <div key={i} className="h-36 bg-gray-100 rounded-2xl" />)}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-36 bg-gray-100 rounded-2xl" />
+                ))}
               </div>
             </div>
           )}
 
           {/* Booking Steps + Content: render as soon as stylist is ready */}
-          {stylistInfo && <>
-          <div className="px-6 sm:px-8 py-6 border-b border-gray-200 bg-white">
-            <div className="flex items-center justify-between max-w-3xl mx-auto">
-              <div className="flex items-center flex-1">
-                <div className={`w-10 h-10 rounded-full ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'} flex items-center justify-center font-semibold shadow-sm transition-all`}>
-                  {currentStep > 1 ? <CheckCircle2 size={20} /> : '1'}
+          {stylistInfo && (
+            <>
+              <div ref={stepTopRef} className="px-4 sm:px-6 py-3 border-b border-gray-100 bg-white">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}
+                  >
+                    {currentStep > 1 ? <CheckCircle2 size={14} /> : '1'}
+                  </div>
+                  <div
+                    className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'} transition-all`}
+                  />
+                  <div
+                    className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}
+                  >
+                    {currentStep > 2 ? <CheckCircle2 size={14} /> : '2'}
+                  </div>
+                  <div
+                    className={`flex-1 h-0.5 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-200'} transition-all`}
+                  />
+                  <div
+                    className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}
+                  >
+                    {currentStep > 3 ? <CheckCircle2 size={14} /> : '3'}
+                  </div>
                 </div>
-                <div className={`h-1 flex-1 mx-2 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'} transition-all`}></div>
-                <div className={`w-10 h-10 rounded-full ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'} flex items-center justify-center font-semibold shadow-sm transition-all`}>
-                  {currentStep > 2 ? <CheckCircle2 size={20} /> : '2'}
-                </div>
-                <div className={`h-1 flex-1 mx-2 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-200'} transition-all`}></div>
-                <div className={`w-10 h-10 rounded-full ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'} flex items-center justify-center font-semibold shadow-sm transition-all`}>
-                  {currentStep > 3 ? <CheckCircle2 size={20} /> : '3'}
+                <div className="flex justify-between text-xs mt-1.5 px-0.5">
+                  <span
+                    className={currentStep === 1 ? 'font-semibold text-blue-600' : 'text-gray-500'}
+                  >
+                    Services
+                  </span>
+                  <span
+                    className={currentStep === 2 ? 'font-semibold text-blue-600' : 'text-gray-500'}
+                  >
+                    Date & Time
+                  </span>
+                  <span
+                    className={currentStep === 3 ? 'font-semibold text-blue-600' : 'text-gray-500'}
+                  >
+                    Payment
+                  </span>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-between text-sm text-gray-600 mt-3 max-w-3xl mx-auto px-2">
-              <span className={currentStep === 1 ? "font-semibold text-blue-600" : ""}>Select Services</span>
-              <span className={currentStep === 2 ? "font-semibold text-blue-600" : ""}>Choose Time</span>
-              <span className={currentStep === 3 ? "font-semibold text-blue-600" : ""}>Payment</span>
-            </div>
-          </div>
-          
-          <div className="p-6 sm:p-8">
-            {/* Step 1: Service Selection */}
-            {currentStep === 1 && (
-              <div className="animate-slideDown">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Services</h2>
-                
-                {servicesLoading ? (
-                  <div className="flex items-center gap-3 py-6 text-gray-400">
-                    <div className="w-5 h-5 border-2 border-gray-200 border-t-primary rounded-full animate-spin flex-shrink-0" />
-                    <span className="text-sm">Loading services…</span>
-                  </div>
-                ) : stylistServices.length === 0 ? (
-                  <p className="text-gray-500">No services available for this stylist</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {stylistServices.map((service) => {
-                      const isSelected = selectedServices.find(s => s._id === service._id);
-                      return (
-                        <div 
-                          key={service._id}
-                          onClick={() => toggleService(service)}
-                          className={`p-6 rounded-2xl cursor-pointer transition-all transform hover:scale-105 ${
-                            isSelected
-                              ? 'border-2 border-blue-600 bg-blue-50 shadow-xl'
-                              : 'border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg bg-white'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h3 className="font-bold text-gray-900 text-lg mb-1">{service.name}</h3>
-                              <p className="text-sm text-gray-600 leading-relaxed">{service.description}</p>
+
+              <div className="p-4 sm:p-6">
+                {/* Step 1: Service Selection */}
+                {currentStep === 1 && (
+                  <div className="animate-slideDown">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Select Services</h2>
+
+                    {servicesLoading ? (
+                      <div className="flex items-center gap-3 py-6 text-gray-400">
+                        <div className="w-5 h-5 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
+                        <span className="text-sm">Loading services…</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Individual services */}
+                        {stylistServices.length === 0 ? (
+                          <p className="text-gray-500 text-sm">
+                            No services available for this stylist
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {stylistServices.map((service) => {
+                              const isSelected = selectedServices.find(
+                                (s) => s._id === service._id
+                              );
+                              return (
+                                <div
+                                  key={service._id}
+                                  onClick={() => toggleService(service)}
+                                  className={`p-4 rounded-xl cursor-pointer transition-all ${
+                                    isSelected
+                                      ? 'border-2 border-blue-600 bg-blue-50 shadow-md'
+                                      : 'border border-gray-200 hover:border-blue-300 hover:shadow-md bg-white'
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="font-semibold text-gray-900 text-sm leading-tight">
+                                        {service.name}
+                                      </h3>
+                                      {service.description && (
+                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                                          {service.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle2
+                                        size={16}
+                                        className="text-blue-600 flex-shrink-0 mt-0.5"
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-gray-100">
+                                    <span className="font-bold text-gray-900 text-sm">
+                                      {currencySymbol}
+                                      {service.basePrice}
+                                    </span>
+                                    <span
+                                      className={`text-xs px-3 py-1 rounded-lg font-semibold ${
+                                        isSelected
+                                          ? 'bg-blue-600 text-white'
+                                          : 'bg-blue-100 text-blue-700'
+                                      }`}
+                                    >
+                                      {isSelected ? 'Selected' : 'Select'}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Trending Combo Packs */}
+                        {packages.length > 0 && (
+                          <div className="mb-5">
+                            <div className="my-4 flex items-center gap-3 text-xs text-gray-400">
+                              <div className="flex-1 h-px bg-gray-100" />
+                              <span>or Choose Combo Services</span>
+                              <div className="flex-1 h-px bg-gray-100" />
                             </div>
-                            {isSelected && (
-                              <CheckCircle2 size={24} className="text-blue-600 flex-shrink-0" />
+                            <div className="flex items-center gap-2 mb-3">
+                              <Tag size={15} className="text-blue-600" />
+                              <h3 className="font-semibold text-gray-800 text-sm">
+                                Trending Combo Packs
+                              </h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {packages.map((pkg) => {
+                                const pkgServices = allServices.filter((s) =>
+                                  pkg.serviceIds?.some((id) => String(id) === String(s._id))
+                                );
+                                const subtotal = pkgServices.reduce(
+                                  (sum, s) => sum + s.basePrice,
+                                  0
+                                );
+                                const comboPrice = pkg.discountPercent
+                                  ? Math.round(subtotal * (1 - pkg.discountPercent / 100))
+                                  : subtotal;
+                                const isSelected = selectedPackage?._id === pkg._id;
+                                return (
+                                  <div
+                                    key={pkg._id}
+                                    onClick={() => selectPackage(pkg)}
+                                    className={`p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                                      isSelected
+                                        ? 'border-blue-600 bg-blue-50 shadow-md'
+                                        : 'border-gray-200 hover:border-blue-300 bg-white hover:shadow-md'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                      <h4 className="font-bold text-gray-800 text-sm">
+                                        {pkg.name}
+                                      </h4>
+                                      <span className="flex items-center gap-0.5 bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0">
+                                        <Percent size={10} />
+                                        {pkg.discountPercent}% OFF
+                                      </span>
+                                    </div>
+                                    {pkgServices.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mb-2">
+                                        {pkgServices.map((s) => (
+                                          <span
+                                            key={s._id}
+                                            className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+                                          >
+                                            {s.name}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                                      <div className="flex items-center gap-2">
+                                        {subtotal > 0 && (
+                                          <span className="text-gray-400 line-through text-xs">
+                                            {currencySymbol}
+                                            {subtotal}
+                                          </span>
+                                        )}
+                                        <span className="font-bold text-gray-900 text-sm">
+                                          {currencySymbol}
+                                          {comboPrice}
+                                        </span>
+                                      </div>
+                                      {isSelected && (
+                                        <CheckCircle2 size={16} className="text-blue-600" />
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {selectedServices.length > 0 && (
+                      <div className="mt-4 flex items-center justify-between bg-blue-600 text-white rounded-xl px-5 py-3.5 shadow-lg">
+                        <div>
+                          <p className="text-xs text-blue-200">
+                            {selectedServices.length} service(s) selected
+                          </p>
+                          <p className="font-bold text-base">
+                            {currencySymbol}
+                            {getFinalPrice()}
+                          </p>
+                          {slotSettings?.advancePaymentRequired &&
+                            slotSettings?.advancePaymentPercentage < 100 && (
+                              <p className="text-xs text-blue-200 mt-0.5">
+                                Pay {slotSettings.advancePaymentPercentage}% now ({currencySymbol}
+                                {Math.round(
+                                  (getFinalPrice() * slotSettings.advancePaymentPercentage) / 100
+                                )}
+                                )
+                              </p>
+                            )}
+                        </div>
+                        <button
+                          onClick={() => { setCurrentStep(2); setTimeout(() => stepTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
+                          className="flex items-center gap-2 bg-white text-blue-600 px-5 py-2 rounded-lg font-semibold text-sm hover:bg-blue-50 transition-all"
+                        >
+                          Continue <ArrowRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 2: Date & Time Selection */}
+                {currentStep === 2 && (
+                  <div className="animate-slideDown">
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        onClick={() => setCurrentStep(1)}
+                        className="flex items-center text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
+                      >
+                        <ChevronLeft size={18} />
+                        <span>Back</span>
+                      </button>
+                      <h2 className="text-base font-bold text-gray-900">Select Date & Time</h2>
+                      <div className="w-14" />
+                    </div>
+
+                    {/* Date Selection */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Select Date
+                      </label>
+
+                      {dateLoading ? (
+                        <div className="flex justify-center py-12">
+                          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                        </div>
+                      ) : availableDates.length === 0 ? (
+                        <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-200">
+                          <Calendar size={48} className="mx-auto text-gray-400 mb-3" />
+                          <p className="text-gray-600 font-medium">
+                            No available dates at the moment
+                          </p>
+                          <p className="text-sm text-gray-500 mt-2">
+                            Please check back later or contact support
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                          {availableDates.map((dateInfo, index) => (
+                            <DateOption
+                              key={index}
+                              dateInfo={dateInfo}
+                              selectedDate={selectedDate}
+                              onDateSelect={handleDateSelect}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Time Selection */}
+                    {selectedDate && (
+                      <div className="mb-5 animate-slideDown">
+                        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                          <Clock size={15} className="text-blue-600" />
+                          Select Time
+                        </label>
+
+                        {loading ? (
+                          <div className="flex justify-center py-12">
+                            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                          </div>
+                        ) : availableSlots.length === 0 ? (
+                          <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-200">
+                            <Calendar size={48} className="mx-auto text-gray-400 mb-3" />
+                            <p className="text-gray-600 font-medium">
+                              No slots available for this date
+                            </p>
+                            <p className="text-sm text-gray-500 mt-2">Please select another date</p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            {availableSlots.map((slot, index) => (
+                              <TimeSlot
+                                key={index}
+                                slot={slot}
+                                selectedSlotISO={selectedSlotISO}
+                                onSelectSlot={setSelectedSlotISO}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedSlotISO && (
+                      <div className="mt-4 flex items-center justify-between bg-blue-600 text-white rounded-xl px-5 py-3.5 shadow-lg">
+                        <div>
+                          <p className="text-xs text-blue-200">Selected</p>
+                          <p className="font-bold text-sm">
+                            {selectedDate?.toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                            })}{' '}
+                            · {formatTime(selectedSlotISO)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => { setCurrentStep(3); setTimeout(() => stepTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
+                          className="flex items-center gap-2 bg-white text-blue-600 px-5 py-2 rounded-lg font-semibold text-sm hover:bg-blue-50 transition-all"
+                        >
+                          Continue <ArrowRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                    {!selectedSlotISO && (
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          disabled
+                          className="flex items-center gap-2 bg-gray-200 text-gray-400 px-6 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed"
+                        >
+                          Select a time to continue <ArrowRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 3: Payment */}
+                {currentStep === 3 && (
+                  <div className="animate-slideDown max-w-2xl mx-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        onClick={() => setCurrentStep(2)}
+                        className="flex items-center text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
+                      >
+                        <ChevronLeft size={18} />
+                        <span>Back</span>
+                      </button>
+                      <h2 className="text-base font-bold text-gray-900">
+                        {shopPaymentInfo?.paymentIntegrationEnabled
+                          ? 'Review & Pay'
+                          : 'Confirm Booking'}
+                      </h2>
+                      <div className="w-14" />
+                    </div>
+
+                    {/* Appointment Summary */}
+                    <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-6 rounded-2xl border-2 border-blue-200 mb-6 shadow-sm">
+                      <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                        <CheckCircle2 size={20} className="text-blue-600" />
+                        Appointment Summary
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center pb-4 border-b border-blue-200">
+                          <div>
+                            <p className="text-xs text-gray-500">Stylist</p>
+                            <p className="font-bold text-gray-900">{stylistInfo.name}</p>
+                          </div>
+                          {stylistInfo.image ? (
+                            <img
+                              src={stylistInfo.image}
+                              alt={stylistInfo.name}
+                              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-gray-100 border-2 border-white shadow flex items-center justify-center">
+                              <User size={22} className="text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="pb-4 border-b border-blue-200">
+                          <p className="text-xs text-gray-500 mb-2">Services</p>
+                          {selectedServices.map((service) => (
+                            <div
+                              key={service._id}
+                              className="flex justify-between items-center bg-white px-3 py-2 rounded-lg mb-1"
+                            >
+                              <span className="text-sm font-medium text-gray-800">
+                                {service.name}
+                              </span>
+                              <span className="text-sm font-bold text-blue-600">
+                                {currencySymbol}
+                                {service.basePrice}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="pb-4 border-b border-blue-200">
+                          <p className="text-xs text-gray-500">Date & Time</p>
+                          <p className="font-bold text-gray-900">
+                            {selectedDate?.toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </p>
+                          <p className="text-blue-600 font-semibold text-sm">
+                            {formatTime(selectedSlotISO)}
+                          </p>
+                        </div>
+                        {/* Discount breakdown */}
+                        {(packageDiscount > 0 || couponDiscount > 0) && (
+                          <div className="space-y-1 pb-2 border-b border-blue-200">
+                            <div className="flex justify-between text-sm text-gray-600">
+                              <span>Subtotal</span>
+                              <span>
+                                {currencySymbol}
+                                {getTotalPrice()}
+                              </span>
+                            </div>
+                            {packageDiscount > 0 && (
+                              <div className="flex justify-between text-sm text-emerald-600">
+                                <span>Package discount ({packageDiscount}%)</span>
+                                <span>
+                                  -{currencySymbol}
+                                  {getTotalPrice() -
+                                    Math.round(getTotalPrice() * (1 - packageDiscount / 100))}
+                                </span>
+                              </div>
+                            )}
+                            {couponDiscount > 0 && (
+                              <div className="flex justify-between text-sm text-emerald-600">
+                                <span>Coupon discount ({couponDiscount}%)</span>
+                                <span>
+                                  -{currencySymbol}
+                                  {Math.round(getTotalPrice() * (1 - packageDiscount / 100)) -
+                                    getFinalPrice()}
+                                </span>
+                              </div>
                             )}
                           </div>
-                          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                            <span className="font-bold text-gray-900 text-xl">{currencySymbol}{service.basePrice}</span>
-                            <button className={`text-sm px-4 py-2 rounded-lg font-semibold transition-all ${
-                              isSelected 
-                                ? 'bg-blue-600 text-white shadow-md' 
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                            }`}>
-                              {isSelected ? 'Selected' : 'Select'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {selectedServices.length > 0 && (
-                  <div className="mt-8 bg-gradient-to-r from-blue-50 to-pink-50 p-6 rounded-2xl border-2 border-blue-200 shadow-lg">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                      <div>
-                        <p className="text-sm text-gray-700 mb-1">{selectedServices.length} service(s) selected</p>
-                        <p className="text-2xl font-bold text-gray-900">Total: {currencySymbol}{getFinalPrice()}</p>
-                        {slotSettings?.advancePaymentRequired && slotSettings?.advancePaymentPercentage < 100 && (
-                          <p className="text-sm text-blue-700 mt-1">
-                            Pay {slotSettings.advancePaymentPercentage}% now ({currencySymbol}{Math.round((getFinalPrice() * slotSettings.advancePaymentPercentage) / 100)})
-                          </p>
                         )}
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (selectedServices.length === 0) {
-                            toast.warning('Please select at least one service');
-                            return;
-                          }
-                          setCurrentStep(2);
-                        }}
-                        className="flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                      >
-                        <span>Continue</span>
-                        <ArrowRight size={20} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Step 2: Date & Time Selection */}
-            {currentStep === 2 && (
-              <div className="animate-slideDown">
-                <div className="mb-6">
-                  <button 
-                    onClick={() => setCurrentStep(1)} 
-                    className="flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium"
-                  >
-                    <ChevronLeft size={20} />
-                    <span>Back to Services</span>
-                  </button>
-                </div>
-                
-                <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-6 rounded-2xl border border-blue-200 mb-8 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-4 text-lg">Selected Services</h3>
-                  <div className="space-y-3">
-                    {selectedServices.map(service => (
-                      <div key={service._id} className="flex justify-between items-center bg-white p-3 rounded-lg">
-                        <span className="text-gray-800 font-medium">{service.name}</span>
-                        <span className="font-bold text-blue-600">{currencySymbol}{service.basePrice}</span>
-                      </div>
-                    ))}
-                    <div className="pt-3 border-t-2 border-blue-200 flex justify-between items-center">
-                      <span className="font-bold text-gray-900 text-lg">Total</span>
-                      <span className="text-2xl font-bold text-blue-600">{currencySymbol}{getFinalPrice()}</span>
-                    </div>
-                  </div>
-                </div>
-              
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Date & Time</h2>
-                
-                {/* Date Selection */}
-                <div className="mb-8">
-                  <label className="block text-base font-semibold text-gray-900 mb-4">Select Date</label>
-                  
-                  {dateLoading ? (
-                    <div className="flex justify-center py-12">
-                      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                    </div>
-                  ) : availableDates.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-200">
-                      <Calendar size={48} className="mx-auto text-gray-400 mb-3" />
-                      <p className="text-gray-600 font-medium">No available dates at the moment</p>
-                      <p className="text-sm text-gray-500 mt-2">Please check back later or contact support</p>
-                    </div>
-                  ) : (
-                    <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-                      {availableDates.map((dateInfo, index) => (
-                        <DateOption 
-                          key={index}
-                          dateInfo={dateInfo}
-                          selectedDate={selectedDate}
-                          onDateSelect={handleDateSelect}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Time Selection */}
-                {selectedDate && (
-                  <div className="mb-8 animate-slideDown">
-                    <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Clock size={20} className="text-blue-600" />
-                      Select Time
-                    </label>
-                    
-                    {loading ? (
-                      <div className="flex justify-center py-12">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                      </div>
-                    ) : availableSlots.length === 0 ? (
-                      <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-200">
-                        <Calendar size={48} className="mx-auto text-gray-400 mb-3" />
-                        <p className="text-gray-600 font-medium">No slots available for this date</p>
-                        <p className="text-sm text-gray-500 mt-2">Please select another date</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {availableSlots.map((slot, index) => (
-                          <TimeSlot 
-                            key={index}
-                            slot={slot} 
-                            selectedSlotISO={selectedSlotISO} 
-                            onSelectSlot={setSelectedSlotISO} 
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="mt-8 flex justify-end">
-                  <button 
-                    onClick={() => {
-                      if (selectedSlotISO) {
-                        setCurrentStep(3);
-                      } else {
-                        toast.warning("Please select a time slot");
-                      }
-                    }}
-                    disabled={!selectedSlotISO}
-                    className={`flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all shadow-lg ${
-                      !selectedSlotISO
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                        : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-xl transform hover:scale-105'
-                    }`}
-                  >
-                    <span>Continue to Payment</span>
-                    <ArrowRight size={20} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Payment */}
-            {currentStep === 3 && (
-              <div className="animate-slideDown max-w-2xl mx-auto">
-                <div className="mb-6">
-                  <button
-                    onClick={() => setCurrentStep(2)}
-                    className="flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium"
-                  >
-                    <ChevronLeft size={20} />
-                    <span>Back to Schedule</span>
-                  </button>
-                </div>
-
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {shopPaymentInfo?.paymentIntegrationEnabled ? 'Review & Pay via UPI' : 'Confirm Booking'}
-                </h2>
-
-                {/* Appointment Summary */}
-                <div className="bg-gradient-to-r from-blue-50 to-pink-50 p-6 rounded-2xl border-2 border-blue-200 mb-6 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
-                    <CheckCircle2 size={20} className="text-blue-600" />
-                    Appointment Summary
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center pb-4 border-b border-blue-200">
-                      <div>
-                        <p className="text-xs text-gray-500">Stylist</p>
-                        <p className="font-bold text-gray-900">{stylistInfo.name}</p>
-                      </div>
-                      <img src={stylistInfo.image} alt={stylistInfo.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow" />
-                    </div>
-                    <div className="pb-4 border-b border-blue-200">
-                      <p className="text-xs text-gray-500 mb-2">Services</p>
-                      {selectedServices.map(service => (
-                        <div key={service._id} className="flex justify-between items-center bg-white px-3 py-2 rounded-lg mb-1">
-                          <span className="text-sm font-medium text-gray-800">{service.name}</span>
-                          <span className="text-sm font-bold text-blue-600">{currencySymbol}{service.basePrice}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="pb-4 border-b border-blue-200">
-                      <p className="text-xs text-gray-500">Date & Time</p>
-                      <p className="font-bold text-gray-900">
-                        {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                      </p>
-                      <p className="text-blue-600 font-semibold text-sm">{formatTime(selectedSlotISO)}</p>
-                    </div>
-                    {/* Discount breakdown */}
-                    {(packageDiscount > 0 || couponDiscount > 0) && (
-                      <div className="space-y-1 pb-2 border-b border-blue-200">
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>Subtotal</span>
-                          <span>{currencySymbol}{getTotalPrice()}</span>
-                        </div>
-                        {packageDiscount > 0 && (
-                          <div className="flex justify-between text-sm text-emerald-600">
-                            <span>Package discount ({packageDiscount}%)</span>
-                            <span>-{currencySymbol}{getTotalPrice() - Math.round(getTotalPrice() * (1 - packageDiscount / 100))}</span>
-                          </div>
-                        )}
-                        {couponDiscount > 0 && (
-                          <div className="flex justify-between text-sm text-emerald-600">
-                            <span>Coupon discount ({couponDiscount}%)</span>
-                            <span>-{currencySymbol}{Math.round(getTotalPrice() * (1 - packageDiscount / 100)) - getFinalPrice()}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center font-bold text-lg">
-                      <span className="text-gray-700">Total Amount</span>
-                      <span className="text-gray-900">{currencySymbol}{getFinalPrice()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Coupon Code (when enabled for this salon) ── */}
-                {shopPaymentInfo?.couponEnabled && (
-                  <div className="mb-5">
-                    {!couponOpen && !couponApplied && (
-                      <button
-                        type="button"
-                        onClick={() => setCouponOpen(true)}
-                        className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2.5 rounded-xl transition-all w-full justify-center"
-                      >
-                        <Tag size={14} />
-                        Add Coupon
-                      </button>
-                    )}
-                  <div className={`bg-white border-2 border-blue-100 rounded-2xl p-5 shadow-sm ${!couponOpen && !couponApplied ? 'hidden' : ''}`}>
-                    <h3 className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
-                      <Tag size={15} className="text-blue-600" />
-                      Have a Coupon Code?
-                    </h3>
-                    {couponApplied ? (
-                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-                        <div>
-                          <p className="text-sm font-semibold text-emerald-700">Coupon applied — {couponDiscount}% off!</p>
-                          <p className="text-xs text-emerald-500 font-mono">{couponCode.toUpperCase()}</p>
-                        </div>
-                        <button onClick={removeCoupon} className="text-emerald-600 hover:text-red-500 transition-colors">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Enter coupon code"
-                          value={couponCode}
-                          onChange={(e) => { setCouponCode(e.target.value); setCouponError(''); }}
-                          onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
-                          className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 bg-gray-50"
-                        />
-                        <button
-                          onClick={applyCoupon}
-                          disabled={couponLoading}
-                          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                        >
-                          {couponLoading ? '…' : 'Apply'}
-                        </button>
-                      </div>
-                    )}
-                    {couponError && <p className="text-xs text-red-500 mt-2">{couponError}</p>}
-                  </div>
-                  </div>
-                )}
-
-                {/* ── UPI Payment (when enabled for this salon) ── */}
-                {shopPaymentInfo?.paymentIntegrationEnabled ? (
-                  <div className="space-y-5">
-                    {/* UPI Payment Details — Name, Mobile, QR only */}
-                    <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm">
-                      <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <QrCode size={18} className="text-blue-600" />
-                        Scan & Pay via UPI
-                      </h3>
-                      <div className="flex flex-col sm:flex-row gap-6 items-start">
-                        {shopPaymentInfo.upiId && (
-                          <div className="flex-shrink-0 text-center">
-                            <img
-                              src={`${backendUrl}/api/shop/${shopSlug}/upi-qr?amount=${getFinalPrice()}`}
-                              alt="UPI QR Code"
-                              className="w-44 h-44 object-contain border-2 border-gray-200 rounded-xl p-2 bg-white shadow"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">Scan to pay ₹{getFinalPrice()}</p>
-                          </div>
-                        )}
-                        <div className="flex-1 space-y-3">
-                          {shopPaymentInfo.upiName && (
-                            <div className="bg-blue-50 rounded-xl px-4 py-3">
-                              <p className="text-xs text-gray-500 mb-0.5">Pay To</p>
-                              <p className="font-bold text-blue-700 text-base">{shopPaymentInfo.upiName}</p>
-                            </div>
-                          )}
-                          {shopPaymentInfo.upiMobileNumber && (
-                            <div className="bg-blue-50 rounded-xl px-4 py-3">
-                              <p className="text-xs text-gray-500 mb-0.5">Mobile Number</p>
-                              <p className="font-bold text-blue-700 text-base flex items-center gap-2">
-                                <Smartphone size={15} />
-                                {shopPaymentInfo.upiMobileNumber}
-                              </p>
-                            </div>
-                          )}
-                          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-                            <p className="text-xs text-gray-500 mb-0.5">Amount to Pay</p>
-                            <p className="font-bold text-green-700 text-2xl">{currencySymbol}{getFinalPrice()}</p>
-                          </div>
+                        <div className="flex justify-between items-center font-bold text-lg">
+                          <span className="text-gray-700">Total Amount</span>
+                          <span className="text-gray-900">
+                            {currencySymbol}
+                            {getFinalPrice()}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Screenshot Upload */}
-                    <div className="bg-white border-2 border-dashed border-blue-200 rounded-2xl p-6">
-                      <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                        <Upload size={17} className="text-blue-600" />
-                        Upload Payment Screenshot
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-4">Upload a screenshot of your completed UPI payment as proof.</p>
-
-                      {paymentScreenshotPreview ? (
-                        <div className="relative inline-block">
-                          <img src={paymentScreenshotPreview} alt="Payment proof" className="max-h-52 rounded-xl border border-gray-200 shadow" />
+                    {/* ── Coupon Code (when enabled for this salon) ── */}
+                    {shopPaymentInfo?.couponEnabled && (
+                      <div className="mb-5">
+                        {!couponOpen && !couponApplied && (
                           <button
                             type="button"
-                            onClick={() => { setPaymentScreenshot(null); setPaymentScreenshotPreview(null); }}
-                            className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow"
+                            onClick={() => setCouponOpen(true)}
+                            className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2.5 rounded-xl transition-all w-full justify-center"
                           >
-                            <X size={14} />
+                            <Tag size={14} />
+                            Add Coupon
                           </button>
-                          <p className="text-xs text-green-600 font-medium mt-2 flex items-center gap-1">
-                            <CheckCircle size={13} /> Screenshot uploaded
+                        )}
+                        <div
+                          className={`bg-white border-2 border-blue-100 rounded-2xl p-5 shadow-sm ${!couponOpen && !couponApplied ? 'hidden' : ''}`}
+                        >
+                          <h3 className="font-bold text-gray-800 mb-3 text-sm flex items-center gap-2">
+                            <Tag size={15} className="text-blue-600" />
+                            Have a Coupon Code?
+                          </h3>
+                          {couponApplied ? (
+                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                              <div>
+                                <p className="text-sm font-semibold text-emerald-700">
+                                  Coupon applied — {couponDiscount}% off!
+                                </p>
+                                <p className="text-xs text-emerald-500 font-mono">
+                                  {couponCode.toUpperCase()}
+                                </p>
+                              </div>
+                              <button
+                                onClick={removeCoupon}
+                                className="text-emerald-600 hover:text-red-500 transition-colors"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Enter coupon code"
+                                value={couponCode}
+                                onChange={(e) => {
+                                  setCouponCode(e.target.value);
+                                  setCouponError('');
+                                }}
+                                onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
+                                className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 bg-gray-50"
+                              />
+                              <button
+                                onClick={applyCoupon}
+                                disabled={couponLoading}
+                                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                              >
+                                {couponLoading ? '…' : 'Apply'}
+                              </button>
+                            </div>
+                          )}
+                          {couponError && (
+                            <p className="text-xs text-red-500 mt-2">{couponError}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── UPI Payment (when enabled for this salon) ── */}
+                    {shopPaymentInfo?.paymentIntegrationEnabled ? (
+                      <div className="space-y-5">
+                        {/* UPI Payment Details — Name, Mobile, QR only */}
+                        <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm">
+                          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <QrCode size={18} className="text-blue-600" />
+                            Scan & Pay via UPI
+                          </h3>
+                          <div className="flex flex-col sm:flex-row gap-6 items-start">
+                            {shopPaymentInfo.upiId && (
+                              <div className="flex-shrink-0 text-center">
+                                <img
+                                  src={`${backendUrl}/api/shop/${shopSlug}/upi-qr?amount=${getFinalPrice()}`}
+                                  alt="UPI QR Code"
+                                  className="w-44 h-44 object-contain border-2 border-gray-200 rounded-xl p-2 bg-white shadow"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Scan to pay ₹{getFinalPrice()}
+                                </p>
+                              </div>
+                            )}
+                            <div className="flex-1 space-y-3">
+                              {shopPaymentInfo.upiName && (
+                                <div className="bg-blue-50 rounded-xl px-4 py-3">
+                                  <p className="text-xs text-gray-500 mb-0.5">Pay To</p>
+                                  <p className="font-bold text-blue-700 text-base">
+                                    {shopPaymentInfo.upiName}
+                                  </p>
+                                </div>
+                              )}
+                              {shopPaymentInfo.upiMobileNumber && (
+                                <div className="bg-blue-50 rounded-xl px-4 py-3">
+                                  <p className="text-xs text-gray-500 mb-0.5">Mobile Number</p>
+                                  <p className="font-bold text-blue-700 text-base flex items-center gap-2">
+                                    <Smartphone size={15} />
+                                    {shopPaymentInfo.upiMobileNumber}
+                                  </p>
+                                </div>
+                              )}
+                              <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                                <p className="text-xs text-gray-500 mb-0.5">Amount to Pay</p>
+                                <p className="font-bold text-green-700 text-2xl">
+                                  {currencySymbol}
+                                  {getFinalPrice()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Screenshot Upload */}
+                        <div className="bg-white border-2 border-dashed border-blue-200 rounded-2xl p-6">
+                          <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <Upload size={17} className="text-blue-600" />
+                            Upload Payment Screenshot
+                          </h3>
+                          <p className="text-sm text-gray-500 mb-4">
+                            Upload a screenshot of your completed UPI payment as proof.
+                          </p>
+
+                          {paymentScreenshotPreview ? (
+                            <div className="relative inline-block">
+                              <img
+                                src={paymentScreenshotPreview}
+                                alt="Payment proof"
+                                className="max-h-52 rounded-xl border border-gray-200 shadow"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPaymentScreenshot(null);
+                                  setPaymentScreenshotPreview(null);
+                                }}
+                                className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow"
+                              >
+                                <X size={14} />
+                              </button>
+                              <p className="text-xs text-green-600 font-medium mt-2 flex items-center gap-1">
+                                <CheckCircle size={13} /> Screenshot uploaded
+                              </p>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => screenshotInputRef.current?.click()}
+                              className="w-full border-2 border-dashed border-gray-200 rounded-xl py-10 flex flex-col items-center gap-2 text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+                            >
+                              <ImageIcon size={32} />
+                              <span className="text-sm font-medium">
+                                Click to upload screenshot
+                              </span>
+                              <span className="text-xs">PNG, JPG up to 5MB</span>
+                            </button>
+                          )}
+                          <input
+                            ref={screenshotInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('File must be under 5MB');
+                                return;
+                              }
+                              setPaymentScreenshot(file);
+                              const reader = new FileReader();
+                              reader.onload = () => setPaymentScreenshotPreview(reader.result);
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </div>
+
+                        {/* Confirm Button */}
+                        <button
+                          onClick={() => {
+                            if (!paymentScreenshot) {
+                              toast.warning('Please upload your payment screenshot');
+                              return;
+                            }
+                            completeBooking('upi', paymentScreenshot);
+                          }}
+                          disabled={bookingLoading || !paymentScreenshot}
+                          className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          {bookingLoading ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Confirming...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 size={22} />
+                              <span>
+                                Confirm Booking — {currencySymbol}
+                                {getFinalPrice()}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                        <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
+                          <Shield size={12} /> Screenshot submitted — admin will verify your payment
+                        </p>
+                      </div>
+                    ) : (
+                      /* ── No payment integration — direct booking ── */
+                      <div className="space-y-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+                          <Shield size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-blue-800">
+                            Your appointment will be confirmed instantly. Payment can be made at the
+                            salon.
                           </p>
                         </div>
-                      ) : (
                         <button
-                          type="button"
-                          onClick={() => screenshotInputRef.current?.click()}
-                          className="w-full border-2 border-dashed border-gray-200 rounded-xl py-10 flex flex-col items-center gap-2 text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+                          onClick={() => completeBooking('cash', null)}
+                          disabled={bookingLoading}
+                          className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                          <ImageIcon size={32} />
-                          <span className="text-sm font-medium">Click to upload screenshot</span>
-                          <span className="text-xs">PNG, JPG up to 5MB</span>
+                          {bookingLoading ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Confirming...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 size={22} />
+                              <span>Book Appointment</span>
+                            </>
+                          )}
                         </button>
-                      )}
-                      <input
-                        ref={screenshotInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (!file) return;
-                          if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5MB'); return; }
-                          setPaymentScreenshot(file);
-                          const reader = new FileReader();
-                          reader.onload = () => setPaymentScreenshotPreview(reader.result);
-                          reader.readAsDataURL(file);
-                        }}
-                      />
-                    </div>
-
-                    {/* Confirm Button */}
-                    <button
-                      onClick={() => {
-                        if (!paymentScreenshot) {
-                          toast.warning('Please upload your payment screenshot');
-                          return;
-                        }
-                        completeBooking('upi', paymentScreenshot);
-                      }}
-                      disabled={bookingLoading || !paymentScreenshot}
-                      className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      {bookingLoading ? (
-                        <><Loader2 className="w-5 h-5 animate-spin" /><span>Confirming...</span></>
-                      ) : (
-                        <><CheckCircle2 size={22} /><span>Confirm Booking — {currencySymbol}{getFinalPrice()}</span></>
-                      )}
-                    </button>
-                    <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
-                      <Shield size={12} /> Screenshot submitted — admin will verify your payment
-                    </p>
-                  </div>
-                ) : (
-                  /* ── No payment integration — direct booking ── */
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                      <Shield size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-blue-800">Your appointment will be confirmed instantly. Payment can be made at the salon.</p>
-                    </div>
-                    <button
-                      onClick={() => completeBooking('cash', null)}
-                      disabled={bookingLoading}
-                      className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {bookingLoading ? (
-                        <><Loader2 className="w-5 h-5 animate-spin" /><span>Confirming...</span></>
-                      ) : (
-                        <><CheckCircle2 size={22} /><span>Book Appointment</span></>
-                      )}
-                    </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
-          </>}
+            </>
+          )}
         </div>
 
-        {slotSettings && <div className="max-w-2xl mx-auto mt-8 bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-md">
-          <div className="flex items-start gap-4">
-            <AlertTriangle size={24} className="text-yellow-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-bold text-yellow-900 mb-2 text-lg">Cancellation & Rescheduling Policy</h3>
-              <div className="text-sm text-yellow-800 leading-relaxed space-y-2">
-                <p>
-                  <strong>Free Cancellation:</strong> {slotSettings.allowRescheduling 
-                    ? `You may cancel or reschedule your appointment free of charge up to ${slotSettings.rescheduleHoursBefore} hours (${Math.floor(slotSettings.rescheduleHoursBefore / 24)} ${Math.floor(slotSettings.rescheduleHoursBefore / 24) === 1 ? 'day' : 'days'}) before your scheduled time.`
-                    : 'Please contact us at least 24 hours in advance to cancel or reschedule your appointment.'
-                  }
-                </p>
-                <p>
-                  <strong>Late Cancellations:</strong> Cancellations made less than {slotSettings.rescheduleHoursBefore || 24} hours before your appointment will incur a cancellation fee of 50% of the service price.
-                </p>
-                <p>
-                  <strong>No-Shows:</strong> If you fail to show up for your appointment without prior notice, you will be charged the full service price.
-                </p>
-                <p>
-                  <strong>How to Cancel:</strong> You can cancel your appointment anytime through the "My Appointments" section or by contacting our support team.
-                </p>
+        {slotSettings && (
+          <div className="max-w-2xl mx-auto mt-8 bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-md">
+            <div className="flex items-start gap-4">
+              <AlertTriangle size={24} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-bold text-yellow-900 mb-2 text-lg">
+                  Cancellation & Rescheduling Policy
+                </h3>
+                <div className="text-sm text-yellow-800 leading-relaxed space-y-2">
+                  <p>
+                    <strong>Free Cancellation:</strong>{' '}
+                    {slotSettings.allowRescheduling
+                      ? `You may cancel or reschedule your appointment free of charge up to ${slotSettings.rescheduleHoursBefore} hours (${Math.floor(slotSettings.rescheduleHoursBefore / 24)} ${Math.floor(slotSettings.rescheduleHoursBefore / 24) === 1 ? 'day' : 'days'}) before your scheduled time.`
+                      : 'Please contact us at least 24 hours in advance to cancel or reschedule your appointment.'}
+                  </p>
+                  <p>
+                    <strong>Late Cancellations:</strong> Cancellations made less than{' '}
+                    {slotSettings.rescheduleHoursBefore || 24} hours before your appointment will
+                    incur a cancellation fee of 50% of the service price.
+                  </p>
+                  <p>
+                    <strong>No-Shows:</strong> If you fail to show up for your appointment without
+                    prior notice, you will be charged the full service price.
+                  </p>
+                  <p>
+                    <strong>How to Cancel:</strong> You can cancel your appointment anytime through
+                    the "My Appointments" section or by contacting our support team.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>}
+        )}
 
         <style>{`
           @keyframes slideDown {

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useContext } from 'react'
 import { AdminContext } from '../../context/AdminContext'
 import { AppContext } from '../../context/AppContext'
+import { SalonAdminContext } from '../../context/SalonAdminContext'
+import { useNavigate } from 'react-router-dom'
 import {
   Trash2,
   Calendar,
@@ -249,6 +251,8 @@ const AllAppointments = () => {
   } = useContext(AdminContext)
 
   const { currency, backendUrl } = useContext(AppContext)
+  const { shopInfo } = useContext(SalonAdminContext)
+  const navigate = useNavigate()
 
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPayment, setFilterPayment] = useState('all')
@@ -833,10 +837,13 @@ const AllAppointments = () => {
   const paginatedAppointments = sortedAppointments.slice(startIndex, endIndex);
 
   const handleMarkCompleted = (id) => {
+    const appt = localAppointments.find(a => a._id === id);
+    if (shopInfo?.serviceBillingEnabled && appt) {
+      navigate(`/${shopInfo.shopSlug || shopInfo.slug}/admin/billing`, { state: { appointmentId: id, appointment: appt } });
+      return;
+    }
     setLocalAppointments(prev =>
-      prev.map(app =>
-        app._id === id ? {...app, isCompleted: true} : app
-      )
+      prev.map(app => app._id === id ? { ...app, isCompleted: true } : app)
     );
     markAppointmentCompleted(id);
   }
@@ -1363,9 +1370,11 @@ const AllAppointments = () => {
                               <RotateCcw size={18} />
                             </button>
                           ) : (
-                            <button onClick={() => handleMarkCompleted(appointment._id)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md" title="Mark as completed">
-                              <CheckCircle size={18} />
-                            </button>
+                            <>
+                              <button onClick={() => handleMarkCompleted(appointment._id)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md" title="Mark as completed">
+                                <CheckCircle size={18} />
+                              </button>
+                            </>
                           )
                         )}
                         <button onClick={() => handleViewAppointment(appointment)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md" title="View details">

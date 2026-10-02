@@ -44,9 +44,11 @@ import ManageProducts from './pages/admin/products/ManageProducts'
 import Inventory from './pages/admin/products/Inventory'
 import Billing from './pages/admin/billing/Billing'
 import Bills from './pages/admin/billing/Bills'
+import TaxSettings from './pages/admin/TaxSettings'
 import Coupons from './pages/admin/Coupons'
 import Packages from './pages/admin/Packages'
 import Broadcast from './pages/admin/Broadcast'
+import OfflineBooking from './pages/admin/OfflineBooking'
 import StylistSection from './pages/stylist/StylistSection'
 
 // Customer pages
@@ -175,11 +177,14 @@ const ShopAdminSection = () => {
               {/* POS / Billing */}
               <Route path="billing" element={<Billing />} />
               <Route path="bills" element={<Bills />} />
+              <Route path="tax-settings" element={<TaxSettings />} />
               {/* Discounts */}
               <Route path="coupons" element={<Coupons />} />
               <Route path="packages" element={<Packages />} />
               {/* Broadcast */}
               <Route path="broadcast" element={<Broadcast />} />
+              {/* Offline / Walk-in Booking */}
+              <Route path="offline-booking" element={<OfflineBooking />} />
               <Route path="add-product" element={<AddProduct />} />
               <Route path="products" element={<ManageProducts />} />
               <Route path="inventory" element={<Inventory />} />

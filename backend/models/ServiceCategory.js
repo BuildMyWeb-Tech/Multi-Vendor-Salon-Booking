@@ -10,7 +10,7 @@ const serviceCategorySchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
+      default: '',
       trim: true
     },
     basePrice: {

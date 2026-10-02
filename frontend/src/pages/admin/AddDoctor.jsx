@@ -76,10 +76,6 @@ const AddStylist = () => {
         event.preventDefault();
 
         try {
-            if (!stylistImg) {
-                return toast.error('Profile Image Required');
-            }
-
             if (specialty.length === 0) {
                 return toast.error('Please select at least one specialty');
             }
@@ -141,19 +137,7 @@ const AddStylist = () => {
         setSpecialty([]);
     };
 
-    // Fallback to static options if API fails
-    const fallbackSpecialtyOptions = [
-        'Hair Styling Specialist',
-        'Beard & Grooming Specialist',
-        'Hair Coloring Specialist',
-        'Hair Treatment Specialist',
-        'Bridal Hairstylist',
-        'Unisex Hairstylist'
-    ];
-
-    const specialtyOptions = serviceCategories.length > 0
-        ? serviceCategories.map(service => service.name)
-        : fallbackSpecialtyOptions;
+    const specialtyOptions = serviceCategories.map(service => service.name);
 
     const togglePasswordVisibility = () => {
         setShowPassword(prevState => !prevState);
@@ -338,7 +322,7 @@ const AddStylist = () => {
                         <div className='flex flex-col gap-1.5'>
                             <label className='text-sm font-medium text-gray-700 flex items-center'>
                                 <FileText size={16} className="mr-1.5" /> Certification
-                                <span className="text-red-500 ml-1">*</span>
+                                <span className="text-gray-400 text-xs ml-1">(optional)</span>
                             </label>
                             <input
                                 onChange={e => setCertification(e.target.value)}
@@ -346,7 +330,6 @@ const AddStylist = () => {
                                 className='border rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary'
                                 type="text"
                                 placeholder='Professional certifications'
-                                required
                             />
                         </div>
 
@@ -484,7 +467,7 @@ const AddStylist = () => {
                 <div className="mt-6">
                     <label className='text-sm font-medium text-gray-700 flex items-center mb-1.5'>
                         <FileText size={16} className="mr-1.5" /> About The Stylist
-                        <span className="text-red-500 ml-1">*</span>
+                        <span className="text-gray-400 text-xs ml-1">(optional)</span>
                     </label>
                     <textarea
                         onChange={e => setAbout(e.target.value)}
@@ -492,7 +475,6 @@ const AddStylist = () => {
                         className='w-full px-4 pt-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary'
                         rows={4}
                         placeholder="Describe the stylist's expertise, style philosophy, and approach to client service"
-                        required
                     ></textarea>
                     <p className="text-xs text-gray-500 mt-1">
                         Include relevant experience, specializations, and unique styling approach to help clients connect with the stylist

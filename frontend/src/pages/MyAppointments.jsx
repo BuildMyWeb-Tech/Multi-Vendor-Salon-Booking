@@ -574,11 +574,17 @@ const MyAppointments = () => {
                       <div className="sm:w-1/4 lg:w-1/5">
                         <div className="relative mx-auto sm:mx-0 w-32 sm:w-full max-w-[160px] group">
                           <div className="rounded-xl overflow-hidden shadow-sm border-2 border-gray-100 aspect-square">
-                            <img
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              src={item.docData?.image || assets.defaultProfile}
-                              alt={item.docData?.name || 'Stylist'}
-                            />
+                            {item.docData?.image ? (
+                              <img
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                src={item.docData.image}
+                                alt={item.docData?.name || 'Stylist'}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/10 to-blue-50 flex items-center justify-center">
+                                <User size={36} className="text-primary/40" />
+                              </div>
+                            )}
                           </div>
 
                           <div className="absolute -top-2 -right-2">
@@ -1127,11 +1133,17 @@ const MyAppointments = () => {
                       <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden">
-                            <img
-                              src={appointmentToCancel?.docData?.image || assets.defaultProfile}
-                              alt={appointmentToCancel?.docData?.name || 'Stylist'}
-                              className="w-full h-full object-cover"
-                            />
+                            {appointmentToCancel?.docData?.image ? (
+                              <img
+                                src={appointmentToCancel.docData.image}
+                                alt={appointmentToCancel?.docData?.name || 'Stylist'}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                                <User size={24} className="text-primary/40" />
+                              </div>
+                            )}
                           </div>
                           <div className="text-left">
                             <p className="font-medium text-gray-800">{appointmentToCancel?.service}</p>

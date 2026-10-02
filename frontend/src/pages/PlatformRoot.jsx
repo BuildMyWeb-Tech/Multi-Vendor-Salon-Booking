@@ -208,6 +208,7 @@ const footerLinks = [
     links: [
       { text: 'buildmyweb2024@gmail.com', href: 'mailto:buildmyweb2024@gmail.com' },
       { text: '+91 93440 95727', href: 'tel:+919344095727' },
+      { text: '+91 93855 73581', href: 'tel:+919385573581' },
       { text: 'www.buildmyweb.info', href: 'https://www.buildmyweb.info', external: true },
     ],
   },
@@ -896,11 +897,18 @@ const PlatformRoot = () => {
                     target: '_blank',
                   },
                   {
+                    icon: Phone,
+                    label: 'Phone',
+                    value: '+91 93855 73581',
+                    href: 'tel:+919385573581',
+                  },
+                  {
                     icon: Mail,
                     label: 'Email',
                     value: 'buildmyweb2024@gmail.com',
                     href: 'mailto:buildmyweb2024@gmail.com',
                   },
+
                   {
                     icon: Globe,
                     label: 'Website',

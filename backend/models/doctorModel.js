@@ -7,16 +7,16 @@ const doctorSchema = new mongoose.Schema(
     // NOTE: Global unique removed — uniqueness is per salon (shopId + email compound index below)
     email: { type: String, required: true },
     password: { type: String, required: true },
-    image: { type: String, required: true },
+    image: { type: String, default: '' },
 
     specialty: {
       type: [String],
       required: true,
     },
 
-    certification: { type: String, required: true },
+    certification: { type: String, default: '' },
     experience: { type: String, required: true },
-    about: { type: String, required: true },
+    about: { type: String, default: '' },
 
     available: { type: Boolean, default: true },
 

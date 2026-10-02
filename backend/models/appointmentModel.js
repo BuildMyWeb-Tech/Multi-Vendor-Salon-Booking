@@ -6,7 +6,7 @@ const appointmentSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'user',
-      required: true,
+      required: false,
     },
 
     doctorId: {
@@ -134,6 +134,9 @@ const appointmentSchema = new mongoose.Schema(
 
     // Multi-tenant
     shopId: { type: String, default: 'SHOP001' },
+
+    // Walk-in / offline booking flag
+    isOffline: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

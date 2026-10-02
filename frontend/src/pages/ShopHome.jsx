@@ -7,7 +7,7 @@ import {
   MapPin, Phone, Mail, Clock, Scissors, Star,
   Calendar, ArrowRight, AlertCircle, Loader2, Store,
   Sparkles, Users, Award, ChevronRight, CheckCircle2, Zap,
-  Plus, User, Instagram
+  Plus, User, Instagram, Tag, Percent, IndianRupee
 } from 'lucide-react';
 
 const ShopHome = () => {
@@ -18,6 +18,7 @@ const ShopHome = () => {
 
   const [doctors, setDoctors] = useState([]);
   const [services, setServices] = useState([]);
+  const [packages, setPackages] = useState([]);
   const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
@@ -31,12 +32,14 @@ const ShopHome = () => {
   const fetchShopData = async () => {
     setDataLoading(true);
     try {
-      const [docRes, svcRes] = await Promise.all([
+      const [docRes, svcRes, pkgRes] = await Promise.all([
         axios.get(`${backendUrl}/api/shop/${shopSlug}/doctors`),
         axios.get(`${backendUrl}/api/shop/${shopSlug}/services`),
+        axios.get(`${backendUrl}/api/user/packages?shopSlug=${shopSlug}`),
       ]);
       if (docRes.data.success) setDoctors(docRes.data.doctors);
       if (svcRes.data.success) setServices(svcRes.data.services.filter(s => s.isActive));
+      if (pkgRes.data.success) setPackages(pkgRes.data.packages || []);
     } catch {}
     setDataLoading(false);
   };
@@ -163,6 +166,57 @@ const ShopHome = () => {
 
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-14">
 
+        {/* ─── Trending Combo Packs ───────────────────── */}
+        {packages.length > 0 && (
+          <section>
+            <SectionHeader
+              title="Trending Combo Packs"
+              subtitle="Exclusive deals on your favourite service combos"
+              link={`/${shopSlug}/stylists`}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {packages.map((pkg) => {
+                const pkgServices = services.filter(s => pkg.serviceIds?.some(id => String(id) === String(s._id)));
+                const subtotal = pkgServices.reduce((sum, s) => sum + s.basePrice, 0);
+                const comboPrice = pkg.discountPercent ? Math.round(subtotal * (1 - pkg.discountPercent / 100)) : subtotal;
+                return (
+                  <div
+                    key={pkg._id}
+                    onClick={() => navigate(`/${shopSlug}/stylists`)}
+                    className="cursor-pointer bg-gradient-to-br from-primary/5 to-blue-50 border border-primary/20 rounded-2xl p-5 hover:shadow-md hover:border-primary/40 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Tag size={18} className="text-primary" />
+                      </div>
+                      <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                        <Percent size={11} /> {pkg.discountPercent}% OFF
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-gray-800 text-base mb-1">{pkg.name}</h3>
+                    {pkgServices.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {pkgServices.map(s => (
+                          <span key={s._id} className="text-[10px] bg-white border border-primary/15 text-gray-600 px-2 py-0.5 rounded-full">{s.name}</span>
+                        ))}
+                      </div>
+                    )}
+                    {subtotal > 0 && (
+                      <div className="flex items-center gap-2 pt-2 border-t border-primary/10">
+                        <span className="text-gray-400 line-through text-xs">₹{subtotal}</span>
+                        <span className="font-bold text-primary text-base">₹{comboPrice}</span>
+                        <span className="ml-auto">
+                          <button className="text-xs bg-primary text-white px-3 py-1 rounded-lg hover:bg-primary/90 transition-colors">Book</button>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* ─── Services ───────────────────────────────── */}
         {services.length > 0 && (
           <section>
@@ -171,9 +225,9 @@ const ShopHome = () => {
               subtitle="Professional salon services tailored for you"
               link={`/${shopSlug}/services`}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-              {services.slice(0, 8).map((svc, idx) => (
-                <HomeServiceCard key={svc._id} svc={svc} idx={idx} shopSlug={shopSlug} navigate={navigate} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {services.slice(0, 8).map((svc) => (
+                <HomeServiceCard key={svc._id} svc={svc} shopSlug={shopSlug} navigate={navigate} />
               ))}
             </div>
           </section>
@@ -243,12 +297,17 @@ const ShopHome = () => {
                 <h2 className="text-xl font-bold text-gray-800 mb-3">Visit Us</h2>
                 <div className="space-y-2.5">
                   {(shop.address || shop.city) && (
-                    <p className="flex items-center gap-2 text-gray-600 text-sm">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([shop.address, shop.city, shop.state, shop.pincode].filter(Boolean).join(', '))}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-gray-600 text-sm hover:text-primary transition-colors"
+                    >
                       <span className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                         <MapPin size={14} className="text-primary" />
                       </span>
                       {[shop.address, shop.city, shop.state, shop.pincode].filter(Boolean).join(', ')}
-                    </p>
+                    </a>
                   )}
                   {shop.phone && (
                     <a href={`tel:${shop.phone}`} className="flex items-center gap-2 text-gray-600 hover:text-primary text-sm transition-colors">
@@ -294,64 +353,58 @@ const SectionHeader = ({ title, subtitle, link }) => (
   </div>
 );
 
-/* ── Service card (matches ShopServices style) ── */
-const HomeServiceCard = ({ svc, idx, shopSlug, navigate }) => {
-  const isPopular = idx < 2;
-  return (
-    <div
-      onClick={() => navigate(`/${shopSlug}/stylists`)}
-      className="bg-white rounded-2xl overflow-hidden cursor-pointer group border border-gray-100 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-200"
-    >
-      <div className="relative overflow-hidden" style={{ height: '140px' }}>
-        {svc.imageUrl ? (
-          <img src={svc.imageUrl} alt={svc.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/10 via-blue-50 to-indigo-50 flex items-center justify-center">
-            <div className="w-14 h-14 rounded-2xl bg-white shadow-md flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Scissors size={24} className="text-primary/60" />
-            </div>
+/* ── Service card ── */
+const HomeServiceCard = ({ svc, shopSlug, navigate }) => (
+  <div
+    onClick={() => navigate(`/${shopSlug}/stylists`)}
+    className="bg-white rounded-2xl overflow-hidden cursor-pointer group border border-gray-100 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col"
+  >
+    {/* Image */}
+    <div className="overflow-hidden" style={{ height: '150px' }}>
+      {svc.imageUrl ? (
+        <img src={svc.imageUrl} alt={svc.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-primary/10 via-blue-50 to-indigo-50 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-primary/10 flex items-center justify-center">
+            <Scissors size={26} className="text-primary/50" />
           </div>
-        )}
-        {isPopular && (
-          <span className="absolute top-2.5 right-2.5 bg-amber-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
-            <Star size={9} fill="white" /> Popular
-          </span>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
 
-      <div className="p-4">
-        <div className="flex items-start gap-2 mb-1">
-          <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors">
-            <Scissors size={11} className="text-primary" />
-          </div>
-          <p className="font-semibold text-gray-800 text-sm leading-tight">{svc.name}</p>
+    {/* Details */}
+    <div className="p-4 flex flex-col gap-2 flex-1">
+      <p className="font-bold text-gray-900 text-sm leading-tight">{svc.name}</p>
+
+      {svc.description && (
+        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{svc.description}</p>
+      )}
+
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+        <div className="flex items-center gap-0.5 text-primary font-bold text-sm">
+          <IndianRupee size={12} className="mt-0.5" />
+          <span>{svc.basePrice}</span>
         </div>
-        {svc.description && (
-          <p className="text-xs text-gray-400 mt-1.5 line-clamp-2 pl-8">{svc.description}</p>
-        )}
-        <div className="flex items-center justify-between mt-3 pl-8">
-          <div>
-            <p className="text-[10px] text-gray-400 font-medium">Starting from</p>
-            <p className="text-primary font-bold text-sm">₹{svc.basePrice}</p>
-          </div>
-          <button className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-200 shadow-sm">
-            <Plus size={15} />
-          </button>
-        </div>
+        <button
+          className="flex items-center gap-1 bg-primary text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+          onClick={e => { e.stopPropagation(); navigate(`/${shopSlug}/stylists`); }}
+        >
+          <Calendar size={11} /> Book
+        </button>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
-/* ── Stylist card (matches ShopStylists style) ── */
+/* ── Stylist card ── */
 const HomeStylistCard = ({ doc, shopSlug, navigate }) => (
   <div
     onClick={() => navigate(`/${shopSlug}/appointment/${doc._id}`)}
-    className={`bg-white rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200 hover:shadow-xl hover:-translate-y-1.5 border-2 ${doc.available ? 'border-primary/20 hover:border-primary' : 'border-gray-100'}`}
+    className="bg-white rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border border-gray-100 shadow-sm"
   >
-    {/* Portrait image */}
-    <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
+    {/* Square image */}
+    <div className="relative overflow-hidden" style={{ aspectRatio: '1/1' }}>
       {doc.image ? (
         <img src={doc.image} alt={doc.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -360,53 +413,34 @@ const HomeStylistCard = ({ doc, shopSlug, navigate }) => (
           <User size={40} className="text-primary/30" />
         </div>
       )}
-
-      {/* Available badge */}
-      {doc.available && (
-        <span className="absolute top-2.5 right-2.5 bg-emerald-500 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-          Available Today
-        </span>
-      )}
-
-      {/* Name overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-3 pb-3 pt-8">
-        <p className="text-white font-bold text-sm leading-tight">{doc.name}</p>
-        {doc.specialty?.length > 0 && (
-          <p className="text-white/75 text-[11px] mt-0.5 flex items-center gap-1">
-            <Scissors size={10} /> {doc.specialty.slice(0, 2).join(', ')}
-          </p>
-        )}
-      </div>
+      {/* Availability dot */}
+      <span className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full border-2 border-white shadow ${doc.available !== false ? 'bg-emerald-400' : 'bg-gray-300'}`} />
     </div>
 
-    {/* Info */}
-    <div className="px-3 py-3 space-y-1">
-      <div className="flex items-center gap-1.5 text-xs">
-        <span className={`w-2 h-2 rounded-full ${doc.available ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-        <span className={doc.available ? 'text-emerald-600' : 'text-gray-400'}>
-          {doc.available ? 'Currently Available' : 'Currently Not Available'}
-        </span>
-      </div>
-      {doc.experience && (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <Calendar size={11} className="text-primary/60" />
-          <span>{doc.experience}</span>
+    {/* Details */}
+    <div className="px-3 pt-2.5 pb-3 space-y-1.5">
+      <p className="font-bold text-gray-900 text-sm leading-tight truncate">{doc.name}</p>
+
+      {doc.specialty?.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {doc.specialty.map((s) => (
+            <span key={s} className="bg-primary/8 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full border border-primary/15">
+              {s}
+            </span>
+          ))}
         </div>
       )}
-    </div>
 
-    {/* CTA */}
-    <div className="px-3 pb-3">
-      {doc.available ? (
-        <button className="w-full bg-primary text-white text-xs font-semibold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors">
-          <Calendar size={12} /> Book Appointment
-        </button>
-      ) : (
-        <button disabled className="w-full bg-gray-100 text-gray-400 text-xs font-semibold py-2.5 rounded-xl cursor-not-allowed">
-          Not Available
-        </button>
+      {doc.experience && (
+        <p className="text-[11px] text-gray-400 flex items-center gap-1">
+          <Award size={10} className="text-amber-400 flex-shrink-0" />
+          {doc.experience}
+        </p>
       )}
+
+      <button className="w-full mt-1 bg-primary text-white text-[11px] font-semibold py-2 rounded-xl flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors">
+        <Calendar size={11} /> Book
+      </button>
     </div>
   </div>
 );

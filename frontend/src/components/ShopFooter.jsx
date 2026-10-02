@@ -32,7 +32,6 @@ const ShopFooter = () => {
   return (
     <div className="px-4 sm:px-6 md:mx-10 pb-24 md:pb-0">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10 my-10 mt-16 text-sm">
-
         {/* About */}
         <div>
           <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent mb-4">
@@ -46,8 +45,11 @@ const ShopFooter = () => {
           </p>
           <div className="flex space-x-3">
             {[Instagram, Facebook, Twitter].map((Icon, i) => (
-              <a key={i} href="#"
-                className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white hover:scale-110 transition">
+              <a
+                key={i}
+                href="#"
+                className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white hover:scale-110 transition"
+              >
                 <Icon size={16} />
               </a>
             ))}
@@ -66,7 +68,10 @@ const ShopFooter = () => {
               { name: 'My Appointments', href: `/${s}/my-appointments` },
             ].map((link) => (
               <li key={link.name}>
-                <Link to={link.href} className="flex items-center gap-2 hover:text-primary transition text-sm">
+                <Link
+                  to={link.href}
+                  className="flex items-center gap-2 hover:text-primary transition text-sm"
+                >
                   <ChevronRight size={14} className="text-primary" />
                   {link.name}
                 </Link>
@@ -79,16 +84,23 @@ const ShopFooter = () => {
         <div>
           <p className="text-base font-semibold mb-5">OUR SERVICES</p>
           <ul className="flex flex-col gap-3 text-gray-600">
-            {services.length > 0 ? services.map((svc) => (
-              <li key={svc._id}>
-                <Link to={`/${s}/services`} className="flex items-center gap-2 hover:text-primary transition text-sm">
-                  <Scissors size={14} className="text-primary" />
-                  {svc.name}
-                </Link>
-              </li>
-            )) : Array(4).fill(0).map((_, i) => (
-              <li key={i} className="h-5 bg-gray-200 animate-pulse rounded w-3/4" />
-            ))}
+            {services.length > 0
+              ? services.map((svc) => (
+                  <li key={svc._id}>
+                    <Link
+                      to={`/${s}/services`}
+                      className="flex items-center gap-2 hover:text-primary transition text-sm"
+                    >
+                      <Scissors size={14} className="text-primary" />
+                      {svc.name}
+                    </Link>
+                  </li>
+                ))
+              : Array(4)
+                  .fill(0)
+                  .map((_, i) => (
+                    <li key={i} className="h-5 bg-gray-200 animate-pulse rounded w-3/4" />
+                  ))}
           </ul>
         </div>
 
@@ -98,7 +110,10 @@ const ShopFooter = () => {
           <ul className="flex flex-col gap-4 text-gray-600 text-sm">
             {currentShop?.phone && (
               <li>
-                <a href={`tel:${currentShop.phone}`} className="flex items-center gap-3 hover:text-primary">
+                <a
+                  href={`tel:${currentShop.phone}`}
+                  className="flex items-center gap-3 hover:text-primary"
+                >
                   <Phone size={16} className="text-primary flex-shrink-0" />
                   {currentShop.phone}
                 </a>
@@ -106,16 +121,23 @@ const ShopFooter = () => {
             )}
             {currentShop?.whatsapp && (
               <li>
-                <a href={`https://wa.me/${currentShop.whatsapp}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 hover:text-primary">
+                <a
+                  href={`https://wa.me/${currentShop.whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 hover:text-primary"
+                >
                   <MessageCircle size={16} className="text-primary flex-shrink-0" />
-                  WhatsApp
+                  {currentShop.whatsapp}
                 </a>
               </li>
             )}
             {currentShop?.email && (
               <li>
-                <a href={`mailto:${currentShop.email}`} className="flex items-center gap-3 hover:text-primary">
+                <a
+                  href={`mailto:${currentShop.email}`}
+                  className="flex items-center gap-3 hover:text-primary"
+                >
                   <Mail size={16} className="text-primary flex-shrink-0" />
                   {currentShop.email}
                 </a>
@@ -124,22 +146,62 @@ const ShopFooter = () => {
             {(currentShop?.address || currentShop?.city) && (
               <li className="flex items-start gap-3">
                 <MapPin size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                <span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([currentShop.address, currentShop.city, currentShop.state, currentShop.pincode].filter(Boolean).join(', '))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
                   {[currentShop.address, currentShop.city, currentShop.state, currentShop.pincode]
-                    .filter(Boolean).join(', ')}
-                </span>
+                    .filter(Boolean)
+                    .join(', ')}
+                </a>
               </li>
             )}
           </ul>
         </div>
       </div>
 
+      {/* Mini map strip — only when address data is available */}
+      {(currentShop?.address || currentShop?.city) &&
+        (() => {
+          const addr = [
+            currentShop.address,
+            currentShop.city,
+            currentShop.state,
+            currentShop.pincode,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(addr)}&output=embed`;
+          return (
+            <div className="mb-6 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              <iframe
+                title={`${shopName} map`}
+                src={mapSrc}
+                width="100%"
+                height="180"
+                style={{ border: 0, display: 'block' }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          );
+        })()}
+
       <div className="py-5 border-t text-center sm:flex sm:justify-between sm:items-center">
-        <p className="text-sm text-gray-500">© {new Date().getFullYear()} {shopName}. All Rights Reserved.</p>
+        <p className="text-sm text-gray-500">
+          © {new Date().getFullYear()} {shopName}. All Rights Reserved.
+        </p>
         <p className="text-sm text-gray-500 mt-2 sm:mt-0">
           Design and Developed by{' '}
-          <a href="https://buildmyweb.info/" target="_blank" rel="noopener noreferrer"
-            className="text-primary font-medium hover:underline">
+          <a
+            href="https://buildmyweb.info/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary font-medium hover:underline"
+          >
             BuildMyWeb
           </a>
         </p>
