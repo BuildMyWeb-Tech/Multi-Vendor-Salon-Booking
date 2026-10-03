@@ -104,7 +104,7 @@ const TimeSlot = memo(({ slot, selectedSlotISO, onSelectSlot }) => {
   return (
     <div
       onClick={() => onSelectSlot(slot.startTime)}
-      className={`py-4 px-4 text-center rounded-xl cursor-pointer transition-all font-semibold border-2 ${
+      className={`py-3 px-3 text-center rounded-xl cursor-pointer transition-all font-semibold border-2 ${
         isSelected 
           ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-105' 
           : 'bg-white hover:bg-blue-50 text-gray-700 border-gray-200 hover:border-blue-300 hover:shadow-md'
@@ -353,40 +353,38 @@ const Appointment = () => {
 
   const stylistServices = useMemo(() => {
     if (!stylistInfo || !allServices.length) return [];
-    const filtered = allServices.filter(service =>
-      stylistInfo.specialty.includes(service.name)
+    const specialtySet = new Set(
+      (stylistInfo.specialty || []).map(s => s.toLowerCase().trim())
     );
+    if (specialtySet.size === 0) return allServices;
+    const filtered = allServices.filter(s => specialtySet.has(s.name.toLowerCase().trim()));
     return filtered.length > 0 ? filtered : allServices;
   }, [stylistInfo, allServices]);
 
+  // Packages eligible for this stylist: ALL serviceIds must be in stylistServices
+  const stylistPackages = useMemo(() => {
+    if (!packages.length || !stylistServices.length) return [];
+    const svcIdSet = new Set(stylistServices.map(s => String(s._id)));
+    return packages.filter(pkg =>
+      Array.isArray(pkg.serviceIds) &&
+      pkg.serviceIds.length > 0 &&
+      pkg.serviceIds.every(id => svcIdSet.has(String(id)))
+    );
+  }, [packages, stylistServices]);
+
   const fetchSlotSettings = useCallback(async () => {
-    if (hasFetchedSettings.current) return;
-    
+    if (hasFetchedSettings.current || !shopSlug) return;
+    hasFetchedSettings.current = true;
     try {
-      hasFetchedSettings.current = true;
-      const { data } = await axios.get(backendUrl + '/api/admin/public/slot-settings');
-      if (data.success) {
-        setSlotSettings(data);
-      } else {
-        setSlotSettings({
-          slotStartTime: "09:00",
-          slotEndTime: "17:00",
-          slotDuration: 30,
-          breakTime: false,
-          daysOpen: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-          allowRescheduling: true,
-          rescheduleHoursBefore: 24,
-          maxAdvanceBookingDays: 30,
-          minBookingTimeBeforeSlot: 0,
-          advancePaymentRequired: true,
-          advancePaymentPercentage: 100
-        });
+      const { data } = await axios.get(`${backendUrl}/api/shop/${shopSlug}/slot-settings`);
+      if (data.success && data.settings) {
+        setSlotSettings(data.settings);
       }
     } catch (error) {
       hasFetchedSettings.current = false;
       console.error("Error fetching slot settings:", error);
     }
-  }, [backendUrl]);
+  }, [backendUrl, shopSlug]);
 
   const fetchStylistInfo = useCallback(() => {
     const found = stylists.find((stylist) => stylist._id === docId);
@@ -710,13 +708,12 @@ const Appointment = () => {
 
   // Fire all on mount in parallel
   useEffect(() => {
+    if (!shopSlug) return;
     Promise.all([fetchSlotSettings(), fetchAllServices()]);
-    if (shopSlug) {
-      axios.get(`${backendUrl}/api/shop/${shopSlug}/payment-info`)
-        .then(({ data }) => { if (data.success) setShopPaymentInfo(data); })
-        .catch(() => {});
-    }
-  }, []);
+    axios.get(`${backendUrl}/api/shop/${shopSlug}/payment-info`)
+      .then(({ data }) => { if (data.success) setShopPaymentInfo(data); })
+      .catch(() => {});
+  }, [shopSlug, fetchSlotSettings, fetchAllServices]);
 
   useEffect(() => {
     if (stylists && stylists.length > 0) {
@@ -925,7 +922,7 @@ const Appointment = () => {
                         )}
 
                         {/* Trending Combo Packs */}
-                        {packages.length > 0 && (
+                        {stylistPackages.length > 0 && (
                           <div className="mb-5">
                             <div className="my-4 flex items-center gap-3 text-xs text-gray-400">
                               <div className="flex-1 h-px bg-gray-100" />
@@ -939,7 +936,7 @@ const Appointment = () => {
                               </h3>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {packages.map((pkg) => {
+                              {stylistPackages.map((pkg) => {
                                 const pkgServices = allServices.filter((s) =>
                                   pkg.serviceIds?.some((id) => String(id) === String(s._id))
                                 );

@@ -4,72 +4,54 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { toast } from 'react-toastify';
 import {
-  Clock, Calendar, PlusCircle, Trash, AlertCircle, Save, Check,
-  CalendarX, CalendarClock, CalendarPlus, Settings, Loader, CreditCard
+  Clock, Calendar, PlusCircle, Trash2, AlertCircle, Save, Check,
+  CalendarX, CalendarClock, CalendarPlus, Loader2, ChevronDown, X,
+  Coffee, Sun, Repeat,
 } from 'lucide-react';
 
-const getOrdinalSuffix = (day) => {
-  if (day > 3 && day < 21) return 'th';
-  switch (day % 10) {
-    case 1: return 'st';
-    case 2: return 'nd';
-    case 3: return 'rd';
-    default: return 'th';
-  }
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const ordinalSuffix = (n) => {
+  if (n > 3 && n < 21) return 'th';
+  switch (n % 10) { case 1: return 'st'; case 2: return 'nd'; case 3: return 'rd'; default: return 'th'; }
 };
 
-// 12hr Time Input Component
-const TimeInput12Hr = ({ label, name, value, onChange }) => {
-  const to24Hr = (h, m, period) => {
-    let hour = parseInt(h);
-    if (period === 'PM' && hour !== 12) hour += 12;
-    if (period === 'AM' && hour === 12) hour = 0;
-    return `${String(hour).padStart(2, '0')}:${m}`;
+const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', {
+  weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+});
+
+const toIso = (d) => {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+};
+
+// 12-hour time input
+const TimeInput = ({ label, name, value, onChange }) => {
+  const parse = () => {
+    if (!value) return { h: '12', m: '00', p: 'AM' };
+    const [hh, mm] = value.split(':').map(Number);
+    return { h: String(hh % 12 || 12), m: String(mm).padStart(2,'0'), p: hh >= 12 ? 'PM' : 'AM' };
   };
-
-  const getValues = () => {
-    if (!value) return { hour: '12', minute: '00', period: 'AM' };
-    const [h, m] = value.split(':').map(Number);
-    const period = h >= 12 ? 'PM' : 'AM';
-    const hour12 = h % 12 || 12;
-    return { hour: String(hour12), minute: String(m).padStart(2, '0'), period };
+  const { h, m, p } = parse();
+  const emit = (nh, nm, np) => {
+    let hour = parseInt(nh);
+    if (np === 'PM' && hour !== 12) hour += 12;
+    if (np === 'AM' && hour === 12) hour = 0;
+    onChange({ target: { name, value: `${String(hour).padStart(2,'0')}:${nm}` } });
   };
-
-  const { hour, minute, period } = getValues();
-
-  const handleChange = (newHour, newMinute, newPeriod) => {
-    const time24 = to24Hr(newHour, newMinute, newPeriod);
-    onChange({ target: { name, value: time24 } });
-  };
-
+  const sel = 'border-none outline-none bg-transparent font-semibold text-gray-800 cursor-pointer text-sm';
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-      <div className="flex gap-1 items-center border rounded-md px-3 py-2.5 bg-white w-full">
-        <select
-          value={hour}
-          onChange={(e) => handleChange(e.target.value, minute, period)}
-          className="border-none outline-none bg-transparent font-medium text-gray-800 cursor-pointer"
-        >
-          {[1,2,3,4,5,6,7,8,9,10,11,12].map(h => (
-            <option key={h} value={String(h)}>{String(h).padStart(2, '0')}</option>
-          ))}
+      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
+      <div className="flex items-center gap-1 border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20">
+        <Clock size={14} className="text-primary mr-1 flex-shrink-0" />
+        <select value={h} onChange={e => emit(e.target.value, m, p)} className={sel}>
+          {[1,2,3,4,5,6,7,8,9,10,11,12].map(v => <option key={v} value={v}>{String(v).padStart(2,'0')}</option>)}
         </select>
-        <span className="font-bold text-gray-600">:</span>
-        <select
-          value={minute}
-          onChange={(e) => handleChange(hour, e.target.value, period)}
-          className="border-none outline-none bg-transparent font-medium text-gray-800 cursor-pointer"
-        >
-          {['00', '15', '30', '45'].map(m => (
-            <option key={m} value={m}>{m}</option>
-          ))}
+        <span className="font-bold text-gray-400">:</span>
+        <select value={m} onChange={e => emit(h, e.target.value, p)} className={sel}>
+          {['00','15','30','45'].map(v => <option key={v} value={v}>{v}</option>)}
         </select>
-        <select
-          value={period}
-          onChange={(e) => handleChange(hour, minute, e.target.value)}
-          className="border-none outline-none bg-transparent font-medium text-gray-800 cursor-pointer"
-        >
+        <select value={p} onChange={e => emit(h, m, e.target.value)} className={sel}>
           <option value="AM">AM</option>
           <option value="PM">PM</option>
         </select>
@@ -78,565 +60,545 @@ const TimeInput12Hr = ({ label, name, value, onChange }) => {
   );
 };
 
+const Modal = ({ title, onClose, children }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+      <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
+        <h3 className="font-bold text-gray-800">{title}</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+      </div>
+      <div className="p-5 space-y-4">{children}</div>
+    </div>
+  </div>
+);
+
+const FieldLabel = ({ children }) => (
+  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{children}</label>
+);
+
+const Section = ({ icon: Icon, title, action, children }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 bg-gray-50/50">
+      <h2 className="font-semibold text-gray-800 flex items-center gap-2 text-sm">
+        {Icon && <Icon size={16} className="text-primary" />}
+        {title}
+      </h2>
+      {action}
+    </div>
+    <div className="p-5">{children}</div>
+  </div>
+);
+
+const EmptyState = ({ message }) => (
+  <div className="text-center py-8 text-gray-400 text-sm">{message}</div>
+);
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAY_SHORT = { Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun' };
+const TABS = [
+  { id: 'hours',   label: 'Operating Hours', icon: Clock },
+  { id: 'dates',   label: 'Date Controls',   icon: Calendar },
+  { id: 'booking', label: 'Booking Rules',   icon: CalendarClock },
+];
+
+// ── Main Component ────────────────────────────────────────────────────────────
 const SlotManagement = () => {
   const {
-    loading, settings, saveSettings: saveSettingsToAPI,
-    addBlockedDate: addBlockedDateToAPI, removeBlockedDate: removeBlockedDateFromAPI,
-    addRecurringHoliday: addRecurringHolidayToAPI, removeRecurringHoliday: removeRecurringHolidayFromAPI,
-    addSpecialWorkingDay: addSpecialWorkingDayToAPI, removeSpecialWorkingDay: removeSpecialWorkingDayFromAPI
+    loading, settings,
+    saveSettings: apiSave,
+    addBlockedDate: apiAddBlocked, removeBlockedDate: apiRemoveBlocked,
+    addRecurringHoliday: apiAddHoliday, removeRecurringHoliday: apiRemoveHoliday,
+    addSpecialWorkingDay: apiAddSpecial, removeSpecialWorkingDay: apiRemoveSpecial,
   } = useContext(SlotManagementContext);
 
-  const [localSettings, setLocalSettings] = useState({...settings});
-  const [error, setError] = useState('');
-  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [local, setLocal] = useState({ ...settings });
+  const [activeTab, setActiveTab] = useState('hours');
+  const [dirty, setDirty] = useState(false);
+
+  // Modals
+  const [blockModal, setBlockModal] = useState(false);
   const [blockDate, setBlockDate] = useState(new Date());
   const [blockReason, setBlockReason] = useState('');
-  const [showRecurringModal, setShowRecurringModal] = useState(false);
-  const [recurringType, setRecurringType] = useState('weekly');
-  const [recurringDay, setRecurringDay] = useState('Monday');
-  const [recurringDate, setRecurringDate] = useState(1);
-  const [recurringName, setRecurringName] = useState('');
-  const [showSpecialModal, setShowSpecialModal] = useState(false);
+
+  const [holModal, setHolModal] = useState(false);
+  const [holName, setHolName] = useState('');
+  const [holType, setHolType] = useState('weekly');
+  const [holDay, setHolDay] = useState('Monday');
+  const [holDayOfMonth, setHolDayOfMonth] = useState(1);
+
+  const [specialModal, setSpecialModal] = useState(false);
   const [specialDate, setSpecialDate] = useState(new Date());
-  const [activeTab, setActiveTab] = useState('basic');
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  useEffect(() => { setLocal({ ...settings }); setDirty(false); }, [settings]);
 
-  useEffect(() => {
-    setLocalSettings({...settings});
-  }, [settings]);
+  const set = (key, val) => { setLocal(p => ({ ...p, [key]: val })); setDirty(true); };
+  const handleInput = (e) => set(e.target.name, e.target.type === 'checkbox' ? e.target.checked : e.target.value);
+  const handleTime = (e) => set(e.target.name, e.target.value);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setLocalSettings({ ...localSettings, [name]: value });
-  };
-
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setLocalSettings({ ...localSettings, [name]: checked });
-  };
-
-  const handleDayToggle = (day) => {
-    const daysOpen = [...localSettings.daysOpen];
-    if (daysOpen.includes(day)) {
-      setLocalSettings({
-        ...localSettings,
-        daysOpen: daysOpen.filter(d => d !== day)
-      });
-    } else {
-      setLocalSettings({
-        ...localSettings,
-        daysOpen: [...daysOpen, day]
-      });
-    }
-  };
-
-  const addBlockedDate = async () => {
-    if (!blockReason.trim()) {
-      toast.error('Please provide a reason');
-      return;
-    }
-    const result = await addBlockedDateToAPI(blockDate, blockReason);
-    if (result) {
-      setBlockDate(new Date());
-      setBlockReason('');
-      setShowBlockModal(false);
-    }
-  };
-
-  const addRecurringHoliday = async () => {
-    if (!recurringName.trim()) {
-      toast.error('Please provide a holiday name');
-      return;
-    }
-    const value = recurringType === 'weekly' ? recurringDay : recurringDate.toString();
-    const result = await addRecurringHolidayToAPI(recurringName, recurringType, value);
-    if (result) {
-      setRecurringName('');
-      setRecurringType('weekly');
-      setRecurringDay('Monday');
-      setRecurringDate(1);
-      setShowRecurringModal(false);
-    }
-  };
-
-  const addSpecialWorkingDay = async () => {
-    const result = await addSpecialWorkingDayToAPI(specialDate);
-    if (result) {
-      setSpecialDate(new Date());
-      setShowSpecialModal(false);
-    }
+  const toggleDay = (day) => {
+    const next = local.daysOpen?.includes(day)
+      ? local.daysOpen.filter(d => d !== day)
+      : [...(local.daysOpen || []), day];
+    set('daysOpen', next);
   };
 
   const saveSettings = async () => {
-    setError('');
-    await saveSettingsToAPI(localSettings);
+    if (!local.slotStartTime || !local.slotEndTime) { toast.error('Set start and end times'); return; }
+    if (local.slotStartTime >= local.slotEndTime) { toast.error('End time must be after start time'); return; }
+    if (local.breakTime && local.breakStartTime && local.breakEndTime) {
+      if (local.breakStartTime >= local.breakEndTime) { toast.error('Break end must be after break start'); return; }
+    }
+    if (!local.daysOpen?.length) { toast.error('Select at least one open day'); return; }
+    await apiSave(local);
+    setDirty(false);
   };
 
+  // Blocked dates
+  const handleAddBlocked = async () => {
+    if (!blockReason.trim()) { toast.error('Please enter a reason'); return; }
+    const result = await apiAddBlocked(blockDate, blockReason);
+    if (result) { setBlockDate(new Date()); setBlockReason(''); setBlockModal(false); }
+  };
+
+  // Recurring holidays
+  const handleAddHoliday = async () => {
+    if (!holName.trim()) { toast.error('Please enter a holiday name'); return; }
+    const value = holType === 'weekly' ? holDay : String(holDayOfMonth);
+    const result = await apiAddHoliday(holName, holType, value);
+    if (result) { setHolName(''); setHolType('weekly'); setHolDay('Monday'); setHolDayOfMonth(1); setHolModal(false); }
+  };
+
+  // Special working days
+  const handleAddSpecial = async () => {
+    const result = await apiAddSpecial(specialDate);
+    if (result) { setSpecialDate(new Date()); setSpecialModal(false); }
+  };
+
+  const inputCls = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20';
+
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Slot Management</h1>
+    <div className="max-w-3xl mx-auto space-y-5">
+
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Clock size={20} className="text-primary" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">Slot Management</h1>
+          <p className="text-sm text-gray-500">Configure availability for your salon</p>
+        </div>
+        {dirty && (
+          <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-semibold px-2.5 py-1 rounded-full">Unsaved changes</span>
+        )}
       </div>
 
-      {error && (
-        <div className="mb-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
-          <AlertCircle size={18} />
-          {error}
-        </div>
-      )}
-
-      <div className="mb-6 border-b border-gray-200">
-        <div className="flex overflow-x-auto">
-          {['basic', 'dates', 'booking'].map(tab => (
-            <button
-              key={tab}
-              className={`py-3 px-2 border-b-2 font-medium text-sm ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-gray-500'}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab === 'basic' && 'Basic Settings'}
-              {tab === 'dates' && 'Date Controls'}
-              {tab === 'booking' && 'Booking Rules'}
-            </button>
-          ))}
-        </div>
+      {/* Tabs */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-1 flex gap-1">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === id ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Icon size={14} />
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        ))}
       </div>
 
-      <div>
-        {activeTab === 'basic' && (
-          <div className="bg-white border rounded-xl shadow-sm p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-6">Operating Hours</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-              <TimeInput12Hr
-                label="Slot Start Time"
-                name="slotStartTime"
-                value={localSettings.slotStartTime}
-                onChange={handleInputChange}
-              />
-              <TimeInput12Hr
-                label="Slot End Time"
-                name="slotEndTime"
-                value={localSettings.slotEndTime}
-                onChange={handleInputChange}
-              />
+      {/* ── TAB: Operating Hours ── */}
+      {activeTab === 'hours' && (
+        <div className="space-y-4">
+          <Section icon={Clock} title="Operating Hours">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <TimeInput label="Opens at" name="slotStartTime" value={local.slotStartTime} onChange={handleTime} />
+              <TimeInput label="Closes at" name="slotEndTime" value={local.slotEndTime} onChange={handleTime} />
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Slot Duration</label>
-              <select
-                name="slotDuration"
-                value={localSettings.slotDuration}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2.5 border rounded-md"
-              >
-                <option value={15}>15 minutes</option>
-                <option value={30}>30 minutes</option>
-                <option value={45}>45 minutes</option>
-                <option value={60}>60 minutes</option>
-              </select>
-            </div>
-
-            <div className="mb-4">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="breakTime"
-                  checked={localSettings.breakTime}
-                  onChange={handleCheckboxChange}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium text-gray-700">Enable Break Time</span>
-              </label>
-            </div>
-
-            {localSettings.breakTime && (
-              <div className="ml-6 pl-4 border-l-2 border-gray-200 mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <TimeInput12Hr
-                    label="Break Start"
-                    name="breakStartTime"
-                    value={localSettings.breakStartTime}
-                    onChange={handleInputChange}
-                  />
-                  <TimeInput12Hr
-                    label="Break End"
-                    name="breakEndTime"
-                    value={localSettings.breakEndTime}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Days Open</label>
-              <div className="flex flex-wrap gap-3">
-                {days.map(day => (
+            <div className="mb-5">
+              <FieldLabel>Slot Duration</FieldLabel>
+              <div className="grid grid-cols-4 gap-2">
+                {[15, 30, 45, 60].map(d => (
                   <button
-                    key={day}
+                    key={d}
                     type="button"
-                    onClick={() => handleDayToggle(day)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium ${
-                      localSettings.daysOpen?.includes(day)
-                        ? 'bg-primary text-white'
-                        : 'bg-gray-100 text-gray-600'
+                    onClick={() => set('slotDuration', d)}
+                    className={`py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+                      Number(local.slotDuration) === d
+                        ? 'bg-primary text-white border-primary'
+                        : 'border-gray-100 text-gray-600 hover:border-primary/30'
                     }`}
                   >
-                    {day.substring(0, 3)}
+                    {d} min
                   </button>
                 ))}
               </div>
             </div>
-          </div>
-        )}
 
-        {activeTab === 'dates' && (
-          <div className="space-y-6">
-            <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-              <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <CalendarX size={18} className="text-primary" />
-                  Blocked Dates
-                </h2>
-                <button
-                  type="button"
-                  className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-                  onClick={() => setShowBlockModal(true)}
-                >
-                  <PlusCircle size={16} />
-                  Add Blocked Date
-                </button>
+            {/* Days Open */}
+            <div className="mb-5">
+              <FieldLabel>Days Open</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {DAYS.map(day => {
+                  const on = local.daysOpen?.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDay(day)}
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+                        on ? 'bg-primary text-white border-primary' : 'border-gray-100 text-gray-500 hover:border-primary/30'
+                      }`}
+                    >
+                      {DAY_SHORT[day]}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="p-6">
-                {localSettings.blockedDates?.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {localSettings.blockedDates.map(item => (
-                          <tr key={item._id}>
-                            <td className="px-6 py-4 text-sm text-gray-700">
-                              {new Date(item.date).toLocaleDateString('en-US', {
-                                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-                              })}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-700">{item.reason}</td>
-                            <td className="px-6 py-4 text-center">
-                              <button
-                                type="button"
-                                className="text-red-500 hover:text-red-700"
-                                onClick={() => removeBlockedDateFromAPI(item._id)}
-                              >
-                                <Trash size={18} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No blocked dates</p>
-                  </div>
-                )}
-              </div>
+              {local.daysOpen?.length === 0 && (
+                <p className="mt-2 text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle size={12} /> Select at least one open day
+                </p>
+              )}
+              <p className="mt-2 text-xs text-gray-400">
+                {local.daysOpen?.length ? `${local.daysOpen.length} day${local.daysOpen.length > 1 ? 's' : ''} open` : 'No days selected'}
+              </p>
             </div>
 
-            <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-              <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <CalendarClock size={18} className="text-primary" />
-                  Recurring Holidays
-                </h2>
-                <button
-                  type="button"
-                  className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-                  onClick={() => setShowRecurringModal(true)}
+            {/* Break Time */}
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer mb-3">
+                <div
+                  onClick={() => set('breakTime', !local.breakTime)}
+                  className={`w-10 h-5 rounded-full relative transition-all cursor-pointer ${local.breakTime ? 'bg-primary' : 'bg-gray-200'}`}
                 >
-                  <PlusCircle size={16} />
-                  Add Recurring Holiday
-                </button>
-              </div>
-              <div className="p-6">
-                {localSettings.recurringHolidays?.length > 0 ? (
-                  <div className="space-y-2">
-                    {localSettings.recurringHolidays.map(item => (
-                      <div key={item._id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {item.type === 'weekly' ? `Every ${item.value}` : `${item.value}${getOrdinalSuffix(parseInt(item.value))} of each month`}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => removeRecurringHolidayFromAPI(item._id)}
-                        >
-                          <Trash size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No recurring holidays</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-              <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <CalendarPlus size={18} className="text-primary" />
-                  Special Working Days
-                </h2>
-                <button
-                  type="button"
-                  className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-                  onClick={() => setShowSpecialModal(true)}
-                >
-                  <PlusCircle size={16} />
-                  Add Special Day
-                </button>
-              </div>
-              <div className="p-6">
-                {localSettings.specialWorkingDays?.length > 0 ? (
-                  <div className="space-y-2">
-                    {localSettings.specialWorkingDays.map(item => (
-                      <div key={item._id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <p className="font-medium">
-                          {new Date(item.date).toLocaleDateString('en-US', {
-                            weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-                          })}
-                        </p>
-                        <button
-                          type="button"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => removeSpecialWorkingDayFromAPI(item._id)}
-                        >
-                          <Trash size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No special working days</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'booking' && (
-          <div className="space-y-6">
-            <div className="bg-white border rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4">Rescheduling Options</h2>
-              <div className="mb-4">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="allowRescheduling"
-                    checked={localSettings.allowRescheduling}
-                    onChange={handleCheckboxChange}
-                    className="mr-2"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Allow Appointment Rescheduling</span>
-                </label>
-              </div>
-              {localSettings.allowRescheduling && (
-                <div className="ml-6 pl-4 border-l-2 border-gray-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Allow Rescheduling Before (hours)
-                  </label>
-                  <input
-                    type="number"
-                    name="rescheduleHoursBefore"
-                    value={localSettings.rescheduleHoursBefore}
-                    onChange={handleInputChange}
-                    min="1"
-                    className="w-full max-w-xs px-3 py-2.5 border rounded-md"
-                  />
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${local.breakTime ? 'left-5' : 'left-0.5'}`} />
+                </div>
+                <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Coffee size={14} className="text-primary" /> Enable Break Time
+                </span>
+              </label>
+              {local.breakTime && (
+                <div className="ml-2 pl-4 border-l-2 border-primary/20 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <TimeInput label="Break Starts" name="breakStartTime" value={local.breakStartTime} onChange={handleTime} />
+                  <TimeInput label="Break Ends" name="breakEndTime" value={local.breakEndTime} onChange={handleTime} />
                 </div>
               )}
             </div>
-
-            <div className="bg-white border rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4">Advance Booking Rules</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Advance Booking Days</label>
-                  <input
-                    type="number"
-                    name="maxAdvanceBookingDays"
-                    value={localSettings.maxAdvanceBookingDays}
-                    onChange={handleInputChange}
-                    min="1"
-                    className="w-full px-3 py-2.5 border rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Booking Time Before Slot (hours)</label>
-                  <input
-                    type="number"
-                    name="minBookingTimeBeforeSlot"
-                    value={localSettings.minBookingTimeBeforeSlot}
-                    onChange={handleInputChange}
-                    min="0"
-                    step="0.5"
-                    className="w-full px-3 py-2.5 border rounded-md"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-8">
-          <button
-            onClick={saveSettings}
-            className="w-full md:w-auto bg-primary text-white font-medium py-3 px-8 rounded-lg hover:bg-primary/90 flex items-center justify-center gap-2"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader size={20} className="animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={20} />
-                Save Settings
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {showBlockModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Add Blocked Date</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-              <DatePicker
-                selected={blockDate}
-                onChange={setBlockDate}
-                dateFormat="MMMM d, yyyy"
-                className="w-full px-3 py-2 border rounded-md"
-                minDate={new Date()}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Reason</label>
-              <input
-                type="text"
-                value={blockReason}
-                onChange={(e) => setBlockReason(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="e.g., Holiday, Maintenance"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button onClick={addBlockedDate} className="flex-1 bg-primary text-white py-2 rounded-lg">Add</button>
-              <button onClick={() => setShowBlockModal(false)} className="flex-1 border py-2 rounded-lg">Cancel</button>
-            </div>
-          </div>
+          </Section>
         </div>
       )}
 
-      {showRecurringModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Add Recurring Holiday</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Holiday Name</label>
-              <input
-                type="text"
-                value={recurringName}
-                onChange={(e) => setRecurringName(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-              <select
-                value={recurringType}
-                onChange={(e) => setRecurringType(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+      {/* ── TAB: Date Controls ── */}
+      {activeTab === 'dates' && (
+        <div className="space-y-4">
+
+          {/* Blocked Dates */}
+          <Section
+            icon={CalendarX}
+            title="Blocked Dates"
+            action={
+              <button
+                onClick={() => setBlockModal(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-all"
               >
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
+                <PlusCircle size={13} /> Block a Date
+              </button>
+            }
+          >
+            {local.blockedDates?.length > 0 ? (
+              <div className="space-y-2">
+                {local.blockedDates.map(item => (
+                  <div key={item._id} className="flex items-center justify-between p-3 rounded-xl bg-red-50 border border-red-100">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{fmtDate(item.date)}</p>
+                      {item.reason && <p className="text-xs text-gray-500 mt-0.5">{item.reason}</p>}
+                    </div>
+                    <button onClick={() => apiRemoveBlocked(item._id)} className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-100 transition-all">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState message="No blocked dates — all days within your schedule are open." />
+            )}
+          </Section>
+
+          {/* Recurring Holidays */}
+          <Section
+            icon={Repeat}
+            title="Recurring Holidays"
+            action={
+              <button
+                onClick={() => setHolModal(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-all"
+              >
+                <PlusCircle size={13} /> Add Holiday
+              </button>
+            }
+          >
+            <p className="text-xs text-gray-400 mb-3">
+              Recurring holidays automatically hide those dates from booking — even if the day is normally open.
+            </p>
+            {local.recurringHolidays?.length > 0 ? (
+              <div className="space-y-2">
+                {local.recurringHolidays.map(item => (
+                  <div key={item._id} className="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-100">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{item.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {item.type === 'weekly'
+                          ? `Every ${item.value}`
+                          : `${item.value}${ordinalSuffix(parseInt(item.value))} of every month`}
+                      </p>
+                    </div>
+                    <button onClick={() => apiRemoveHoliday(item._id)} className="text-amber-500 hover:text-amber-700 p-1 rounded-lg hover:bg-amber-100 transition-all">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState message="No recurring holidays set." />
+            )}
+          </Section>
+
+          {/* Special Working Days */}
+          <Section
+            icon={CalendarPlus}
+            title="Special Working Days"
+            action={
+              <button
+                onClick={() => setSpecialModal(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-all"
+              >
+                <PlusCircle size={13} /> Add Special Day
+              </button>
+            }
+          >
+            <p className="text-xs text-gray-400 mb-3">
+              Special working days open a normally closed or holiday date for bookings.
+            </p>
+            {local.specialWorkingDays?.length > 0 ? (
+              <div className="space-y-2">
+                {local.specialWorkingDays.map(item => (
+                  <div key={item._id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                    <p className="text-sm font-semibold text-gray-800">{fmtDate(item.date)}</p>
+                    <button onClick={() => apiRemoveSpecial(item._id)} className="text-emerald-500 hover:text-emerald-700 p-1 rounded-lg hover:bg-emerald-100 transition-all">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState message="No special working days set." />
+            )}
+          </Section>
+        </div>
+      )}
+
+      {/* ── TAB: Booking Rules ── */}
+      {activeTab === 'booking' && (
+        <div className="space-y-4">
+
+          <Section icon={CalendarClock} title="Rescheduling Options">
+            <label className="flex items-center gap-3 cursor-pointer mb-4">
+              <div
+                onClick={() => set('allowRescheduling', !local.allowRescheduling)}
+                className={`w-10 h-5 rounded-full relative transition-all cursor-pointer flex-shrink-0 ${local.allowRescheduling ? 'bg-primary' : 'bg-gray-200'}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${local.allowRescheduling ? 'left-5' : 'left-0.5'}`} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Allow Customers to Reschedule</p>
+                <p className="text-xs text-gray-400">Customers can change their appointment time</p>
+              </div>
+            </label>
+            {local.allowRescheduling && (
+              <div className="ml-2 pl-4 border-l-2 border-primary/20">
+                <FieldLabel>Cancel/Reschedule Cutoff (hours before appointment)</FieldLabel>
+                <input
+                  type="number"
+                  name="rescheduleHoursBefore"
+                  value={local.rescheduleHoursBefore}
+                  onChange={handleInput}
+                  min="1"
+                  className={`${inputCls} max-w-xs`}
+                />
+                <p className="mt-1.5 text-xs text-gray-400">
+                  Customers must reschedule at least {local.rescheduleHoursBefore}h before their appointment
+                </p>
+              </div>
+            )}
+          </Section>
+
+          <Section icon={Calendar} title="Advance Booking Rules">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <FieldLabel>Max Days Ahead Customers Can Book</FieldLabel>
+                <input
+                  type="number"
+                  name="maxAdvanceBookingDays"
+                  value={local.maxAdvanceBookingDays}
+                  onChange={handleInput}
+                  min="1"
+                  max="365"
+                  className={inputCls}
+                />
+                <p className="mt-1 text-xs text-gray-400">Show up to {local.maxAdvanceBookingDays} days in calendar</p>
+              </div>
+              <div>
+                <FieldLabel>Min Hours Before Slot to Allow Booking</FieldLabel>
+                <input
+                  type="number"
+                  name="minBookingTimeBeforeSlot"
+                  value={local.minBookingTimeBeforeSlot}
+                  onChange={handleInput}
+                  min="0"
+                  step="0.5"
+                  className={inputCls}
+                />
+                <p className="mt-1 text-xs text-gray-400">0 = allow last-minute bookings</p>
+              </div>
+            </div>
+          </Section>
+
+        </div>
+      )}
+
+      {/* Save Button */}
+      <button
+        onClick={saveSettings}
+        disabled={loading}
+        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all shadow-sm ${
+          dirty
+            ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
+            : 'bg-gray-100 text-gray-500'
+        }`}
+      >
+        {loading ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : <><Save size={16} /> Save Settings</>}
+      </button>
+
+      {/* ── Modals ── */}
+      {blockModal && (
+        <Modal title="Block a Date" onClose={() => setBlockModal(false)}>
+          <div>
+            <FieldLabel>Date to Block</FieldLabel>
+            <DatePicker
+              selected={blockDate}
+              onChange={setBlockDate}
+              dateFormat="MMMM d, yyyy"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary"
+              minDate={new Date()}
+            />
+          </div>
+          <div>
+            <FieldLabel>Reason</FieldLabel>
+            <input
+              type="text"
+              value={blockReason}
+              onChange={e => setBlockReason(e.target.value)}
+              placeholder="e.g., Public holiday, Staff training"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button onClick={handleAddBlocked} className="flex-1 bg-primary text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-primary/90">Block Date</button>
+            <button onClick={() => setBlockModal(false)} className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+          </div>
+        </Modal>
+      )}
+
+      {holModal && (
+        <Modal title="Add Recurring Holiday" onClose={() => setHolModal(false)}>
+          <div>
+            <FieldLabel>Holiday Name</FieldLabel>
+            <input
+              type="text"
+              value={holName}
+              onChange={e => setHolName(e.target.value)}
+              placeholder="e.g., Sunday Leave, Diwali"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <FieldLabel>Repeat</FieldLabel>
+            <div className="grid grid-cols-2 gap-2">
+              {['weekly', 'monthly'].map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setHolType(t)}
+                  className={`py-2.5 rounded-xl text-sm font-semibold border-2 transition-all capitalize ${
+                    holType === t ? 'bg-primary text-white border-primary' : 'border-gray-100 text-gray-600 hover:border-primary/30'
+                  }`}
+                >
+                  {t === 'weekly' ? 'Every Week' : 'Every Month'}
+                </button>
+              ))}
+            </div>
+          </div>
+          {holType === 'weekly' ? (
+            <div>
+              <FieldLabel>Day of Week</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {DAYS.map(d => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setHolDay(d)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
+                      holDay === d ? 'bg-primary text-white border-primary' : 'border-gray-100 text-gray-600 hover:border-primary/30'
+                    }`}
+                  >
+                    {DAY_SHORT[d]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <FieldLabel>Day of Month</FieldLabel>
+              <select
+                value={holDayOfMonth}
+                onChange={e => setHolDayOfMonth(parseInt(e.target.value))}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary"
+              >
+                {[...Array(31)].map((_, i) => (
+                  <option key={i+1} value={i+1}>{i+1}{ordinalSuffix(i+1)}</option>
+                ))}
               </select>
             </div>
-            {recurringType === 'weekly' ? (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Day of Week</label>
-                <select
-                  value={recurringDay}
-                  onChange={(e) => setRecurringDay(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md"
-                >
-                  {days.map(day => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Day of Month</label>
-                <select
-                  value={recurringDate}
-                  onChange={(e) => setRecurringDate(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border rounded-md"
-                >
-                  {[...Array(31)].map((_, i) => (
-                    <option key={i+1} value={i+1}>
-                      {i+1}{getOrdinalSuffix(i+1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div className="flex gap-3">
-              <button onClick={addRecurringHoliday} className="flex-1 bg-primary text-white py-2 rounded-lg">Add</button>
-              <button onClick={() => setShowRecurringModal(false)} className="flex-1 border py-2 rounded-lg">Cancel</button>
-            </div>
+          )}
+          <div className="flex gap-3 pt-2">
+            <button onClick={handleAddHoliday} className="flex-1 bg-primary text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-primary/90">Add Holiday</button>
+            <button onClick={() => setHolModal(false)} className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
           </div>
-        </div>
+        </Modal>
       )}
 
-      {showSpecialModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Add Special Working Day</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-              <DatePicker
-                selected={specialDate}
-                onChange={setSpecialDate}
-                dateFormat="MMMM d, yyyy"
-                className="w-full px-3 py-2 border rounded-md"
-                minDate={new Date()}
-              />
-            </div>
-            <div className="flex gap-3">
-              <button onClick={addSpecialWorkingDay} className="flex-1 bg-primary text-white py-2 rounded-lg">Add</button>
-              <button onClick={() => setShowSpecialModal(false)} className="flex-1 border py-2 rounded-lg">Cancel</button>
-            </div>
+      {specialModal && (
+        <Modal title="Add Special Working Day" onClose={() => setSpecialModal(false)}>
+          <p className="text-sm text-gray-500">This will override a holiday or closed day to allow bookings.</p>
+          <div>
+            <FieldLabel>Date</FieldLabel>
+            <DatePicker
+              selected={specialDate}
+              onChange={setSpecialDate}
+              dateFormat="MMMM d, yyyy"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary"
+              minDate={new Date()}
+            />
           </div>
-        </div>
+          <div className="flex gap-3 pt-2">
+            <button onClick={handleAddSpecial} className="flex-1 bg-primary text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-primary/90">Add Special Day</button>
+            <button onClick={() => setSpecialModal(false)} className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+          </div>
+        </Modal>
       )}
     </div>
   );

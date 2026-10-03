@@ -137,6 +137,16 @@ const appointmentSchema = new mongoose.Schema(
 
     // Walk-in / offline booking flag
     isOffline: { type: Boolean, default: false },
+
+    // Combo package info (walk-in or any booking using a package)
+    packages: [
+      {
+        name:            { type: String },
+        discountPercent: { type: Number },
+        discountAmount:  { type: Number },
+        finalAmount:     { type: Number },
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -51,17 +51,15 @@ const SlotManagementContextProvider = (props) => {
       });
 
       if (data.success) {
-        // Merge settings with the fetched arrays
+        const s = data.settings || {};
         const processedData = {
-          ...data.settings,
-          openSlotsFromDate: new Date(data.settings.openSlotsFromDate),
-          openSlotsTillDate: new Date(data.settings.openSlotsTillDate),
+          ...s,
+          openSlotsFromDate: s.openSlotsFromDate ? new Date(s.openSlotsFromDate) : new Date(),
+          openSlotsTillDate: s.openSlotsTillDate ? new Date(s.openSlotsTillDate) : new Date(Date.now() + 30*24*60*60*1000),
           blockedDates: data.blockedDates || [],
           recurringHolidays: data.recurringHolidays || [],
-          specialWorkingDays: data.specialWorkingDays || []
+          specialWorkingDays: data.specialWorkingDays || [],
         };
-
-        console.log('Processed settings:', processedData);
         setSettings(processedData);
       } else {
         toast.error(data.message || 'Failed to load settings');

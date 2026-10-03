@@ -34,6 +34,8 @@ import {
   getSalonAdminNotifications,
   markSalonAdminNotificationsRead,
   createOfflineAppointment,
+  getAdminAvailableSlots,
+  getAdminAvailableDates,
   getTaxes, createTax, updateTax, deleteTax,
 } from '../controllers/salonAdminController.js';
 import {
@@ -113,6 +115,8 @@ salonAdminRouter.post('/notifications/read', authSalonAdmin, markSalonAdminNotif
 
 /* ──────────── OFFLINE / WALK-IN BOOKING ──────────── */
 salonAdminRouter.post('/offline-appointment', authSalonAdmin, createOfflineAppointment);
+salonAdminRouter.get('/available-slots', authSalonAdmin, getAdminAvailableSlots);
+salonAdminRouter.get('/available-dates/:docId', authSalonAdmin, getAdminAvailableDates);
 
 /* ──────────── TAXES ──────────── */
 salonAdminRouter.get('/taxes', authSalonAdmin, getTaxes);

@@ -87,11 +87,18 @@ const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimeP
         {/* Body */}
         <div className="overflow-y-auto flex-1 p-6 space-y-5">
           {/* Status */}
-          <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border font-semibold text-sm ${bannerClass}`}>
-            <BadgeCheck size={18} />
-            Status: {statusLabel}
-            {appt.cancelled && appt.cancellationReason && (
-              <span className="ml-2 font-normal text-xs opacity-80">— {appt.cancellationReason}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border font-semibold text-sm flex-1 ${bannerClass}`}>
+              <BadgeCheck size={18} />
+              Status: {statusLabel}
+              {appt.cancelled && appt.cancellationReason && (
+                <span className="ml-2 font-normal text-xs opacity-80">— {appt.cancellationReason}</span>
+              )}
+            </div>
+            {appt.isOffline && (
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 rounded-xl text-xs font-bold flex-shrink-0">
+                🚶 Walk-in
+              </span>
             )}
           </div>
 
@@ -145,8 +152,45 @@ const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimeP
             </div>
           </div>
 
-          {/* Services */}
-          {appt.services && appt.services.length > 0 && (
+          {/* Combo Packages */}
+          {appt.packages && appt.packages.length > 0 && (
+            <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-semibold text-violet-700 uppercase flex items-center gap-1.5">
+                <span>📦</span> Combo Package
+              </p>
+              {appt.packages.map((pkg, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-gray-800 text-sm">{pkg.name}</span>
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                      -{pkg.discountPercent}% off
+                    </span>
+                  </div>
+                  {appt.services && appt.services.length > 0 && (
+                    <div className="space-y-1 pl-2 border-l-2 border-violet-200">
+                      {appt.services.map((svc, j) => (
+                        <div key={j} className="flex justify-between text-xs text-gray-500">
+                          <span>{svc.name}</span>
+                          <span>₹{svc.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm pt-1 border-t border-violet-100">
+                    <span className="text-gray-500">Combo Discount</span>
+                    <span className="text-emerald-600 font-semibold">– ₹{pkg.discountAmount}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold">
+                    <span className="text-gray-800">Package Total</span>
+                    <span className="text-primary">₹{pkg.finalAmount}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Individual Services (no package) */}
+          {(!appt.packages || appt.packages.length === 0) && appt.services && appt.services.length > 0 && (
             <div className="bg-gray-50 rounded-xl p-4">
               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Services</p>
               <div className="space-y-1">
@@ -156,6 +200,10 @@ const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimeP
                     <span className="font-semibold text-gray-700">₹{svc.price}</span>
                   </div>
                 ))}
+                <div className="flex justify-between text-sm font-bold border-t border-gray-200 pt-2 mt-1">
+                  <span className="text-gray-700">Total</span>
+                  <span className="text-primary">₹{appt.amount || 0}</span>
+                </div>
               </div>
             </div>
           )}
@@ -1320,7 +1368,10 @@ const AllAppointments = () => {
                           )}
                         </div>
                         <div className="ml-3 sm:ml-4">
-                          <div className="text-sm sm:text-base font-semibold text-gray-900">{appointment.userData?.name || "N/A"}</div>
+                          <div className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-1.5">
+                            {appointment.userData?.name || "N/A"}
+                            {appointment.isOffline && <span className="text-[10px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-700 rounded-md leading-none">Walk-in</span>}
+                          </div>
                           <div onClick={() => callPhoneNumber(appointment.userData?.phone)} className="text-xs sm:text-sm text-gray-600 font-medium mt-0.5 flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-all">
                             <Phone className="w-3.5 h-3.5" />
                             {appointment.userData?.phone || "N/A"}

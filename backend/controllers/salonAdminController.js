@@ -16,6 +16,7 @@ import AdminNotification from '../models/AdminNotification.js';
 import taxModel from '../models/taxModel.js';
 import ServiceCategory from '../models/ServiceCategory.js';
 import validator from 'validator';
+import { generateAvailableSlots } from '../utils/slotUtils.js';
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 const formatDisplayDate = (slotDate, slotTime) => {
@@ -543,11 +544,14 @@ export const updateSalonStylistLeaveDates = async (req, res) => {
 export const getSalonSlotSettings = async (req, res) => {
   try {
     const { shopId } = req.salonAdmin;
-    let settings = await SlotSettings.findOne({ shopId });
-    if (!settings) {
-      settings = await SlotSettings.create({ shopId });
-    }
-    res.json({ success: true, settings });
+    let [settings, blockedDates, recurringHolidays, specialWorkingDays] = await Promise.all([
+      SlotSettings.findOne({ shopId }),
+      BlockedDate.find({ shopId }).sort({ date: 1 }),
+      RecurringHoliday.find({ shopId }),
+      SpecialWorkingDay.find({ shopId }).sort({ date: 1 }),
+    ]);
+    if (!settings) settings = await SlotSettings.create({ shopId });
+    res.json({ success: true, settings, blockedDates, recurringHolidays, specialWorkingDays });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -556,10 +560,32 @@ export const getSalonSlotSettings = async (req, res) => {
 export const updateSalonSlotSettings = async (req, res) => {
   try {
     const { shopId } = req.salonAdmin;
+    // Only pick known SlotSettings fields — ignore blockedDates / recurringHolidays arrays sent by frontend
+    const {
+      slotStartTime, slotEndTime, slotDuration,
+      breakTime, breakStartTime, breakEndTime, daysOpen,
+      allowRescheduling, rescheduleHoursBefore,
+      maxAdvanceBookingDays, minBookingTimeBeforeSlot,
+      advancePaymentRequired, advancePaymentPercentage,
+    } = req.body;
+    const update = {};
+    if (slotStartTime !== undefined)         update.slotStartTime = slotStartTime;
+    if (slotEndTime !== undefined)           update.slotEndTime = slotEndTime;
+    if (slotDuration !== undefined)          update.slotDuration = Number(slotDuration);
+    if (breakTime !== undefined)             update.breakTime = breakTime;
+    if (breakStartTime !== undefined)        update.breakStartTime = breakStartTime;
+    if (breakEndTime !== undefined)          update.breakEndTime = breakEndTime;
+    if (Array.isArray(daysOpen))             update.daysOpen = daysOpen;
+    if (allowRescheduling !== undefined)     update.allowRescheduling = allowRescheduling;
+    if (rescheduleHoursBefore !== undefined) update.rescheduleHoursBefore = Number(rescheduleHoursBefore);
+    if (maxAdvanceBookingDays !== undefined) update.maxAdvanceBookingDays = Number(maxAdvanceBookingDays);
+    if (minBookingTimeBeforeSlot !== undefined) update.minBookingTimeBeforeSlot = Number(minBookingTimeBeforeSlot);
+    if (advancePaymentRequired !== undefined)   update.advancePaymentRequired = advancePaymentRequired;
+    if (advancePaymentPercentage !== undefined) update.advancePaymentPercentage = Number(advancePaymentPercentage);
     const settings = await SlotSettings.findOneAndUpdate(
       { shopId },
-      { ...req.body, shopId },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { $set: update },
+      { upsert: true, new: true, runValidators: false }
     );
     res.json({ success: true, message: 'Slot settings saved.', settings });
   } catch (error) {
@@ -596,9 +622,10 @@ export const removeSalonBlockedDate = async (req, res) => {
 export const addSalonRecurringHoliday = async (req, res) => {
   try {
     const { shopId } = req.salonAdmin;
-    const { name, day, month } = req.body;
-    const holiday = await RecurringHoliday.create({ shopId, name, day, month });
-    res.json({ success: true, holiday });
+    const { name, type, value } = req.body;
+    if (!name || !type || !value) return res.json({ success: false, message: 'name, type and value are required.' });
+    const holiday = await RecurringHoliday.create({ shopId, name, type, value });
+    res.json({ success: true, recurringHoliday: holiday });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -749,7 +776,7 @@ export const markSalonAdminNotificationsRead = async (req, res) => {
 export const createOfflineAppointment = async (req, res) => {
   try {
     const { shopId } = req.salonAdmin;
-    const { doctorId, services, slotDate, slotTime, customerName, customerPhone } = req.body;
+    const { doctorId, services, slotDate, slotTime, customerName, customerPhone, paymentMethod, packages, finalAmount } = req.body;
 
     if (!doctorId || !slotDate || !slotTime || !customerName) {
       return res.json({ success: false, message: 'Stylist, date, time and customer name are required.' });
@@ -763,7 +790,9 @@ export const createOfflineAppointment = async (req, res) => {
     if (existing) return res.json({ success: false, message: 'This slot is already booked.' });
 
     const svcList = Array.isArray(services) ? services : [];
-    const totalAmount = svcList.reduce((s, sv) => s + (Number(sv.price) || 0), 0);
+    const pkgList = Array.isArray(packages) ? packages : [];
+    // Use the pre-calculated finalAmount from frontend (already applies package discounts)
+    const totalAmount = finalAmount != null ? Number(finalAmount) : svcList.reduce((s, sv) => s + (Number(sv.price) || 0), 0);
 
     const appt = new appointmentModel({
       doctorId,
@@ -772,8 +801,11 @@ export const createOfflineAppointment = async (req, res) => {
       slotDateTime,
       amount: totalAmount,
       services: svcList,
-      service: svcList.map(s => s.name).join(', ') || 'Walk-in',
-      paymentMethod: 'cash',
+      packages: pkgList,
+      service: pkgList.length > 0
+        ? pkgList.map(p => p.name).join(', ')
+        : svcList.map(s => s.name).join(', ') || 'Walk-in',
+      paymentMethod: paymentMethod === 'upi' ? 'upi' : 'cash',
       shopId,
       isOffline: true,
       userData: { name: customerName, phone: customerPhone || '' },
@@ -785,6 +817,86 @@ export const createOfflineAppointment = async (req, res) => {
     if (error.code === 11000) return res.json({ success: false, message: 'Slot already taken.' });
     res.json({ success: false, message: error.message });
   }
+};
+
+// ── ADMIN AVAILABLE DATES ─────────────────────────────────────────────────────
+export const getAdminAvailableDates = async (req, res) => {
+  try {
+    const { docId } = req.params;
+    const doctor = await doctorModel.findById(docId).select('available leaveDates shopId');
+    if (!doctor) return res.json({ success: false, message: 'Stylist not found' });
+    if (!doctor.available) return res.json({ success: true, dates: [] });
+
+    const shopId = doctor.shopId || req.salonAdmin.shopId;
+    let settings = await SlotSettings.findOne({ shopId });
+    if (!settings) settings = await SlotSettings.create({
+      shopId, slotStartTime: '09:00', slotEndTime: '18:00', slotDuration: 30,
+      breakTime: false, daysOpen: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+      maxAdvanceBookingDays: 30, minBookingTimeBeforeSlot: 0,
+    });
+
+    const blockedDates   = await BlockedDate.find({ shopId });
+    const recurringHols  = await RecurringHoliday.find({ shopId });
+    const specialDays    = await SpecialWorkingDay.find({ shopId });
+
+    const toStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const blockedSet = new Set(blockedDates.map(b => toStr(new Date(b.date))));
+    const specialSet = new Set(specialDays.map(s => toStr(new Date(s.date))));
+    const leaveSet   = new Set(doctor.leaveDates || []);
+
+    const today  = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDays = settings.maxAdvanceBookingDays || 30;
+    const result  = [];
+
+    for (let i = 0; i <= maxDays; i++) {
+      const d   = new Date(today);
+      d.setDate(today.getDate() + i);
+      const str = toStr(d);
+      const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+
+      if (leaveSet.has(str) || blockedSet.has(str)) continue;
+      const isSpecial = specialSet.has(str);
+      let isHoliday = recurringHols.some(h =>
+        (h.type === 'weekly' && h.value === day) ||
+        (h.type === 'monthly' && h.value === String(d.getDate()))
+      );
+      if (isHoliday && !isSpecial) continue;
+      if (!settings.daysOpen.includes(day) && !isSpecial) continue;
+      result.push(str);
+    }
+
+    res.json({ success: true, dates: result });
+  } catch (e) { res.json({ success: false, message: e.message }); }
+};
+
+// ── ADMIN AVAILABLE SLOTS ─────────────────────────────────────────────────────
+export const getAdminAvailableSlots = async (req, res) => {
+  try {
+    const { date, docId } = req.query;
+    if (!date || !docId) return res.json({ success: false, message: 'date and docId required' });
+
+    const doctor = await doctorModel.findById(docId).select('available leaveDates shopId');
+    if (!doctor) return res.json({ success: false, message: 'Stylist not found' });
+    if (!doctor.available) return res.json({ success: true, slots: [] });
+    if ((doctor.leaveDates || []).includes(date)) return res.json({ success: true, slots: [] });
+
+    const shopId = doctor.shopId || req.salonAdmin.shopId;
+    let settings = await SlotSettings.findOne({ shopId });
+    if (!settings) settings = await SlotSettings.create({
+      shopId, slotStartTime: '09:00', slotEndTime: '18:00', slotDuration: 30,
+      breakTime: false, daysOpen: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+      maxAdvanceBookingDays: 30, minBookingTimeBeforeSlot: 0,
+    });
+
+    const { slots: allSlots } = await generateAvailableSlots(date, settings, docId);
+    const booked = await appointmentModel.find({
+      $or: [{ doctorId: docId, slotDate: date, cancelled: false }, { docId, slotDate: date, cancelled: false }],
+    }).select('slotTime').lean();
+    const bookedTimes = new Set(booked.map(a => a.slotTime));
+    const free = allSlots.filter(s => !bookedTimes.has(s.startTime));
+    res.json({ success: true, slots: free });
+  } catch (e) { res.json({ success: false, message: e.message }); }
 };
 
 // ── TAX CRUD ──────────────────────────────────────────────────────────────────

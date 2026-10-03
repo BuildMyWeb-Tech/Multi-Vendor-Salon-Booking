@@ -173,7 +173,7 @@ export const getServices = async (req, res) => {
 export const getAvailableDates = async (req, res) => {
   try {
     const { docId } = req.params;
-    const doctor = await doctorModel.findById(docId).select('available leaveDates');
+    const doctor = await doctorModel.findById(docId).select('available leaveDates shopId');
     if (!doctor) return res.json({ success: false, message: 'Stylist not found' });
     if (!doctor.available) return res.json({ success: false, message: 'Stylist is not available' });
 
