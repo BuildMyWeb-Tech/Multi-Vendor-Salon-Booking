@@ -12,6 +12,9 @@
   "description": "",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.18",
+    "qrcode": "^1.5.4",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.3.0",
