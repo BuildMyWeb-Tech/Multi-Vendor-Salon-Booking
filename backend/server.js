@@ -134,3 +134,10 @@ initSocket(httpServer, allowedOrigins);
 httpServer.listen(port, () => {
   console.log(`🚀 Server started on PORT: ${port}`);
 });
+
+// ── WHATSAPP WORKER (multi-salon supervisor) ──────────────────────────────────
+if (process.env.WHATSAPP_SESSION_ENCRYPTION_KEY) {
+  import('./whatsapp-worker/index.js').catch((err) =>
+    console.error('WhatsApp worker failed to start:', err)
+  );
+}
