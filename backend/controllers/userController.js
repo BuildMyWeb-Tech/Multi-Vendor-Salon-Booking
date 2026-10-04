@@ -16,6 +16,7 @@ import AdminNotification from '../models/AdminNotification.js';
 import shopModel from '../models/shopModel.js';
 import UtrRecord from '../models/UtrRecord.js';
 import { emitToShop, emitToUser } from '../config/socket.js';
+import { normalizeIndianPhone } from '../utils/phoneUtils.js';
 
 // ── Stripe (test mode — replace STRIPE_SECRET_KEY with live key when ready) ──
 const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
@@ -54,17 +55,18 @@ const registerUser = async (req, res) => {
       return res.json({ success: false, message: 'Missing Details' });
     if (!validator.isEmail(email))
       return res.json({ success: false, message: 'Please enter a valid email' });
-    if (!validator.isMobilePhone(phone, 'any'))
-      return res.json({ success: false, message: 'Please enter a valid phone number' });
+    const normalizedPhone = normalizeIndianPhone(phone);
+    if (!normalizedPhone)
+      return res.json({ success: false, message: 'Please enter a valid 10-digit mobile number' });
     if (password.length < 8)
       return res.json({ success: false, message: 'Please enter a strong password' });
     if (await userModel.findOne({ email }))
       return res.json({ success: false, message: 'User already exists with this email' });
-    if (await userModel.findOne({ phone, shopId: shopId || 'SHOP001' }))
+    if (await userModel.findOne({ phone: normalizedPhone, shopId: shopId || 'SHOP001' }))
       return res.json({ success: false, message: 'Phone number already registered at this salon' });
 
     const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
-    const userDoc = { name, email, password: hashedPassword, phone };
+    const userDoc = { name, email, password: hashedPassword, phone: normalizedPhone };
     if (shopId) userDoc.shopId = shopId;
     const user = await new userModel(userDoc).save();
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
@@ -113,10 +115,13 @@ const updateProfile = async (req, res) => {
     // Only name and phone are truly required; gender/dob/address are optional
     if (!name || !phone)
       return res.json({ success: false, message: 'Name and phone are required' });
+    const normalizedPhone = normalizeIndianPhone(phone);
+    if (!normalizedPhone)
+      return res.json({ success: false, message: 'Please enter a valid 10-digit mobile number' });
 
     const updateData = {
       name,
-      phone,
+      phone: normalizedPhone,
       address: address ? JSON.parse(address) : { line1: '', line2: '' },
       dob: dob || '',
       gender: gender || 'Not Selected',

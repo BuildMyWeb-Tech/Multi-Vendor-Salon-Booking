@@ -53,6 +53,14 @@ import {
   getBroadcastHistory,
   getBroadcastById,
 } from '../controllers/broadcastController.js';
+import {
+  getWhatsAppStatus,
+  connectWhatsApp,
+  disconnectWhatsApp,
+  createQrBroadcast,
+  getQrBroadcastStatus,
+  cancelQrBroadcast,
+} from '../controllers/whatsappController.js';
 
 const salonAdminRouter = express.Router();
 
@@ -158,5 +166,15 @@ salonAdminRouter.get('/broadcast/contacts', authSalonAdmin, getBroadcastContacts
 salonAdminRouter.get('/broadcast', authSalonAdmin, getBroadcastHistory);
 salonAdminRouter.get('/broadcast/:id', authSalonAdmin, getBroadcastById);
 salonAdminRouter.post('/broadcast', authSalonAdmin, upload.single('media'), createBroadcast);
+
+// WhatsApp QR connection
+salonAdminRouter.get('/whatsapp/status', authSalonAdmin, getWhatsAppStatus);
+salonAdminRouter.post('/whatsapp/connect', authSalonAdmin, connectWhatsApp);
+salonAdminRouter.post('/whatsapp/disconnect', authSalonAdmin, disconnectWhatsApp);
+
+// QR Broadcast
+salonAdminRouter.post('/broadcast/qr', authSalonAdmin, upload.single('media'), createQrBroadcast);
+salonAdminRouter.get('/broadcast/qr/status/:id', authSalonAdmin, getQrBroadcastStatus);
+salonAdminRouter.post('/broadcast/qr/:id/cancel', authSalonAdmin, cancelQrBroadcast);
 
 export default salonAdminRouter;

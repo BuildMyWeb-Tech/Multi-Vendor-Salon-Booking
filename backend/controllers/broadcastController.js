@@ -2,6 +2,7 @@ import broadcastModel from '../models/broadcastModel.js';
 import userModel from '../models/userModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import { v2 as cloudinary } from 'cloudinary';
+import { normalizeIndianPhone } from '../utils/phoneUtils.js';
 
 // ── GET /api/salon-admin/broadcast/contacts ───────────────────────────────────
 // Returns deduplicated contacts (name + phone) from users and appointments
@@ -30,13 +31,14 @@ export const getBroadcastContacts = async (req, res) => {
     const phoneMap = new Map();
 
     for (const { name, phone } of users) {
-      const p = phone?.trim();
+      const p = normalizeIndianPhone(phone?.trim()) || phone?.trim();
       if (p) phoneMap.set(p, { name: (name || '').trim(), phone: p });
     }
 
     for (const { userData } of appts) {
-      const p = userData?.phone?.trim();
-      if (!p) continue;
+      const raw = userData?.phone?.trim();
+      if (!raw) continue;
+      const p = normalizeIndianPhone(raw) || raw;
       const apptName = (userData.name || '').trim();
       if (phoneMap.has(p)) {
         const existing = phoneMap.get(p);
@@ -194,13 +196,34 @@ export const getBroadcastHistory = async (req, res) => {
 };
 
 // ── GET /api/salon-admin/broadcast/:id ───────────────────────────────────────
-// Full broadcast detail including recipients (scoped to this salon)
+// Full broadcast detail including recipients (scoped to this salon).
+// Recomputes aggregate counts from recipients so the UI is always accurate.
 export const getBroadcastById = async (req, res) => {
   try {
     const { shopId } = req.salonAdmin;
     const broadcast = await broadcastModel.findOne({ _id: req.params.id, shopId }).lean();
     if (!broadcast) return res.json({ success: false, message: 'Broadcast not found.' });
-    res.json({ success: true, broadcast });
+
+    // Recompute live counts from recipients array
+    const recipients = broadcast.recipients || [];
+    const sentCount     = recipients.filter((r) => ['sent', 'delivered', 'read'].includes(r.status)).length;
+    const failedCount   = recipients.filter((r) => r.status === 'failed').length;
+    const pendingCount  = recipients.filter((r) => ['pending', 'queued', 'processing'].includes(r.status)).length;
+    const deliveredCount = recipients.filter((r) => ['delivered', 'read'].includes(r.status)).length;
+    const readCount     = recipients.filter((r) => r.status === 'read').length;
+
+    res.json({
+      success: true,
+      broadcast: {
+        ...broadcast,
+        sentCount,
+        failedCount,
+        pendingCount,
+        deliveredCount,
+        readCount,
+        totalCount: recipients.length || broadcast.totalCount,
+      },
+    });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

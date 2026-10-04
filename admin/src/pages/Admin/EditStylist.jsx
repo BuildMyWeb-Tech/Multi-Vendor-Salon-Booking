@@ -411,9 +411,7 @@ const EditStylist = () => {
                                     {available ? 'Available for bookings' : 'Not available'}
                                 </span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Toggle to control whether clients can book appointments with this stylist
-                            </p>
+                            
                         </div>
                     </div>
 
@@ -432,9 +430,7 @@ const EditStylist = () => {
                                 type="text" 
                                 placeholder='e.g. Mon-Fri: 10AM-7PM' 
                             />
-                            <p className="text-xs text-gray-500">
-                                Working hours will be displayed to clients when booking
-                            </p>
+                            
                         </div>
 
                         {/* Certification */}
@@ -473,10 +469,10 @@ const EditStylist = () => {
                                 maxLength={10}
                                 required 
                             />
-                            <p className="text-xs text-gray-500">10-digit number • digits only</p>
+                            
                             {phone.length > 0 && phone.length < 10 && (
                                 <p className="text-xs text-red-500">Phone number must be exactly 10 digits</p>
-                            )}
+                            )}  
                         </div>
 
                         {/* Instagram */}
@@ -586,9 +582,7 @@ const EditStylist = () => {
                         placeholder="Describe the stylist's expertise, style philosophy, and approach to client service"
                         
                     ></textarea>
-                    <p className="text-xs text-gray-500 mt-1">
-                        Include relevant experience, specializations, and unique styling approach to help clients connect with the stylist
-                    </p>
+                    
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-100">

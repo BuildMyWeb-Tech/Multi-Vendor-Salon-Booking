@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { SalonAdminContext } from '../../../context/SalonAdminContext';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Receipt, Search, Eye, X, RefreshCw, AlertTriangle, Printer, Trash2, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -12,6 +13,15 @@ const statusBadge = {
 
 const Bills = () => {
   const { billingApi, shopInfo } = useContext(SalonAdminContext);
+  const navigate = useNavigate();
+  const { shopSlug } = useParams();
+
+  useEffect(() => {
+    if (shopInfo && !shopInfo.serviceBillingEnabled && !shopInfo.productBillingEnabled) {
+      navigate(`/${shopSlug}/admin/dashboard`);
+    }
+  }, [shopInfo, shopSlug]);
+
   const [bills, setBills]               = useState([]);
   const [total, setTotal]               = useState(0);
   const [loading, setLoading]           = useState(true);

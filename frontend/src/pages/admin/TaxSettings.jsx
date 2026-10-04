@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { SalonAdminContext } from '../../context/SalonAdminContext';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import {
@@ -7,7 +8,15 @@ import {
 } from 'lucide-react';
 
 const TaxSettings = () => {
-  const { backendUrl, saAdminToken } = useContext(SalonAdminContext);
+  const { backendUrl, saAdminToken, shopInfo } = useContext(SalonAdminContext);
+  const navigate = useNavigate();
+  const { shopSlug } = useParams();
+
+  useEffect(() => {
+    if (shopInfo && !shopInfo.serviceBillingEnabled && !shopInfo.productBillingEnabled) {
+      navigate(`/${shopSlug}/admin/dashboard`);
+    }
+  }, [shopInfo, shopSlug]);
   const headers = { satoken: saAdminToken };
 
   const [taxes, setTaxes] = useState([]);

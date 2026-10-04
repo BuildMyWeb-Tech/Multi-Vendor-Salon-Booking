@@ -48,6 +48,7 @@ import TaxSettings from './pages/admin/TaxSettings'
 import Coupons from './pages/admin/Coupons'
 import Packages from './pages/admin/Packages'
 import Broadcast from './pages/admin/Broadcast'
+import WhatsAppConnect from './pages/admin/WhatsAppConnect'
 import OfflineBooking from './pages/admin/OfflineBooking'
 import StylistSection from './pages/stylist/StylistSection'
 
@@ -183,6 +184,7 @@ const ShopAdminSection = () => {
               <Route path="packages" element={<Packages />} />
               {/* Broadcast */}
               <Route path="broadcast" element={<Broadcast />} />
+              <Route path="whatsapp-connect" element={<WhatsAppConnect />} />
               {/* Offline / Walk-in Booking */}
               <Route path="offline-booking" element={<OfflineBooking />} />
               <Route path="add-product" element={<AddProduct />} />

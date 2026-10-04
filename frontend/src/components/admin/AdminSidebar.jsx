@@ -6,7 +6,7 @@ import { SalonAdminContext } from '../../context/SalonAdminContext';
 import {
   Calendar, UserPlus2, ChevronLeft, ChevronRight, MenuIcon, X,
   Scissors, LayoutGrid, CalendarClock, UserCog, LayoutDashboard,
-  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt, Tag, Gift, MessageCircle, Percent,
+  User, IndianRupee, ShoppingCart, Package, Boxes, Receipt, Tag, Gift, MessageCircle, Percent, Smartphone,
 } from 'lucide-react';
 
 const iconClass = 'min-w-[23px] w-[23px] h-[23px]';
@@ -53,7 +53,10 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
     ...(couponEnabled ? [{ to: `/${slug}/admin/coupons`, label: 'Coupons', icon: Tag }] : []),
     ...(packageEnabled ? [{ to: `/${slug}/admin/packages`, label: 'Packages', icon: Gift }] : []),
     ...(broadcastEnabled
-      ? [{ to: `/${slug}/admin/broadcast`, label: 'WhatsApp Broadcast', icon: MessageCircle }]
+      ? [
+          { to: `/${slug}/admin/broadcast`, label: 'Broadcast', icon: MessageCircle },
+          { to: `/${slug}/admin/whatsapp-connect`, label: 'WA Connect', icon: Smartphone },
+        ]
       : []),
     ...(showBilling
       ? [
@@ -214,7 +217,7 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
               ...(showBilling    ? [{ to: `/${slug}/admin/billing`,   icon: ShoppingCart,  label: 'Billing'   }] : []),
               ...(couponEnabled  ? [{ to: `/${slug}/admin/coupons`,   icon: Tag,           label: 'Coupons'   }] : []),
               ...(packageEnabled ? [{ to: `/${slug}/admin/packages`,  icon: Gift,          label: 'Packages'  }] : []),
-              ...(broadcastEnabled      ? [{ to: `/${slug}/admin/broadcast`,       icon: MessageCircle, label: 'Broadcast' }] : []),
+              ...(broadcastEnabled      ? [{ to: `/${slug}/admin/broadcast`, icon: MessageCircle, label: 'Broadcast' }, { to: `/${slug}/admin/whatsapp-connect`, icon: Smartphone, label: 'WA Connect' }] : []),
               ...(offlineBookingEnabled ? [{ to: `/${slug}/admin/offline-booking`, icon: UserPlus2,      label: 'Walk-in'   }] : []),
             ].map(({ to, icon: Icon, label }) => (
               <NavLink

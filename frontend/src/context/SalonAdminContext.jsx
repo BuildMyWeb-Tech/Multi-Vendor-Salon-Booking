@@ -45,9 +45,18 @@ const SalonAdminContextProvider = ({ children }) => {
   const shopIdRef = useRef(null);
   useEffect(() => {
     if (!saAdminToken) return;
-    fetchShopInfo();
+    fetchShopInfo({ force: true }); // always fresh on login/token change
     getAllAppointments();
     getAdminNotifications();
+  }, [saAdminToken]);
+
+  // Re-fetch shopInfo when admin returns to the tab so toggle changes apply immediately
+  useEffect(() => {
+    if (!saAdminToken) return;
+    const onFocus = () => fetchShopInfo({ force: true });
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saAdminToken]);
 
   // Join admin socket room once shopInfo is available
@@ -65,7 +74,7 @@ const SalonAdminContextProvider = ({ children }) => {
     return () => sock.off('admin_notification', handler);
   }, [shopInfo?.shopId]);
 
-  const SHOP_INFO_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const SHOP_INFO_TTL_MS = 30 * 1000; // 30 seconds — keeps toggles in sync quickly
 
   const fetchShopInfo = async ({ force = false } = {}) => {
     try {

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { SalonAdminContext } from '../../context/SalonAdminContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Gift, Plus, Trash2, Pencil, X, CheckSquare, Square } from 'lucide-react';
 import axios from 'axios';
@@ -10,10 +10,11 @@ const EMPTY = { name: '', serviceIds: [], discountPercent: '' };
 const Packages = () => {
   const { discountApi, backendUrl, saAdminToken, shopInfo } = useContext(SalonAdminContext);
   const navigate = useNavigate();
+  const { shopSlug } = useParams();
 
   useEffect(() => {
-    if (shopInfo && !shopInfo.packageEnabled) navigate('/admin/dashboard');
-  }, [shopInfo]);
+    if (shopInfo && !shopInfo.packageEnabled) navigate(`/${shopSlug}/admin/dashboard`);
+  }, [shopInfo, shopSlug]);
   const [packages, setPackages] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading]   = useState(true);

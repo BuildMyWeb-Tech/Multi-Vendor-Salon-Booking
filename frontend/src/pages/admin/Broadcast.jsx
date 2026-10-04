@@ -1,12 +1,13 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+/* eslint-disable react/prop-types */
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { SalonAdminContext } from '../../context/SalonAdminContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import {
   MessageCircle, Search, CheckSquare, Square, Users, Send,
-  Image as ImageIcon, X, Clock, Eye,
-  RefreshCw, Plus, Loader2,
+  Image as ImageIcon, X, Clock, Eye, Loader2, Plus,
+  CheckCheck, AlertCircle, SkipForward, CheckCircle2, WifiOff,
 } from 'lucide-react';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -15,15 +16,46 @@ const fmt = (dt) =>
   dt ? new Date(dt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
 const statusBadge = (s) => ({
-  sent:    'bg-emerald-100 text-emerald-700',
-  failed:  'bg-red-100 text-red-700',
-  pending: 'bg-yellow-100 text-yellow-700',
+  sent:      'bg-emerald-100 text-emerald-700',
+  delivered: 'bg-emerald-100 text-emerald-700',
+  read:      'bg-emerald-100 text-emerald-700',
+  failed:    'bg-red-100 text-red-700',
+  pending:   'bg-yellow-100 text-yellow-700',
+  queued:    'bg-yellow-100 text-yellow-700',
+  cancelled: 'bg-gray-100 text-gray-500',
 }[s] || 'bg-gray-100 text-gray-600');
 
-const waUrl = (phone, msg) => {
-  const clean = phone.replace(/[^0-9]/g, '');
-  const num = clean.startsWith('91') ? clean : `91${clean}`;
-  return `https://wa.me/${num}?text=${encodeURIComponent(msg || '')}`;
+const liveStatusLabel = (s) => {
+  if (['sent', 'delivered', 'read'].includes(s)) return 'Sent';
+  if (s === 'failed') return 'Failed';
+  if (s === 'cancelled') return 'Skipped';
+  return 'Sending';
+};
+
+const liveStatusPill = (s) => {
+  if (['sent', 'delivered', 'read'].includes(s))
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+        <CheckCheck size={11} /> Sent
+      </span>
+    );
+  if (s === 'failed')
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+        <AlertCircle size={11} /> Failed
+      </span>
+    );
+  if (s === 'cancelled')
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+        <SkipForward size={11} /> Skipped
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+      <Loader2 size={11} className="animate-spin" /> Sending
+    </span>
+  );
 };
 
 // ── sub-components ────────────────────────────────────────────────────────────
@@ -31,9 +63,7 @@ const waUrl = (phone, msg) => {
 const ContactRow = ({ contact, checked, onToggle }) => (
   <label className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 select-none">
     <button type="button" onClick={onToggle} className="flex-shrink-0 text-primary">
-      {checked
-        ? <CheckSquare size={18} />
-        : <Square size={18} className="text-gray-300" />}
+      {checked ? <CheckSquare size={18} /> : <Square size={18} className="text-gray-300" />}
     </button>
     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
       <span className="text-xs font-bold text-primary">
@@ -47,8 +77,13 @@ const ContactRow = ({ contact, checked, onToggle }) => (
   </label>
 );
 
-const HistoryCard = ({ broadcast, onView }) => (
-  <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+const HistoryCard = ({ broadcast, onView, isLive, workerAlive }) => (
+  <div className={`bg-white border rounded-xl p-5 transition-shadow ${isLive ? 'border-primary/40 shadow-md' : 'border-gray-200 hover:shadow-md'}`}>
+    {isLive && !workerAlive && (
+      <p className="mb-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5">
+        ⚠ Worker offline — start it to resume sending
+      </p>
+    )}
     <div className="flex items-start justify-between gap-3 mb-3">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-800 truncate">
@@ -56,9 +91,11 @@ const HistoryCard = ({ broadcast, onView }) => (
         </p>
         <p className="text-xs text-gray-400 mt-0.5">{fmt(broadcast.createdAt)}</p>
       </div>
-      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${broadcast.sendMode === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-        {broadcast.sendMode === 'api' ? 'API' : 'Manual'}
-      </span>
+      {isLive && (
+        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${workerAlive ? 'bg-primary/10 text-primary' : 'bg-amber-100 text-amber-700'}`}>
+          <Loader2 size={10} className="animate-spin" /> {workerAlive ? 'Sending' : 'Queued'}
+        </span>
+      )}
     </div>
     <div className="grid grid-cols-4 gap-2 text-center">
       {[
@@ -68,7 +105,7 @@ const HistoryCard = ({ broadcast, onView }) => (
         { label: 'Pending', value: broadcast.pendingCount, color: 'text-amber-500'   },
       ].map(({ label, value, color }) => (
         <div key={label} className="bg-gray-50 rounded-lg py-2">
-          <p className={`text-sm font-bold ${color}`}>{value}</p>
+          <p className={`text-sm font-bold ${color}`}>{value ?? 0}</p>
           <p className="text-[10px] text-gray-400">{label}</p>
         </div>
       ))}
@@ -87,45 +124,82 @@ const HistoryCard = ({ broadcast, onView }) => (
 const Broadcast = () => {
   const { saAdminToken, backendUrl, shopInfo } = useContext(SalonAdminContext);
   const navigate = useNavigate();
+  const { shopSlug } = useParams();
   const hdrs = () => ({ satoken: saAdminToken });
 
   useEffect(() => {
-    if (shopInfo && !shopInfo.broadcastEnabled) navigate('/admin/dashboard');
-  }, [shopInfo]);
+    if (shopInfo && !shopInfo.broadcastEnabled) navigate(`/${shopSlug}/admin/dashboard`);
+  }, [shopInfo, navigate]);
 
   // contacts
-  const [contacts, setContacts]             = useState([]);
-  const [contactsTotal, setContactsTotal]   = useState(0);
-  const [contactsPage, setContactsPage]     = useState(1);
-  const [contactsPages, setContactsPages]   = useState(1);
+  const [contacts, setContacts]               = useState([]);
+  const [contactsTotal, setContactsTotal]     = useState(0);
+  const [contactsPage, setContactsPage]       = useState(1);
+  const [contactsPages, setContactsPages]     = useState(1);
   const [contactsLoading, setContactsLoading] = useState(true);
   const [contactsLoadingMore, setContactsLoadingMore] = useState(false);
-  const [search, setSearch]                 = useState('');
-  const [selected, setSelected]             = useState(new Set());
+  const [search, setSearch]                   = useState('');
+  const [selected, setSelected]               = useState(new Set());
+
+  // WhatsApp status
+  const [waStatus, setWaStatus]               = useState(null);
 
   // compose
-  const [message, setMessage]               = useState('');
-  const [mediaFile, setMediaFile]           = useState(null);
-  const [mediaPreview, setMediaPreview]     = useState(null);
-  const [mediaType, setMediaType]           = useState('');
-  const [sendMode, setSendMode]             = useState('manual');
-  const [sending, setSending]               = useState(false);
-  const mediaInputRef                       = useRef(null);
+  const [message, setMessage]                 = useState('');
+  const [mediaFile, setMediaFile]             = useState(null);
+  const [mediaPreview, setMediaPreview]       = useState(null);
+  const [mediaType, setMediaType]             = useState('');
+  const [sending, setSending]                 = useState(false);
+  const mediaInputRef                         = useRef(null);
 
   // history
-  const [broadcasts, setBroadcasts]         = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
-  const [view, setView]                     = useState('compose'); // 'compose' | 'history'
+  const [broadcasts, setBroadcasts]           = useState([]);
+  const [historyLoading, setHistoryLoading]   = useState(true);
+  const [view, setView]                       = useState('compose');
+
+  // live broadcast id being tracked
+  const [liveBroadcastId, setLiveBroadcastId] = useState(null);
 
   // detail modal
-  const [detail, setDetail]                 = useState(null);
-  const [detailLoading, setDetailLoading]   = useState(false);
+  const [detail, setDetail]                   = useState(null);
+  const [detailLoading, setDetailLoading]     = useState(false);
 
-  // manual send queue modal
-  const [sendQueue, setSendQueue]           = useState(null); // { contacts, message, current }
+  const fetchWaStatus = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/salon-admin/whatsapp/status`, { headers: { satoken: saAdminToken } });
+      if (data.success) setWaStatus(data);
+    } catch (e) { /* ignore */ }
+  }, [backendUrl, saAdminToken]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadContacts(); loadHistory(); fetchWaStatus(); }, []);
 
-  useEffect(() => { loadContacts(); loadHistory(); }, []);
+  // Poll WA status every 5s while on compose view
+  useEffect(() => {
+    if (view !== 'compose') return;
+    const id = setInterval(fetchWaStatus, 5000);
+    return () => clearInterval(id);
+  }, [view, fetchWaStatus]);
+
+  // Poll live broadcast status every 2s while it's in progress
+  useEffect(() => {
+    if (!liveBroadcastId) return;
+    const id = setInterval(async () => {
+      try {
+        const { data } = await axios.get(
+          `${backendUrl}/api/salon-admin/broadcast/${liveBroadcastId}`,
+          { headers: hdrs() }
+        );
+        if (!data.success) return;
+        const b = data.broadcast;
+        setBroadcasts((prev) => prev.map((bc) => bc._id === liveBroadcastId ? { ...bc, ...b, recipients: undefined } : bc));
+        const pending = (b.recipients || []).filter((r) => ['pending', 'queued', 'processing'].includes(r.status)).length;
+        if (pending === 0) setLiveBroadcastId(null);
+      } catch (e) { /* ignore */ }
+    }, 2000);
+    return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveBroadcastId]);
 
   const loadContacts = async (page = 1, append = false) => {
     if (page === 1) setContactsLoading(true); else setContactsLoadingMore(true);
@@ -149,7 +223,7 @@ const Broadcast = () => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/salon-admin/broadcast`, { headers: hdrs() });
       if (data.success) setBroadcasts(data.broadcasts);
-    } catch {}
+    } catch (e) { /* ignore */ }
     finally { setHistoryLoading(false); }
   };
 
@@ -181,51 +255,34 @@ const Broadcast = () => {
 
   const selectedContacts = contacts.filter((c) => selected.has(c.phone));
 
-  const saveBroadcast = async (recipientDocs) => {
-    const fd = new FormData();
-    fd.append('message', message.trim());
-    fd.append('sendMode', sendMode);
-    fd.append('recipients', JSON.stringify(recipientDocs));
-    if (mediaFile) fd.append('media', mediaFile);
-    const { data } = await axios.post(`${backendUrl}/api/salon-admin/broadcast`, fd, {
-      headers: { ...hdrs(), 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
-  };
-
-  const handleManualSend = async () => {
+  const handleSend = async () => {
     if (selected.size === 0) { toast.warning('Select at least one contact'); return; }
     if (!message.trim() && !mediaFile) { toast.warning('Enter a message or upload media'); return; }
-    // Save broadcast record first, then show the send-queue modal
+    if (waStatus?.connectionState !== 'CONNECTED') {
+      toast.error('WhatsApp is not connected.');
+      return;
+    }
     setSending(true);
     try {
-      const data = await saveBroadcast(selectedContacts.map((c) => ({ ...c, status: 'pending' })));
-      if (!data.success) { toast.error(data.message); return; }
-      // Open queue modal — user opens WhatsApp one contact at a time
-      setSendQueue({ contacts: selectedContacts, message: message.trim(), current: 0 });
-      setMessage(''); setSelected(new Set()); clearMedia();
-    } catch (err) { toast.error(err.response?.data?.message || err.message || 'Error'); }
-    finally { setSending(false); }
-  };
-
-  const closeSendQueue = () => {
-    setSendQueue(null);
-    loadHistory();
-    setView('history');
-  };
-
-  const handleApiSend = async () => {
-    if (selected.size === 0) { toast.warning('Select at least one contact'); return; }
-    if (!message.trim() && !mediaFile) { toast.warning('Enter a message or upload media'); return; }
-    setSending(true);
-    try {
-      const data = await saveBroadcast(selectedContacts);
+      const fd = new FormData();
+      fd.append('message', message.trim());
+      fd.append('recipients', JSON.stringify(selectedContacts));
+      fd.append('sendIntervalMs', '800');
+      if (mediaFile) fd.append('media', mediaFile);
+      const { data } = await axios.post(`${backendUrl}/api/salon-admin/broadcast/qr`, fd, {
+        headers: { ...hdrs(), 'Content-Type': 'multipart/form-data' },
+      });
       if (data.success) {
         const b = data.broadcast;
-        toast.success(`Done — Sent: ${b.sentCount} / Failed: ${b.failedCount}`);
+        // Add to top of history list and track live
+        setBroadcasts((prev) => [b, ...prev]);
+        setLiveBroadcastId(b._id);
         setMessage(''); setSelected(new Set()); clearMedia();
-        loadHistory(); setView('history');
-      } else { toast.error(data.message); }
+        toast.success(`Broadcast started — sending to ${b.totalCount} contacts`);
+        setView('history');
+      } else {
+        toast.error(data.message);
+      }
     } catch (err) { toast.error(err.response?.data?.message || err.message || 'Error'); }
     finally { setSending(false); }
   };
@@ -241,6 +298,8 @@ const Broadcast = () => {
   };
 
   const allSelected = filteredContacts.length > 0 && selected.size === filteredContacts.length;
+  const isConnected = waStatus?.connectionState === 'CONNECTED';
+  const isWorkerAlive = waStatus?.isWorkerAlive || false;
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -275,12 +334,6 @@ const Broadcast = () => {
       {/* ── History ──────────────────────────────────────────────────────── */}
       {view === 'history' && (
         <div>
-          {/* <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-500">{broadcasts.length} broadcast{broadcasts.length !== 1 ? 's' : ''}</p>
-            <button onClick={loadHistory} className="text-primary text-sm flex items-center gap-1 hover:underline">
-              <RefreshCw size={13} /> Refresh
-            </button>
-          </div> */}
           {historyLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 size={28} className="text-primary animate-spin" />
@@ -296,7 +349,13 @@ const Broadcast = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {broadcasts.map((b) => (
-                <HistoryCard key={b._id} broadcast={b} onView={() => openDetail(b._id)} />
+                <HistoryCard
+                  key={b._id}
+                  broadcast={b}
+                  isLive={b._id === liveBroadcastId}
+                  workerAlive={isWorkerAlive}
+                  onView={() => openDetail(b._id)}
+                />
               ))}
             </div>
           )}
@@ -344,7 +403,7 @@ const Broadcast = () => {
                 <div className="text-center py-10">
                   <Users size={28} className="text-gray-200 mx-auto mb-2" />
                   <p className="text-xs text-gray-400">
-                    {contacts.length === 0 ? 'No customers found for this salon' : 'No results'}
+                    {contacts.length === 0 ? 'No customers found' : 'No results'}
                   </p>
                 </div>
               ) : (
@@ -379,53 +438,6 @@ const Broadcast = () => {
 
           {/* Message + Send Panel */}
           <div className="lg:col-span-3 flex flex-col gap-4">
-
-            {/* Send mode */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5">
-              <p className="text-sm font-semibold text-gray-700 mb-3">Send Method</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  {
-                    value: 'manual',
-                    label: 'Manual (wa.me)',
-                    desc: 'Opens WhatsApp for each contact — no API needed',
-                    icon: MessageCircle,
-                    colorClass: 'text-amber-600',
-                    bg: 'bg-amber-50',
-                  },
-                  {
-                    value: 'api',
-                    label: 'WhatsApp Cloud API',
-                    desc: 'Automatic send via WhatsApp Business API',
-                    icon: Send,
-                    colorClass: 'text-blue-600',
-                    bg: 'bg-blue-50',
-                  },
-                ].map(({ value, label, desc, icon: Icon, colorClass, bg }) => (
-                  <label
-                    key={value}
-                    onClick={() => setSendMode(value)}
-                    className={`cursor-pointer rounded-xl border-2 p-3 transition-all ${sendMode === value ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <div className={`w-8 h-8 ${bg} rounded-lg flex items-center justify-center mb-2`}>
-                      <Icon size={15} className={colorClass} />
-                    </div>
-                    <p className="text-sm font-semibold text-gray-800">{label}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-                  </label>
-                ))}
-              </div>
-              {sendMode === 'api' && (
-                <p className="mt-3 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700">
-                  Requires <strong>WHATSAPP_API_TOKEN</strong> and <strong>WHATSAPP_PHONE_ID</strong> set on the server.
-                </p>
-              )}
-              {sendMode === 'manual' && (
-                <p className="mt-3 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700">
-                  A step-by-step guide will open WhatsApp for each contact one at a time. Only messages you manually send are actually delivered — they are saved as "Pending" in history.
-                </p>
-              )}
-            </div>
 
             {/* Message area */}
             <div className="bg-white border border-gray-200 rounded-2xl p-5">
@@ -473,30 +485,43 @@ const Broadcast = () => {
 
             {/* Send */}
             <div className="bg-white border border-gray-200 rounded-2xl p-5">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">
-                    {selected.size === 0
-                      ? 'No contacts selected'
-                      : `${selected.size} contact${selected.size !== 1 ? 's' : ''} selected`}
-                  </p>
-                  {selected.size > 0 && sendMode === 'manual' && (
-                    <p className="text-xs text-amber-600 mt-0.5">
-                      Opens a step-by-step guide for {selected.size} contact{selected.size !== 1 ? 's' : ''}
-                    </p>
-                  )}
-                  {selected.size > 0 && sendMode === 'api' && (
-                    <p className="text-xs text-blue-600 mt-0.5">Messages sent automatically via API</p>
-                  )}
+              {/* WA status */}
+              {isConnected && isWorkerAlive ? (
+                <p className="mb-4 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 text-xs text-emerald-700 flex items-center gap-1.5">
+                  <CheckCircle2 size={13} /> WhatsApp connected — messages will be sent automatically
+                </p>
+              ) : isConnected && !isWorkerAlive ? (
+                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                  <p className="font-semibold mb-0.5">⚠ Worker process is offline</p>
+                  <p className="text-amber-700">Messages will queue but won&apos;t send until the worker is running. Start it with:</p>
+                  <code className="block mt-1 bg-amber-100 rounded px-2 py-1 font-mono">cd backend/whatsapp-worker &amp;&amp; npm start</code>
                 </div>
+              ) : (
+                <div className="mb-4 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-700 flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5"><WifiOff size={13} /> WhatsApp not connected.</span>
+                  <button
+                    onClick={() => navigate(`/${shopSlug}/admin/whatsapp-connect`)}
+                    className="font-semibold underline hover:text-red-900"
+                  >
+                    Connect →
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <p className="text-sm font-semibold text-gray-800">
+                  {selected.size === 0
+                    ? 'No contacts selected'
+                    : `${selected.size} contact${selected.size !== 1 ? 's' : ''} selected`}
+                </p>
                 <button
-                  onClick={sendMode === 'manual' ? handleManualSend : handleApiSend}
-                  disabled={sending || selected.size === 0}
+                  onClick={handleSend}
+                  disabled={sending || selected.size === 0 || !isConnected || !isWorkerAlive}
                   className="flex items-center gap-2 bg-primary text-white font-semibold px-6 py-2.5 rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                 >
                   {sending
                     ? <><Loader2 size={15} className="animate-spin" /> Sending…</>
-                    : <><Send size={15} /> {sendMode === 'manual' ? 'Open WhatsApp' : 'Send Broadcast'}</>}
+                    : <><Send size={15} /> Send via WhatsApp</>}
                 </button>
               </div>
             </div>
@@ -527,7 +552,6 @@ const Broadcast = () => {
               </div>
             ) : detail.recipients ? (
               <>
-                {/* Stats */}
                 <div className="grid grid-cols-4 gap-2 px-5 py-3 border-b border-gray-100 flex-shrink-0">
                   {[
                     { label: 'Total',   value: detail.totalCount,   color: 'text-gray-700'    },
@@ -536,13 +560,12 @@ const Broadcast = () => {
                     { label: 'Pending', value: detail.pendingCount, color: 'text-amber-500'   },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="text-center bg-gray-50 rounded-lg py-2">
-                      <p className={`text-base font-bold ${color}`}>{value}</p>
+                      <p className={`text-base font-bold ${color}`}>{value ?? 0}</p>
                       <p className="text-[10px] text-gray-400">{label}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Message preview */}
                 {detail.message && (
                   <div className="mx-5 mt-3 p-3 bg-gray-50 rounded-xl text-sm text-gray-600 border border-gray-100 flex-shrink-0">
                     {detail.message}
@@ -557,127 +580,45 @@ const Broadcast = () => {
                 )}
 
                 <p className="text-xs text-gray-400 px-5 pt-2 flex-shrink-0">
-                  {fmt(detail.createdAt)} · {detail.sendMode === 'api' ? 'API send' : 'Manual send'}
+                  {fmt(detail.createdAt)}
                 </p>
 
-                {/* Recipients */}
-                <div className="flex-1 overflow-y-auto px-5 py-3 space-y-1">
-                  {detail.recipients.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between gap-3 py-2.5 border-b border-gray-50 last:border-0">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{r.name || '—'}</p>
-                        <p className="text-xs text-gray-400">{r.phone}</p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusBadge(r.status)}`}>
-                          {r.status}
-                        </span>
-                        {r.status === 'pending' && (
-                          <a
-                            href={waUrl(r.phone, detail.message)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition-colors"
-                          >
-                            Open WA
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex-1 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-50 border-b border-gray-100">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500">Name</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500">Mobile</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.recipients.map((r, i) => (
+                        <tr key={i} className="border-b border-gray-50 last:border-0">
+                          <td className="px-4 py-2.5 font-medium text-gray-800 truncate max-w-[130px]">{r.name || '—'}</td>
+                          <td className="px-4 py-2.5 text-xs text-gray-500">{r.phone}</td>
+                          <td className="px-4 py-2.5">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusBadge(r.status)}`}>
+                              {liveStatusLabel(r.status)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+
+                {detail._id === liveBroadcastId && (
+                  <div className="px-5 py-3 border-t border-gray-100 text-center text-xs text-gray-400 flex items-center justify-center gap-1.5 flex-shrink-0">
+                    <Loader2 size={11} className="animate-spin" /> Sending in background…
+                  </div>
+                )}
               </>
             ) : null}
           </div>
         </div>
       )}
-
-      {/* ── Manual Send Queue Modal ─────────────────────────────────────────── */}
-    {sendQueue && (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-            <div>
-              <p className="font-semibold text-gray-800">Send via WhatsApp</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {sendQueue.current + 1} of {sendQueue.contacts.length} contacts
-              </p>
-            </div>
-            <button onClick={closeSendQueue} className="text-gray-400 hover:text-gray-600">
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Progress bar */}
-          <div className="h-1 bg-gray-100">
-            <div
-              className="h-1 bg-primary transition-all"
-              style={{ width: `${((sendQueue.current) / sendQueue.contacts.length) * 100}%` }}
-            />
-          </div>
-
-          <div className="p-5 space-y-4">
-            {sendQueue.current < sendQueue.contacts.length ? (
-              <>
-                <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-bold text-primary">
-                      {(sendQueue.contacts[sendQueue.current].name || sendQueue.contacts[sendQueue.current].phone).charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">{sendQueue.contacts[sendQueue.current].name || '—'}</p>
-                    <p className="text-xs text-gray-400">{sendQueue.contacts[sendQueue.current].phone}</p>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                  Click <strong>Open WhatsApp</strong>, send the message manually, then click <strong>Next</strong>.
-                </p>
-                <div className="flex gap-3">
-                  <a
-                    href={waUrl(sendQueue.contacts[sendQueue.current].phone, sendQueue.message)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-all"
-                  >
-                    <MessageCircle size={15} /> Open WhatsApp
-                  </a>
-                  <button
-                    onClick={() => setSendQueue(q => ({ ...q, current: q.current + 1 }))}
-                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 rounded-xl text-sm transition-all"
-                  >
-                    Next →
-                  </button>
-                </div>
-                <button
-                  onClick={closeSendQueue}
-                  className="w-full text-xs text-gray-400 hover:text-gray-600 py-1"
-                >
-                  Skip remaining and finish
-                </button>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CheckSquare size={22} className="text-green-600" />
-                </div>
-                <p className="font-semibold text-gray-800">All done!</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Broadcast saved for all {sendQueue.contacts.length} contacts.
-                </p>
-                <button
-                  onClick={closeSendQueue}
-                  className="mt-4 bg-primary text-white font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-primary/90 transition-all"
-                >
-                  View History
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
+    </div>
   );
 };
 

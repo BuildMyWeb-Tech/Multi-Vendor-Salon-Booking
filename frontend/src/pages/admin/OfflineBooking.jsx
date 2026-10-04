@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { SalonAdminContext } from '../../context/SalonAdminContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -34,12 +34,13 @@ const fmt12 = (t) => {
 const OfflineBooking = () => {
   const { saAdminToken, backendUrl, shopInfo, doctors, getAllDoctors } = useContext(SalonAdminContext);
   const navigate = useNavigate();
+  const { shopSlug } = useParams();
   const headers = { satoken: saAdminToken };
 
   // Guard: redirect if feature not enabled
   useEffect(() => {
-    if (shopInfo && !shopInfo.offlineBookingEnabled) navigate(`/${shopInfo.slug}/admin/dashboard`);
-  }, [shopInfo]);
+    if (shopInfo && !shopInfo.offlineBookingEnabled) navigate(`/${shopSlug}/admin/dashboard`);
+  }, [shopInfo, shopSlug]);
 
   useEffect(() => { if (saAdminToken) getAllDoctors(); }, [saAdminToken]);
 
@@ -317,16 +318,16 @@ const OfflineBooking = () => {
             <React.Fragment key={i}>
               <div className="flex items-center gap-1.5 min-w-0">
                 <div className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 transition-all ${
-                  step > i + 1 ? 'bg-emerald-500 text-white' : step === i + 1 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
+                  step > i + 1 ? 'bg-blue-500 text-white' : step === i + 1 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
                 }`}>
                   {step > i + 1 ? <Check size={13} /> : i + 1}
                 </div>
-                <span className={`text-[11px] font-medium hidden sm:block truncate ${step === i + 1 ? 'text-primary' : step > i + 1 ? 'text-emerald-500' : 'text-gray-400'}`}>
+                <span className={`text-[11px] font-medium hidden sm:block truncate ${step === i + 1 ? 'text-primary' : step > i + 1 ? 'text-blue-500' : 'text-gray-400'}`}>
                   {label}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 transition-all min-w-2 ${step > i + 1 ? 'bg-emerald-400' : 'bg-gray-100'}`} />
+                <div className={`flex-1 h-0.5 transition-all min-w-2 ${step > i + 1 ? 'bg-blue-400' : 'bg-gray-100'}`} />
               )}
             </React.Fragment>
           ))}
@@ -379,7 +380,6 @@ const OfflineBooking = () => {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Package size={15} className="text-primary" /> Combo Packages
-                <span className="text-xs text-gray-400 font-normal">optional</span>
               </p>
               <div className="space-y-2">
                 {stylistPackages.map((pkg) => {
@@ -406,7 +406,7 @@ const OfflineBooking = () => {
                         <p className="text-xs text-gray-400 mt-0.5 truncate">{pkgSvcs.map(s => s.name).join(' + ')}</p>
                       </div>
                       <div className="text-right flex-shrink-0 space-y-0.5">
-                        <p className="text-[11px] font-bold text-emerald-600">-{pkg.discountPercent}% (₹{discAmt} off)</p>
+                        <p className="text-[11px] font-bold text-blue-600">-{pkg.discountPercent}% (₹{discAmt} off)</p>
                         <p className="text-xs text-gray-400 line-through">₹{origTotal}</p>
                         <p className="text-sm font-bold text-gray-800">₹{finalAmt}</p>
                       </div>
@@ -421,7 +421,6 @@ const OfflineBooking = () => {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
             <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
               <CheckCircle2 size={15} className="text-primary" /> Services
-              <span className="text-xs text-gray-400 font-normal">optional</span>
             </p>
             {stylistServices.length === 0 ? (
               <p className="text-sm text-gray-400 py-3 text-center">
@@ -451,7 +450,7 @@ const OfflineBooking = () => {
                       <div className="flex-shrink-0 text-right">
                         <span className="font-semibold">₹{svc.price}</span>
                         {inPackage && (
-                          <span className="block text-[10px] text-emerald-500 font-medium">in combo</span>
+                          <span className="block text-[10px] text-blue-500 font-medium">in combo</span>
                         )}
                       </div>
                     </label>
@@ -470,7 +469,7 @@ const OfflineBooking = () => {
                   </div>
                 ))}
                 {totalPkgDiscount > 0 && (
-                  <div className="flex justify-between text-xs text-emerald-600 font-medium">
+                  <div className="flex justify-between text-xs text-blue-600 font-medium">
                     <span>Combo discount</span>
                     <span>– ₹{totalPkgDiscount}</span>
                   </div>
@@ -611,7 +610,7 @@ const OfflineBooking = () => {
                 <SummaryRow label="Services" value={selectedServices.map(s => s.name).join(', ')} />
               )}
               {totalPkgDiscount > 0 && (
-                <SummaryRow label="Combo discount" value={`– ₹${totalPkgDiscount}`} valueClass="text-emerald-600 font-semibold" />
+                <SummaryRow label="Combo discount" value={`– ₹${totalPkgDiscount}`} valueClass="text-blue-600 font-semibold" />
               )}
               <div className="pt-2 border-t border-primary/10 flex justify-between">
                 <span className="font-semibold text-gray-700">Total</span>
