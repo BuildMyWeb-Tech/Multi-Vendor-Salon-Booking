@@ -189,13 +189,7 @@ export default function WhatsAppConnect() {
               Disconnect
             </button>
           )}
-          <button
-            onClick={fetchStatus}
-            className="flex items-center gap-2 bg-gray-50 text-gray-600 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors"
-          >
-            <RefreshCw size={15} />
-            Refresh
-          </button>
+          
         </div>
       </div>
 

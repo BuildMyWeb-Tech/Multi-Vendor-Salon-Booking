@@ -90,12 +90,19 @@ const Billing = () => {
     setLinkedAppointment(incomingAppt);
     setCustomerName(incomingAppt.userData?.name || '');
     setCustomerPhone(incomingAppt.userData?.phone || '');
-    const svcs = (incomingAppt.services && incomingAppt.services.length > 0)
-      ? incomingAppt.services.map(s => ({ name: s.name, price: s.price, quantity: 1 }))
-      : incomingAppt.service
-        ? [{ name: incomingAppt.service, price: incomingAppt.amount || 0, quantity: 1 }]
-        : [];
-    if (svcs.length > 0) setCartServices(svcs);
+    if (incomingAppt.packages?.length > 0) {
+      const combo = incomingAppt.packages[0];
+      const comboServiceNames = new Set((combo.includedServices || []).map((s) => s.name));
+      const comboItem = { name: combo.name || 'Combo Package', price: combo.finalAmount || 0, quantity: 1 };
+      const extraItems = (incomingAppt.services || [])
+        .filter((s) => !comboServiceNames.has(s.name))
+        .map((s) => ({ name: s.name, price: s.price, quantity: 1 }));
+      setCartServices([comboItem, ...extraItems]);
+    } else if (incomingAppt.services?.length > 0) {
+      setCartServices(incomingAppt.services.map((s) => ({ name: s.name, price: s.price, quantity: 1 })));
+    } else if (incomingAppt.service) {
+      setCartServices([{ name: incomingAppt.service, price: incomingAppt.amount || 0, quantity: 1 }]);
+    }
     window.history.replaceState({}, '', window.location.pathname);
   }, []);
 
@@ -116,6 +123,12 @@ const Billing = () => {
   }, []);
 
   // ── Computed ──────────────────────────────────────────────────────────────────
+  // Build a map of qty-in-cart for each product variant for real-time stock filtering
+  const cartQtyMap = cartProducts.reduce((m, p) => {
+    m[`${p.productId}-${p.variantId}`] = p.quantity;
+    return m;
+  }, {});
+
   const serviceSubtotal = cartServices.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
   const productSubtotal = cartProducts.reduce((s, i) => s + i.price * i.quantity, 0);
   const subtotal = serviceSubtotal + productSubtotal;
@@ -172,8 +185,13 @@ const Billing = () => {
   // ── Cart helpers ──────────────────────────────────────────────────────────────
   const addServiceToCart = (name, price) => {
     setCartServices((prev) => {
-      const ex = prev.find((s) => s.name === name);
-      if (ex) return prev.map((s) => s.name === name ? { ...s, quantity: (s.quantity || 1) + 1 } : s);
+      const inCombo = prev.find((s) => s.isCombo && (s.includedServiceNames || []).includes(name));
+      if (inCombo) {
+        toast.info(`"${name}" is already included in "${inCombo.name}"`);
+        return prev;
+      }
+      const ex = prev.find((s) => s.name === name && !s.isCombo);
+      if (ex) return prev.map((s) => (s.name === name && !s.isCombo) ? { ...s, quantity: (s.quantity || 1) + 1 } : s);
       return [...prev, { name, price, quantity: 1 }];
     });
     setShowServicePicker(false);
@@ -181,7 +199,32 @@ const Billing = () => {
   };
 
   const addPackageToCart = (pkg) => {
-    pkg.services?.forEach(svc => addServiceToCart(svc.name, svc.price || svc.basePrice || 0));
+    const pkgSvcs = allServices.filter(s =>
+      (pkg.serviceIds || []).some(id => String(id) === String(s._id))
+    );
+    const origTotal = pkgSvcs.reduce((sum, s) => sum + (s.basePrice || s.price || 0), 0);
+    const comboPrice = pkg.discountPercent
+      ? Math.round(origTotal * (1 - pkg.discountPercent / 100))
+      : origTotal;
+    const includedServiceNames = pkgSvcs.map(s => s.name);
+
+    setCartServices((prev) => {
+      if (prev.find((s) => s.isCombo && s.name === pkg.name)) {
+        toast.info('Combo already in cart');
+        return prev;
+      }
+      // Remove individual services that are now covered by this combo
+      const filtered = prev.filter(s => !(!s.isCombo && includedServiceNames.includes(s.name)));
+      return [...filtered, {
+        name: pkg.name,
+        price: comboPrice,
+        quantity: 1,
+        isCombo: true,
+        includedServiceNames,
+        discountPercent: pkg.discountPercent,
+        originalAmount: origTotal,
+      }];
+    });
     setShowServicePicker(false);
     setServiceSearch('');
   };
@@ -206,10 +249,26 @@ const Billing = () => {
     setLinkedAppointment(apt);
     setCustomerName(apt.userData?.name || '');
     setCustomerPhone(apt.userData?.phone || '');
-    if (serviceBilling && apt.services?.length) {
-      setCartServices(apt.services.map((s) => ({ name: s.name, price: s.price, quantity: 1 })));
-    } else if (serviceBilling && apt.service) {
-      setCartServices([{ name: apt.service, price: apt.amount || 0, quantity: 1 }]);
+    if (serviceBilling) {
+      if (apt.packages?.length > 0) {
+        const combo = apt.packages[0];
+        const comboServiceNames = new Set(
+          (combo.includedServices || []).map((s) => s.name)
+        );
+        const comboItem = {
+          name: combo.name || 'Combo Package',
+          price: combo.finalAmount || 0,
+          quantity: 1,
+        };
+        const extraItems = (apt.services || [])
+          .filter((s) => !comboServiceNames.has(s.name))
+          .map((s) => ({ name: s.name, price: s.price, quantity: 1 }));
+        setCartServices([comboItem, ...extraItems]);
+      } else if (apt.services?.length) {
+        setCartServices(apt.services.map((s) => ({ name: s.name, price: s.price, quantity: 1 })));
+      } else if (apt.service) {
+        setCartServices([{ name: apt.service, price: apt.amount || 0, quantity: 1 }]);
+      }
     }
   };
 
@@ -272,8 +331,22 @@ const Billing = () => {
   };
 
   const printBill = (bill) => {
+    // Check if linked appointment had a combo package for detailed breakdown
+    const combo = linkedAppointment?.packages?.[0];
+    const comboServiceNames = combo ? new Set((combo.includedServices || []).map((s) => s.name)) : null;
+
+    const serviceLines = (bill.services || []).map((s) => {
+      if (combo && s.name === (combo.name || 'Combo Package')) {
+        // Expand combo line with full breakdown
+        const includedRows = (combo.includedServices || [])
+          .map((is) => `<tr><td style="padding-left:16px;color:#6b7280;font-size:11px">${is.name}</td><td style="text-align:right;color:#6b7280;font-size:11px">₹${is.price?.toFixed(2)}</td></tr>`)
+          .join('');
+        return `<tr><td><strong>${combo.name}</strong> <span style="font-size:10px;color:#059669">${combo.discountPercent}% off</span></td><td></td></tr>${includedRows}<tr><td style="color:#6b7280;font-size:11px">Original price</td><td style="text-align:right;color:#6b7280;font-size:11px;text-decoration:line-through">₹${combo.originalAmount?.toFixed(2)}</td></tr><tr><td style="color:#059669;font-size:11px">Combo discount</td><td style="text-align:right;color:#059669;font-size:11px">-₹${combo.discountAmount?.toFixed(2)}</td></tr><tr><td style="font-weight:600">Combo price</td><td style="text-align:right;font-weight:600">₹${(s.price * (s.quantity || 1)).toFixed(2)}</td></tr>`;
+      }
+      return `<tr><td>${s.name}</td><td style="text-align:right">₹${(s.price * (s.quantity || 1)).toFixed(2)}</td></tr>`;
+    });
     const lines = [
-      ...(bill.services || []).map(s => `<tr><td>${s.name}</td><td style="text-align:right">₹${(s.price * (s.quantity || 1)).toFixed(2)}</td></tr>`),
+      ...serviceLines,
       ...(bill.products || []).map(p => `<tr><td>${p.productName} (${p.variantSize}) x${p.quantity}</td><td style="text-align:right">₹${(p.price * p.quantity).toFixed(2)}</td></tr>`),
     ].join('');
     const taxLines = (bill.taxBreakdown && bill.taxBreakdown.length > 0
@@ -484,9 +557,14 @@ const Billing = () => {
                 </div>
               ) : (
                 products.map((p) =>
-                  p.variants.map((v) => {
-                    const outOfStock = v.stock === 0;
-                    const lowStock = v.stock > 0 && v.stock <= (v.lowStockThreshold || 5);
+                  p.variants.filter((v) => {
+                    const inCart = cartQtyMap[`${p._id}-${v._id}`] || 0;
+                    return v.stock - inCart > 0;
+                  }).map((v) => {
+                    const inCart = cartQtyMap[`${p._id}-${v._id}`] || 0;
+                    const effectiveStock = v.stock - inCart;
+                    const outOfStock = false;
+                    const lowStock = effectiveStock <= (v.lowStockThreshold || 5);
                     return (
                       <button
                         key={`${p._id}-${v._id}`}
@@ -516,10 +594,10 @@ const Billing = () => {
                               <span className="text-xs font-medium text-red-500">Out of stock</span>
                             ) : lowStock ? (
                               <span className="text-xs font-medium text-amber-500">
-                                Only {v.stock} left
+                                Only {effectiveStock} left
                               </span>
                             ) : (
-                              <span className="text-xs text-gray-400">{v.stock} in stock</span>
+                              <span className="text-xs text-gray-400">{effectiveStock} in stock</span>
                             )}
                           </div>
                         </div>
@@ -603,7 +681,7 @@ const Billing = () => {
                               <div>
                                 <p className="text-xs font-semibold text-gray-800">{pkg.name}</p>
                                 <p className="text-[10px] text-gray-400">
-                                  {pkg.services?.length || 0} services
+                                  {pkg.serviceIds?.length || 0} services
                                 </p>
                               </div>
                               {pkg.discountPercent > 0 && (
@@ -654,15 +732,22 @@ const Billing = () => {
                 <p className="text-center text-gray-300 text-xs py-5">No items added yet</p>
               ) : null}
               {cartServices.map((s, i) => (
-                <div key={i} className="flex items-center gap-2 py-1">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <Scissors size={12} className="text-blue-500" />
+                <div key={i} className="flex items-start gap-2 py-1">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${s.isCombo ? 'bg-violet-50' : 'bg-blue-50'}`}>
+                    {s.isCombo ? <Gift size={12} className="text-violet-500" /> : <Scissors size={12} className="text-blue-500" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{s.name}</p>
-                    <p className="text-xs text-gray-400">Service · ₹{s.price}</p>
+                    <p className={`text-sm font-medium truncate ${s.isCombo ? 'text-violet-700' : 'text-gray-800'}`}>{s.name}</p>
+                    {s.isCombo && s.discountPercent > 0 ? (
+                      <p className="text-[10px] text-gray-400">
+                        Combo · <span className="line-through">₹{s.originalAmount}</span>
+                        <span className="text-emerald-600 font-semibold ml-1">{s.discountPercent}% off</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-400">Service · ₹{s.price}</p>
+                    )}
                   </div>
-                  <p className="text-sm font-semibold text-gray-700 w-14 text-right flex-shrink-0">
+                  <p className="text-sm font-semibold text-gray-700 w-14 text-right flex-shrink-0 mt-0.5">
                     ₹{s.price * (s.quantity || 1)}
                   </p>
                   <button

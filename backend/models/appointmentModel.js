@@ -145,6 +145,8 @@ const appointmentSchema = new mongoose.Schema(
         discountPercent: { type: Number },
         discountAmount:  { type: Number },
         finalAmount:     { type: Number },
+        originalAmount:  { type: Number },
+        includedServices: [{ name: { type: String }, price: { type: Number } }],
       },
     ],
   },

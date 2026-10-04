@@ -281,13 +281,24 @@ const Appointment = () => {
     return selectedServices.reduce((total, service) => total + service.basePrice, 0);
   }, [selectedServices]);
 
-  // Final price after package + coupon discounts applied sequentially
+  // Final price: if a combo is explicitly selected, discount applies only to combo services
   const getFinalPrice = useCallback(() => {
+    if (selectedPackage) {
+      const pkgServiceIds = new Set((selectedPackage.serviceIds || []).map(String));
+      const comboServices = selectedServices.filter((s) => pkgServiceIds.has(String(s._id)));
+      const extraServices = selectedServices.filter((s) => !pkgServiceIds.has(String(s._id)));
+      const comboTotal = comboServices.reduce((sum, s) => sum + s.basePrice, 0);
+      const extraTotal = extraServices.reduce((sum, s) => sum + s.basePrice, 0);
+      const comboFinal = Math.round(comboTotal * (1 - (selectedPackage.discountPercent || 0) / 100));
+      let price = comboFinal + extraTotal;
+      if (couponDiscount > 0) price = Math.round(price * (1 - couponDiscount / 100));
+      return price;
+    }
     let price = getTotalPrice();
     if (packageDiscount > 0) price = Math.round(price * (1 - packageDiscount / 100));
     if (couponDiscount  > 0) price = Math.round(price * (1 - couponDiscount  / 100));
     return price;
-  }, [getTotalPrice, packageDiscount, couponDiscount]);
+  }, [selectedPackage, selectedServices, getTotalPrice, packageDiscount, couponDiscount]);
 
   // Auto-match package discount when selected services change
   useEffect(() => {
@@ -509,13 +520,28 @@ const Appointment = () => {
   }, [docId, backendUrl, token, navigate]);
 
   const toggleService = useCallback((service) => {
-    setSelectedPackage(null); // deselect package when individual service toggled
-    setSelectedServices(prevServices => {
-      const isSelected = prevServices.find(s => s._id === service._id);
-      if (isSelected) return prevServices.filter(s => s._id !== service._id);
-      return [...prevServices, service];
+    if (selectedPackage) {
+      const pkgServiceIds = new Set((selectedPackage.serviceIds || []).map(String));
+      if (pkgServiceIds.has(String(service._id))) {
+        // Clicking a service inside the combo deselects the whole combo
+        setSelectedPackage(null);
+        setSelectedServices([]);
+      } else {
+        // Clicking a service outside the combo toggles it as an extra service
+        setSelectedServices((prev) => {
+          const isSelected = prev.find((s) => s._id === service._id);
+          if (isSelected) return prev.filter((s) => s._id !== service._id);
+          return [...prev, service];
+        });
+      }
+      return;
+    }
+    setSelectedServices((prev) => {
+      const isSelected = prev.find((s) => s._id === service._id);
+      if (isSelected) return prev.filter((s) => s._id !== service._id);
+      return [...prev, service];
     });
-  }, []);
+  }, [selectedPackage]);
 
   const selectPackage = useCallback((pkg) => {
     if (selectedPackage?._id === pkg._id) {
@@ -548,6 +574,23 @@ const Appointment = () => {
         price: s.basePrice
       }));
 
+      // Build combo package payload if a package was explicitly selected
+      let comboPackageData = null;
+      if (selectedPackage) {
+        const pkgServiceIds = new Set((selectedPackage.serviceIds || []).map(String));
+        const comboServices = selectedServices.filter((s) => pkgServiceIds.has(String(s._id)));
+        const originalAmount = comboServices.reduce((sum, s) => sum + s.basePrice, 0);
+        const finalAmount = Math.round(originalAmount * (1 - (selectedPackage.discountPercent || 0) / 100));
+        comboPackageData = {
+          name: selectedPackage.name,
+          discountPercent: selectedPackage.discountPercent || 0,
+          originalAmount,
+          discountAmount: originalAmount - finalAmount,
+          finalAmount,
+          includedServices: comboServices.map((s) => ({ name: s.name, price: s.basePrice })),
+        };
+      }
+
       let data;
       if (screenshotFile) {
         // UPI payment — send as FormData (do NOT manually set Content-Type; axios adds boundary)
@@ -561,6 +604,7 @@ const Appointment = () => {
         fd.append('remainingAmount', 0);
         fd.append('paymentMethod', 'upi');
         fd.append('paymentScreenshot', screenshotFile);
+        if (comboPackageData) fd.append('comboPackage', JSON.stringify(comboPackageData));
         const res = await axios.post(backendUrl + '/api/user/book-appointment', fd, {
           headers: { token }, // No Content-Type — axios sets it with boundary automatically
         });
@@ -577,6 +621,7 @@ const Appointment = () => {
             paidAmount: paymentAmount,
             remainingAmount: remainingAmount,
             paymentMethod,
+            comboPackage: comboPackageData,
           },
           { headers: { token } }
         );
@@ -619,6 +664,7 @@ const Appointment = () => {
     docId,
     selectedDate,
     selectedServices,
+    selectedPackage,
     selectedSlotISO,
     getTotalPrice, getFinalPrice,
     paymentAmount,
@@ -1201,7 +1247,51 @@ const Appointment = () => {
                         </div>
                         <div className="pb-4 border-b border-blue-200">
                           <p className="text-xs text-gray-500 mb-2">Services</p>
-                          {selectedServices.map((service) => (
+                          {selectedPackage ? (() => {
+                            const pkgServiceIds = new Set((selectedPackage.serviceIds || []).map(String));
+                            const comboSvcs = selectedServices.filter((s) => pkgServiceIds.has(String(s._id)));
+                            const extraSvcs = selectedServices.filter((s) => !pkgServiceIds.has(String(s._id)));
+                            const comboOriginal = comboSvcs.reduce((sum, s) => sum + s.basePrice, 0);
+                            const comboFinal = Math.round(comboOriginal * (1 - (selectedPackage.discountPercent || 0) / 100));
+                            return (
+                              <>
+                                <div className="bg-violet-50 border border-violet-100 rounded-lg p-3 mb-2">
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-sm font-bold text-violet-800">{selectedPackage.name}</span>
+                                    <span className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold flex-shrink-0">
+                                      {selectedPackage.discountPercent}% OFF
+                                    </span>
+                                  </div>
+                                  {comboSvcs.map((s) => (
+                                    <div key={s._id} className="flex justify-between text-xs text-gray-500 ml-1 mb-0.5">
+                                      <span>{s.name}</span>
+                                      <span>{currencySymbol}{s.basePrice}</span>
+                                    </div>
+                                  ))}
+                                  <div className="border-t border-violet-200 mt-1.5 pt-1.5 space-y-0.5">
+                                    <div className="flex justify-between text-xs text-gray-400">
+                                      <span>Original</span>
+                                      <span className="line-through">{currencySymbol}{comboOriginal}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-emerald-600 font-semibold">
+                                      <span>Discount (-{selectedPackage.discountPercent}%)</span>
+                                      <span>-{currencySymbol}{comboOriginal - comboFinal}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm font-bold text-violet-800">
+                                      <span>Combo Price</span>
+                                      <span>{currencySymbol}{comboFinal}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                {extraSvcs.map((s) => (
+                                  <div key={s._id} className="flex justify-between items-center bg-white px-3 py-2 rounded-lg mb-1 border border-gray-100">
+                                    <span className="text-sm font-medium text-gray-800">{s.name}</span>
+                                    <span className="text-sm font-bold text-blue-600">{currencySymbol}{s.basePrice}</span>
+                                  </div>
+                                ))}
+                              </>
+                            );
+                          })() : selectedServices.map((service) => (
                             <div
                               key={service._id}
                               className="flex justify-between items-center bg-white px-3 py-2 rounded-lg mb-1"
@@ -1230,38 +1320,47 @@ const Appointment = () => {
                             {formatTime(selectedSlotISO)}
                           </p>
                         </div>
-                        {/* Discount breakdown */}
-                        {(packageDiscount > 0 || couponDiscount > 0) && (
+                        {/* Discount breakdown — only show coupon when no explicit package (combo shows inline above) */}
+                        {!selectedPackage && (packageDiscount > 0 || couponDiscount > 0) && (
                           <div className="space-y-1 pb-2 border-b border-blue-200">
                             <div className="flex justify-between text-sm text-gray-600">
                               <span>Subtotal</span>
-                              <span>
-                                {currencySymbol}
-                                {getTotalPrice()}
-                              </span>
+                              <span>{currencySymbol}{getTotalPrice()}</span>
                             </div>
                             {packageDiscount > 0 && (
                               <div className="flex justify-between text-sm text-emerald-600">
                                 <span>Package discount ({packageDiscount}%)</span>
-                                <span>
-                                  -{currencySymbol}
-                                  {getTotalPrice() -
-                                    Math.round(getTotalPrice() * (1 - packageDiscount / 100))}
-                                </span>
+                                <span>-{currencySymbol}{getTotalPrice() - Math.round(getTotalPrice() * (1 - packageDiscount / 100))}</span>
                               </div>
                             )}
                             {couponDiscount > 0 && (
                               <div className="flex justify-between text-sm text-emerald-600">
                                 <span>Coupon discount ({couponDiscount}%)</span>
-                                <span>
-                                  -{currencySymbol}
-                                  {Math.round(getTotalPrice() * (1 - packageDiscount / 100)) -
-                                    getFinalPrice()}
-                                </span>
+                                <span>-{currencySymbol}{Math.round(getTotalPrice() * (1 - packageDiscount / 100)) - getFinalPrice()}</span>
                               </div>
                             )}
                           </div>
                         )}
+                        {selectedPackage && couponDiscount > 0 && (() => {
+                          const pkgServiceIds = new Set((selectedPackage.serviceIds || []).map(String));
+                          const comboSvcs = selectedServices.filter((s) => pkgServiceIds.has(String(s._id)));
+                          const extraSvcs = selectedServices.filter((s) => !pkgServiceIds.has(String(s._id)));
+                          const comboOrig = comboSvcs.reduce((sum, s) => sum + s.basePrice, 0);
+                          const comboFin = Math.round(comboOrig * (1 - (selectedPackage.discountPercent || 0) / 100));
+                          const beforeCoupon = comboFin + extraSvcs.reduce((sum, s) => sum + s.basePrice, 0);
+                          return (
+                            <div className="space-y-1 pb-2 border-b border-blue-200">
+                              <div className="flex justify-between text-sm text-gray-600">
+                                <span>Subtotal (after combo)</span>
+                                <span>{currencySymbol}{beforeCoupon}</span>
+                              </div>
+                              <div className="flex justify-between text-sm text-emerald-600">
+                                <span>Coupon discount ({couponDiscount}%)</span>
+                                <span>-{currencySymbol}{beforeCoupon - getFinalPrice()}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         <div className="flex justify-between items-center font-bold text-lg">
                           <span className="text-gray-700">Total Amount</span>
                           <span className="text-gray-900">

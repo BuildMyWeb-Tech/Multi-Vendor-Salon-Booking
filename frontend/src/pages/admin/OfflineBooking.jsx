@@ -270,8 +270,10 @@ const OfflineBooking = () => {
             return {
               name: pkg.name,
               discountPercent: pkg.discountPercent,
+              originalAmount: origTotal,
               discountAmount: discAmt,
               finalAmount: origTotal - discAmt,
+              includedServices: pkgSvcs.map(s => ({ name: s.name, price: s.price })),
             };
           }),
         },

@@ -123,7 +123,7 @@ const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimeP
               <div className="flex items-center gap-3">
                 {appt.docData?.image
                   ? <img src={appt.docData.image} className="w-10 h-10 rounded-full object-cover" alt="" />
-                  : <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><Scissors size={16} /></div>
+                  : <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-blue-600"><Scissors size={16} /></div>
                 }
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{appt.docData?.name || '—'}</p>
@@ -153,22 +153,25 @@ const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimeP
           </div>
 
           {/* Combo Packages */}
-          {appt.packages && appt.packages.length > 0 && (
-            <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 space-y-3">
-              <p className="text-xs font-semibold text-violet-700 uppercase flex items-center gap-1.5">
-                <span>📦</span> Combo Package
-              </p>
-              {appt.packages.map((pkg, i) => (
-                <div key={i} className="space-y-2">
+          {appt.packages && appt.packages.length > 0 && (() => {
+            const pkg = appt.packages[0];
+            const comboServiceNames = new Set((pkg.includedServices || []).map((s) => s.name));
+            const extraSvcs = (appt.services || []).filter((s) => !comboServiceNames.has(s.name));
+            return (
+              <div className="space-y-3">
+                <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 space-y-2">
+                  <p className="text-xs font-semibold text-violet-700 uppercase flex items-center gap-1.5">
+                    <span>📦</span> Combo Package
+                  </p>
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-800 text-sm">{pkg.name}</span>
                     <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
                       -{pkg.discountPercent}% off
                     </span>
                   </div>
-                  {appt.services && appt.services.length > 0 && (
+                  {(pkg.includedServices || []).length > 0 && (
                     <div className="space-y-1 pl-2 border-l-2 border-violet-200">
-                      {appt.services.map((svc, j) => (
+                      {pkg.includedServices.map((svc, j) => (
                         <div key={j} className="flex justify-between text-xs text-gray-500">
                           <span>{svc.name}</span>
                           <span>₹{svc.price}</span>
@@ -176,18 +179,43 @@ const ViewAppointmentModal = ({ appt, paymentEnabled, onClose, onCancel, isTimeP
                       ))}
                     </div>
                   )}
-                  <div className="flex justify-between text-sm pt-1 border-t border-violet-100">
+                  {pkg.originalAmount != null && (
+                    <div className="flex justify-between text-xs text-gray-400 border-t border-violet-100 pt-1">
+                      <span>Original Price</span>
+                      <span className="line-through">₹{pkg.originalAmount}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Combo Discount</span>
                     <span className="text-emerald-600 font-semibold">– ₹{pkg.discountAmount}</span>
                   </div>
-                  <div className="flex justify-between text-sm font-bold">
-                    <span className="text-gray-800">Package Total</span>
-                    <span className="text-primary">₹{pkg.finalAmount}</span>
+                  <div className="flex justify-between text-sm font-bold border-t border-violet-200 pt-1">
+                    <span className="text-violet-800">Combo Total</span>
+                    <span className="text-violet-800">₹{pkg.finalAmount}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {extraSvcs.length > 0 && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Extra Services</p>
+                    <div className="space-y-1">
+                      {extraSvcs.map((svc, i) => (
+                        <div key={i} className="flex justify-between text-sm">
+                          <span className="text-gray-800">{svc.name}</span>
+                          <span className="font-semibold text-gray-700">₹{svc.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-sm font-bold bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+                  <span className="text-gray-700">Total Amount</span>
+                  <span className="text-primary">₹{appt.amount || 0}</span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Individual Services (no package) */}
           {(!appt.packages || appt.packages.length === 0) && appt.services && appt.services.length > 0 && (
@@ -305,7 +333,7 @@ const AllAppointments = () => {
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPayment, setFilterPayment] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState('date-desc')
+  const [sortBy, setSortBy] = useState('date-asc')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -376,7 +404,7 @@ const AllAppointments = () => {
     setSearchTerm('')
     setStartDate('')
     setEndDate('')
-    setSortBy('date-desc')
+    setSortBy('date-asc')
     setSelectedQuickFilter(null)
     setTodayFilter(false)
   }
@@ -1302,8 +1330,8 @@ const AllAppointments = () => {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-3 py-2 sm:py-2.5 border-2 border-gray-200 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
                 >
-                  <option value="date-desc">Newest First</option>
-                  <option value="date-asc">Oldest First</option>
+                  <option value="date-asc">Nearest First</option>
+                  <option value="date-desc">Furthest First</option>
                   <option value="price-desc">Price: High to Low</option>
                   <option value="price-asc">Price: Low to High</option>
                 </select>
@@ -1386,14 +1414,30 @@ const AllAppointments = () => {
                           {appointment.docData?.image ? (
                             <img className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg object-cover ring-2 ring-purple-100" src={appointment.docData.image} alt={appointment.docData.name} />
                           ) : (
-                            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white shadow-md">
+                            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white shadow-md">
                               <Scissors size={14} />
                             </div>
                           )}
                         </div>
                         <div className="ml-3">
                           <div className="text-xs sm:text-sm font-semibold text-gray-900">{appointment.docData?.name || "N/A"}</div>
-                          <div className="text-xs text-gray-600 mt-1 max-w-[200px] leading-relaxed">{appointment.service || appointment.docData?.specialty || appointment.docData?.speciality || "N/A"}</div>
+                          <div className="text-xs text-gray-600 mt-1 max-w-[200px] leading-relaxed">
+                            {appointment.packages?.length > 0 ? (() => {
+                              const pkg = appointment.packages[0];
+                              const comboNames = new Set((pkg.includedServices || []).map((s) => s.name));
+                              const extras = (appointment.services || []).filter((s) => !comboNames.has(s.name));
+                              return (
+                                <span>
+                                  <span className="text-blue-700 font-semibold">{pkg.name}</span>
+                                  {extras.length > 0 && (
+                                    <span className="text-gray-500"> + {extras.map((s) => s.name).join(', ')}</span>
+                                  )}
+                                </span>
+                              );
+                            })() : appointment.services?.length > 0
+                              ? appointment.services.map((s) => s.name).join(', ')
+                              : appointment.service || appointment.docData?.specialty || appointment.docData?.speciality || 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </td>

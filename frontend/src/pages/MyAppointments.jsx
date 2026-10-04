@@ -695,13 +695,75 @@ const MyAppointments = () => {
                               </div>
                               <div className="min-w-0">
                                 <p className="text-xs text-gray-500 uppercase font-medium">Service</p>
-                                <p className="font-medium text-gray-800 leading-snug break-words">
-                                  {item.service || 'Hair Styling'}
-                                </p>
+                                {item.packages?.length > 0 ? (() => {
+                                  const pkg = item.packages[0];
+                                  const comboNames = new Set((pkg.includedServices || []).map((s) => s.name));
+                                  const extras = (item.services || []).filter((s) => !comboNames.has(s.name));
+                                  return (
+                                    <p className="font-medium text-gray-800 leading-snug break-words">
+                                      <span className="text-violet-700">{pkg.name}</span>
+                                      {extras.length > 0 && (
+                                        <span className="text-gray-500"> + {extras.map((s) => s.name).join(', ')}</span>
+                                      )}
+                                    </p>
+                                  );
+                                })() : (
+                                  <p className="font-medium text-gray-800 leading-snug break-words">
+                                    {item.services?.length > 0
+                                      ? item.services.map((s) => s.name).join(', ')
+                                      : item.service || 'Hair Styling'}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
                         </div>
+
+                        {/* Combo Package Breakdown */}
+                        {item.packages && item.packages.length > 0 && (() => {
+                          const combo = item.packages[0];
+                          const comboServiceNames = new Set((combo.includedServices || []).map((s) => s.name));
+                          const extraSvcs = (item.services || []).filter((s) => !comboServiceNames.has(s.name));
+                          return (
+                            <div className="mb-4 bg-violet-50 border border-violet-200 rounded-xl p-4">
+                              <p className="text-xs font-semibold text-violet-700 uppercase mb-2 flex items-center gap-1.5">
+                                <IndianRupee size={12} /> Combo Package
+                              </p>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="font-bold text-gray-800 text-sm">{combo.name}</span>
+                                <span className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
+                                  -{combo.discountPercent}% off
+                                </span>
+                              </div>
+                              {(combo.includedServices || []).map((s, idx) => (
+                                <div key={idx} className="flex justify-between text-xs text-gray-500 ml-1 mb-0.5">
+                                  <span>{s.name}</span>
+                                  <span>{currencySymbol}{s.price}</span>
+                                </div>
+                              ))}
+                              {combo.originalAmount != null && (
+                                <div className="flex justify-between text-xs text-gray-400 mt-1 border-t border-violet-100 pt-1">
+                                  <span>Original</span>
+                                  <span className="line-through">{currencySymbol}{combo.originalAmount}</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between text-xs text-emerald-600 font-semibold">
+                                <span>Discount</span>
+                                <span>-{currencySymbol}{combo.discountAmount}</span>
+                              </div>
+                              <div className="flex justify-between text-sm font-bold text-violet-800 mt-0.5">
+                                <span>Combo Price</span>
+                                <span>{currencySymbol}{combo.finalAmount}</span>
+                              </div>
+                              {extraSvcs.map((s, idx) => (
+                                <div key={idx} className="flex justify-between text-sm mt-1.5 pt-1.5 border-t border-violet-100">
+                                  <span className="text-gray-700">{s.name}</span>
+                                  <span className="font-semibold text-blue-600">{currencySymbol}{s.price}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
 
                         {/* Booking Status Banner */}
                         <div className="mb-4 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-100">

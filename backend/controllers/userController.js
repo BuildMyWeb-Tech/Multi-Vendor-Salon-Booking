@@ -324,7 +324,24 @@ export const bookAppointment = async (req, res) => {
       remainingAmount,
       paymentMethod,
       utrNumber,
+      comboPackage: comboPackageRaw,
     } = req.body;
+
+    // comboPackage may arrive as a JSON string (FormData) or object (JSON body)
+    let comboPackage = null;
+    if (comboPackageRaw) {
+      try {
+        comboPackage = typeof comboPackageRaw === 'string' ? JSON.parse(comboPackageRaw) : comboPackageRaw;
+      } catch { comboPackage = null; }
+    }
+
+    // services may arrive as a JSON string (FormData) or array (JSON body)
+    let parsedServices = [];
+    if (Array.isArray(services)) {
+      parsedServices = services;
+    } else if (typeof services === 'string') {
+      try { parsedServices = JSON.parse(services); } catch { parsedServices = []; }
+    }
 
     console.log('📋 Booking attempt:', { userId, docId, slotDate, slotTime });
 
@@ -409,7 +426,8 @@ export const bookAppointment = async (req, res) => {
       slotDate,
       slotTime,
       slotDateTime,
-      services: Array.isArray(services) ? services : [],
+      services: parsedServices,
+      packages: comboPackage ? [comboPackage] : [],
       amount: finalAmount,
       paidAmount: finalPaid,
       remainingAmount: finalRemaining,
