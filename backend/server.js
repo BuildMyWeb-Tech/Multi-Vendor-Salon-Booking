@@ -136,8 +136,10 @@ httpServer.listen(port, () => {
 });
 
 // ── WHATSAPP WORKER (multi-salon supervisor) ──────────────────────────────────
+// Imports supervisor.js (not index.js) — safe to embed: no extra HTTP server,
+// no second mongoose.connect(), no duplicate signal handlers.
 if (process.env.WHATSAPP_SESSION_ENCRYPTION_KEY) {
-  import('./whatsapp-worker/index.js').catch((err) =>
-    console.error('WhatsApp worker failed to start:', err)
-  );
+  import('./whatsapp-worker/supervisor.js')
+    .then(({ startSupervisor }) => startSupervisor())
+    .catch((err) => console.error('WhatsApp supervisor failed to start:', err));
 }
