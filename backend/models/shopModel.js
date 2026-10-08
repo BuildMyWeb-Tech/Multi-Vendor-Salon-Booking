@@ -80,5 +80,8 @@ const shopSchema = new mongoose.Schema(
 );
 
 
+shopSchema.index({ status: 1 });
+shopSchema.index({ status: 1, createdAt: -1 });
+
 const shopModel = mongoose.models.shop || mongoose.model('shop', shopSchema);
 export default shopModel;

@@ -15,15 +15,19 @@ export const getBroadcastContacts = async (req, res) => {
     const limit = Math.min(500, Math.max(1, parseInt(req.query.limit || '200', 10)));
     const skip  = (page - 1) * limit;
 
-    // 1. Fetch users in pages — project only name + phone
+    // 1. Fetch contacts — capped at 5000 per source to avoid loading entire collections.
+    // The in-memory merge stays fast; a large salon with 5k+ contacts can use search.
+    const MAX_RAW = 5000;
     const [users, appts] = await Promise.all([
       userModel
         .find({ shopId }, 'name phone')
         .sort({ name: 1 })
+        .limit(MAX_RAW)
         .lean(),
       appointmentModel
         .find({ shopId, 'userData.phone': { $exists: true, $ne: '' } })
         .select('userData.name userData.phone')
+        .limit(MAX_RAW)
         .lean(),
     ]);
 

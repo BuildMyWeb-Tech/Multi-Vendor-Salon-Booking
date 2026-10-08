@@ -35,6 +35,9 @@ const serviceCategorySchema = new mongoose.Schema(
   }
 );
 
+serviceCategorySchema.index({ shopId: 1, isActive: 1 });
+serviceCategorySchema.index({ shopId: 1, name: 1 });
+
 const ServiceCategory =
   mongoose.models.ServiceCategory ||
   mongoose.model('ServiceCategory', serviceCategorySchema);

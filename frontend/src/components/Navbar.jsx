@@ -122,7 +122,7 @@ const Navbar = () => {
       return;
     }
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000);
+    const interval = setInterval(fetchNotifications, 300000);
     return () => clearInterval(interval);
   }, [token, backendUrl]);
 

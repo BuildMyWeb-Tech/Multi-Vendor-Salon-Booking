@@ -137,21 +137,24 @@ export const getSalonDashboard = async (req, res) => {
         .lean(),
     ]);
 
-    const todayAppointments = await appointmentModel.countDocuments({ shopId, slotDate: todayStr, cancelled: false });
-    const pendingAppointments = await appointmentModel.countDocuments({ shopId, cancelled: false, isCompleted: false });
-    const completedAppointments = await appointmentModel.countDocuments({ shopId, isCompleted: true });
-    const cancelledAppointments = await appointmentModel.countDocuments({ shopId, cancelled: true });
-
-    const revenueAgg = await appointmentModel.aggregate([
-      { $match: { shopId, isCompleted: true, payment: true } },
-      { $group: { _id: null, total: { $sum: '$amount' } } },
+    const [
+      todayAppointments, pendingAppointments, completedAppointments, cancelledAppointments,
+      revenueAgg, todayRevAgg,
+    ] = await Promise.all([
+      appointmentModel.countDocuments({ shopId, slotDate: todayStr, cancelled: false }),
+      appointmentModel.countDocuments({ shopId, cancelled: false, isCompleted: false }),
+      appointmentModel.countDocuments({ shopId, isCompleted: true }),
+      appointmentModel.countDocuments({ shopId, cancelled: true }),
+      appointmentModel.aggregate([
+        { $match: { shopId, isCompleted: true, payment: true } },
+        { $group: { _id: null, total: { $sum: '$amount' } } },
+      ]),
+      appointmentModel.aggregate([
+        { $match: { shopId, slotDate: todayStr, isCompleted: true, payment: true } },
+        { $group: { _id: null, total: { $sum: '$amount' } } },
+      ]),
     ]);
     const totalRevenue = revenueAgg[0]?.total || 0;
-
-    const todayRevAgg = await appointmentModel.aggregate([
-      { $match: { shopId, slotDate: todayStr, isCompleted: true, payment: true } },
-      { $group: { _id: null, total: { $sum: '$amount' } } },
-    ]);
     const todayRevenue = todayRevAgg[0]?.total || 0;
 
     const processedAppointments = latestAppointments.map((app) => {
@@ -193,17 +196,17 @@ export const getSalonAppointments = async (req, res) => {
       .find({ shopId })
       .populate('userId', 'name phone email image')
       .populate('doctorId', 'name image specialty price')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     const processed = appointments.map((app) => {
-      const obj = app.toObject();
-      if (!obj.userData && obj.userId) {
-        obj.userData = { _id: obj.userId._id, name: obj.userId.name, phone: obj.userId.phone, email: obj.userId.email, image: obj.userId.image };
+      if (!app.userData && app.userId) {
+        app.userData = { _id: app.userId._id, name: app.userId.name, phone: app.userId.phone, email: app.userId.email, image: app.userId.image };
       }
-      if (!obj.docData && obj.doctorId) {
-        obj.docData = { _id: obj.doctorId._id, name: obj.doctorId.name, image: obj.doctorId.image, speciality: obj.doctorId.specialty?.[0], price: obj.doctorId.price };
+      if (!app.docData && app.doctorId) {
+        app.docData = { _id: app.doctorId._id, name: app.doctorId.name, image: app.doctorId.image, speciality: app.doctorId.specialty?.[0], price: app.doctorId.price };
       }
-      return obj;
+      return app;
     });
 
     res.json({ success: true, appointments: processed });
@@ -479,6 +482,10 @@ export const updateSalonStylistLeaveDates = async (req, res) => {
       isCompleted: false,
     });
 
+    // Hoist shop slug lookup before the loop to avoid N+1 DB queries
+    const leaveShopDoc = await shopModel.findOne({ shopId }, 'slug').lean();
+    const leaveShopSlug = leaveShopDoc?.slug || '';
+
     // Cancel each affected appointment and remove from slots_booked
     let cancelledCount = 0;
     for (const appt of affectedAppointments) {
@@ -490,8 +497,6 @@ export const updateSalonStylistLeaveDates = async (req, res) => {
       // Notify the customer
       if (appt.userId) {
         const { dateStr, timeStr } = formatDisplayDate(appt.slotDate, appt.slotTime);
-        const leaveShopDoc = await shopModel.findOne({ shopId }).lean();
-        const leaveShopSlug = leaveShopDoc?.slug || '';
         const leaveApptLink = leaveShopSlug ? `/${leaveShopSlug}/my-appointments` : '/my-appointments';
 
         const leaveUserNotif = {

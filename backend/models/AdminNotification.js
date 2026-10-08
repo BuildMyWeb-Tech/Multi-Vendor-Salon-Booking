@@ -34,7 +34,8 @@ const adminNotificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-adminNotificationSchema.index({ read: 1, createdAt: -1 });
+adminNotificationSchema.index({ shopId: 1, createdAt: -1 });
+adminNotificationSchema.index({ shopId: 1, read: 1 });
 
 const AdminNotification =
   mongoose.models.adminNotification || mongoose.model('adminNotification', adminNotificationSchema);

@@ -1,8 +1,7 @@
-﻿import React, { useContext, useEffect } from 'react'
+﻿import React, { lazy, Suspense, useContext, useEffect } from 'react'
 import { Routes, Route, useParams, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import PlatformRoot from './pages/PlatformRoot'
 
 import ScrollToTop from './components/ScrollToTop'
 
@@ -13,57 +12,71 @@ import { AdminContext } from './context/AdminContext'
 import { ShopContext } from './context/ShopContext'
 import { StylistContext } from './context/StylistContext'
 
-// Super Admin
-import SuperAdminLogin from './pages/superadmin/SuperAdminLogin'
-import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
-import SuperAdminSalons from './pages/superadmin/SuperAdminSalons'
-import CreateSalon from './pages/superadmin/CreateSalon'
-import PendingSalons from './pages/superadmin/PendingSalons'
-import CreateYourSalon from './pages/CreateYourSalon'
+// Shell components (always needed — no lazy loading)
 import SuperAdminSidebar from './components/admin/SuperAdminSidebar'
 import SuperAdminNavbar from './components/admin/SuperAdminNavbar'
-
-// Admin pages
 import AdminSidebar from './components/admin/AdminSidebar'
 import AdminNavbar from './components/admin/AdminNavbar'
-import SalonAdminLogin from './pages/admin/SalonAdminLogin'
-import Dashboard from './pages/admin/Dashboard'
-import AllAppointments from './pages/admin/AllAppointments'
-import AddDoctor from './pages/admin/AddDoctor'
-import DoctorsList from './pages/admin/DoctorsList'
-import EditStylist from './pages/admin/EditStylist'
-import ServicesCategory from './pages/admin/ServicesCategory'
-import SlotManagement from './pages/admin/SlotManagement'
-import AdminMyProfile from './pages/admin/MyProfile'
-import DoctorDashboard from './pages/doctor/DoctorDashboard'
-import DoctorAppointments from './pages/doctor/DoctorAppointments'
-import DoctorProfile from './pages/doctor/DoctorProfile'
-import DoctorEarnings from './pages/doctor/DoctorEarnings'
-import AddProduct from './pages/admin/products/AddProduct'
-import ManageProducts from './pages/admin/products/ManageProducts'
-import Inventory from './pages/admin/products/Inventory'
-import Billing from './pages/admin/billing/Billing'
-import Bills from './pages/admin/billing/Bills'
-import TaxSettings from './pages/admin/TaxSettings'
-import Coupons from './pages/admin/Coupons'
-import Packages from './pages/admin/Packages'
-import Broadcast from './pages/admin/Broadcast'
-import WhatsAppConnect from './pages/admin/WhatsAppConnect'
-import OfflineBooking from './pages/admin/OfflineBooking'
-import StylistSection from './pages/stylist/StylistSection'
-
-// Customer pages
 import ShopNavbar from './components/ShopNavbar'
 import ShopFooter from './components/ShopFooter'
-import ShopHome from './pages/ShopHome'
-import ShopStylists from './pages/ShopStylists'
-import ShopLogin from './pages/ShopLogin'
-import ShopServices from './pages/ShopServices'
-import ShopContact from './pages/ShopContact'
-import Appointment from './pages/Appointment'
-import MyAppointments from './pages/MyAppointments'
-import MyProfile from './pages/MyProfile'
-import Verify from './pages/Verify'
+
+// Login pages — small, load eagerly
+import SuperAdminLogin from './pages/superadmin/SuperAdminLogin'
+import SalonAdminLogin from './pages/admin/SalonAdminLogin'
+
+// Platform root — loaded at /
+const PlatformRoot    = lazy(() => import('./pages/PlatformRoot'))
+const CreateYourSalon = lazy(() => import('./pages/CreateYourSalon'))
+
+// Super Admin pages
+const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDashboard'))
+const SuperAdminSalons    = lazy(() => import('./pages/superadmin/SuperAdminSalons'))
+const CreateSalon         = lazy(() => import('./pages/superadmin/CreateSalon'))
+const PendingSalons       = lazy(() => import('./pages/superadmin/PendingSalons'))
+
+// Admin pages
+const Dashboard         = lazy(() => import('./pages/admin/Dashboard'))
+const AllAppointments   = lazy(() => import('./pages/admin/AllAppointments'))
+const AddDoctor         = lazy(() => import('./pages/admin/AddDoctor'))
+const DoctorsList       = lazy(() => import('./pages/admin/DoctorsList'))
+const EditStylist       = lazy(() => import('./pages/admin/EditStylist'))
+const ServicesCategory  = lazy(() => import('./pages/admin/ServicesCategory'))
+const SlotManagement    = lazy(() => import('./pages/admin/SlotManagement'))
+const AdminMyProfile    = lazy(() => import('./pages/admin/MyProfile'))
+const DoctorDashboard   = lazy(() => import('./pages/doctor/DoctorDashboard'))
+const DoctorAppointments= lazy(() => import('./pages/doctor/DoctorAppointments'))
+const DoctorProfile     = lazy(() => import('./pages/doctor/DoctorProfile'))
+const DoctorEarnings    = lazy(() => import('./pages/doctor/DoctorEarnings'))
+const AddProduct        = lazy(() => import('./pages/admin/products/AddProduct'))
+const ManageProducts    = lazy(() => import('./pages/admin/products/ManageProducts'))
+const Inventory         = lazy(() => import('./pages/admin/products/Inventory'))
+const Billing           = lazy(() => import('./pages/admin/billing/Billing'))
+const Bills             = lazy(() => import('./pages/admin/billing/Bills'))
+const TaxSettings       = lazy(() => import('./pages/admin/TaxSettings'))
+const Coupons           = lazy(() => import('./pages/admin/Coupons'))
+const Packages          = lazy(() => import('./pages/admin/Packages'))
+const Broadcast         = lazy(() => import('./pages/admin/Broadcast'))
+const WhatsAppConnect   = lazy(() => import('./pages/admin/WhatsAppConnect'))
+const OfflineBooking    = lazy(() => import('./pages/admin/OfflineBooking'))
+const StylistSection    = lazy(() => import('./pages/stylist/StylistSection'))
+
+// Customer pages
+const ShopHome        = lazy(() => import('./pages/ShopHome'))
+const ShopStylists    = lazy(() => import('./pages/ShopStylists'))
+const ShopLogin       = lazy(() => import('./pages/ShopLogin'))
+const ShopServices    = lazy(() => import('./pages/ShopServices'))
+const ShopContact     = lazy(() => import('./pages/ShopContact'))
+const Appointment     = lazy(() => import('./pages/Appointment'))
+const MyAppointments  = lazy(() => import('./pages/MyAppointments'))
+const MyProfile       = lazy(() => import('./pages/MyProfile'))
+const Verify          = lazy(() => import('./pages/Verify'))
+
+// Minimal fallback shown while a lazy chunk loads
+const PageSpinner = () => (
+  <div className="min-h-[200px] flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+)
 
 // ── SUPER ADMIN SECTION ──────────────────────────────────────────────────────
 const SuperAdminSection = () => {
@@ -77,15 +90,17 @@ const SuperAdminSection = () => {
       <div className="flex-1 flex flex-col md:ml-64">
         <SuperAdminNavbar />
         <div className="flex-grow">
-          <Routes>
-            <Route path="dashboard" element={<SuperAdminDashboard />} />
-            <Route path="salons" element={<SuperAdminSalons />} />
-            <Route path="salons/create" element={<CreateSalon />} />
-            <Route path="pending-salons" element={<PendingSalons />} />
-            <Route path="login" element={<Navigate to="/super-admin/dashboard" replace />} />
-            <Route path="" element={<Navigate to="/super-admin/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
-          </Routes>
+          <Suspense fallback={<PageSpinner />}>
+            <Routes>
+              <Route path="dashboard" element={<SuperAdminDashboard />} />
+              <Route path="salons" element={<SuperAdminSalons />} />
+              <Route path="salons/create" element={<CreateSalon />} />
+              <Route path="pending-salons" element={<PendingSalons />} />
+              <Route path="login" element={<Navigate to="/super-admin/dashboard" replace />} />
+              <Route path="" element={<Navigate to="/super-admin/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
     </div>
@@ -162,6 +177,7 @@ const ShopAdminSection = () => {
         <div className="flex flex-col min-h-screen md:ml-20 lg:ml-64">
           <AdminNavbar shopSlug={shopSlug} />
           <div className="p-4 sm:p-6 pb-20 md:pb-6 flex-grow">
+            <Suspense fallback={<PageSpinner />}>
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="appointments" element={<AllAppointments />} />
@@ -193,6 +209,7 @@ const ShopAdminSection = () => {
               <Route path="" element={<Navigate to={`/${shopSlug}/admin/dashboard`} replace />} />
               <Route path="*" element={<Navigate to={`/${shopSlug}/admin/dashboard`} replace />} />
             </Routes>
+            </Suspense>
           </div>
         </div>
       </div>
@@ -213,18 +230,20 @@ const ShopCustomerSection = () => {
     <div className="min-h-screen flex flex-col">
       <ShopNavbar />
       <main className="flex-grow">
-        <Routes>
-          <Route path="" element={<ShopHome />} />
-          <Route path="login" element={<ShopLogin />} />
-          <Route path="services" element={<ShopServices />} />
-          <Route path="stylists" element={<ShopStylists />} />
-          <Route path="contact" element={<ShopContact />} />
-          <Route path="appointment/:docId" element={<Appointment />} />
-          <Route path="my-appointments" element={<MyAppointments />} />
-          <Route path="my-profile" element={<MyProfile />} />
-          <Route path="verify" element={<Verify />} />
-          <Route path="*" element={<ShopHome />} />
-        </Routes>
+        <Suspense fallback={<PageSpinner />}>
+          <Routes>
+            <Route path="" element={<ShopHome />} />
+            <Route path="login" element={<ShopLogin />} />
+            <Route path="services" element={<ShopServices />} />
+            <Route path="stylists" element={<ShopStylists />} />
+            <Route path="contact" element={<ShopContact />} />
+            <Route path="appointment/:docId" element={<Appointment />} />
+            <Route path="my-appointments" element={<MyAppointments />} />
+            <Route path="my-profile" element={<MyProfile />} />
+            <Route path="verify" element={<Verify />} />
+            <Route path="*" element={<ShopHome />} />
+          </Routes>
+        </Suspense>
       </main>
       <ShopFooter />
     </div>
@@ -235,27 +254,29 @@ const ShopCustomerSection = () => {
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 const App = () => (
   <>
-    <ToastContainer position="top-center" autoClose={3000} />
+    <ToastContainer position=”top-center” autoClose={3000} />
     <ScrollToTop />
+    <Suspense fallback={<PageSpinner />}>
     <Routes>
       {/* Super Admin — must be before /:shopSlug/* to avoid slug capturing “super-admin” */}
-      <Route path="/super-admin/*" element={<SuperAdminSection />} />
+      <Route path=”/super-admin/*” element={<SuperAdminSection />} />
 
       {/* Shop Admin — must be before /:shopSlug/* */}
-      <Route path="/:shopSlug/admin/*" element={<ShopAdminSection />} />
+      <Route path=”/:shopSlug/admin/*” element={<ShopAdminSection />} />
 
       {/* Stylist Panel — must be before /:shopSlug/* */}
-      <Route path="/:shopSlug/stylist/*" element={<StylistSection />} />
+      <Route path=”/:shopSlug/stylist/*” element={<StylistSection />} />
 
       {/* Customer shop pages */}
-      <Route path="/:shopSlug/*" element={<ShopCustomerSection />} />
+      <Route path=”/:shopSlug/*” element={<ShopCustomerSection />} />
 
       {/* Create Your Own Salon — public form */}
-      <Route path="/create-salon" element={<CreateYourSalon />} />
+      <Route path=”/create-salon” element={<CreateYourSalon />} />
 
       {/* Platform root */}
       <Route path="/" element={<PlatformRoot />} />
     </Routes>
+    </Suspense>
   </>
 )
 

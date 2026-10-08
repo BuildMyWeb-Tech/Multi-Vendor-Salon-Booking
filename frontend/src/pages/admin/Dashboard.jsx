@@ -54,9 +54,9 @@ const Dashboard = () => {
     if (aToken) {
       setIsLoading(true);
 
-      Promise.all([getDashData(), getAllAppointments()]).finally(() => {
-        setIsLoading(false);
-      });
+      // getAllAppointments() is already called by SalonAdminContext on login;
+      // only fetch dashData (lightweight aggregate) here to avoid duplicate requests.
+      getDashData().finally(() => setIsLoading(false));
     }
   }, [aToken]);
 

@@ -50,10 +50,10 @@ const SalonAdminContextProvider = ({ children }) => {
     getAdminNotifications();
   }, [saAdminToken]);
 
-  // Re-fetch shopInfo when admin returns to the tab so toggle changes apply immediately
+  // Re-fetch shopInfo when admin returns to the tab, but respect the TTL
   useEffect(() => {
     if (!saAdminToken) return;
-    const onFocus = () => fetchShopInfo({ force: true });
+    const onFocus = () => fetchShopInfo({ force: false });
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,7 +74,7 @@ const SalonAdminContextProvider = ({ children }) => {
     return () => sock.off('admin_notification', handler);
   }, [shopInfo?.shopId]);
 
-  const SHOP_INFO_TTL_MS = 30 * 1000; // 30 seconds — keeps toggles in sync quickly
+  const SHOP_INFO_TTL_MS = 5 * 60 * 1000; // 5 minutes — sufficient for toggle changes
 
   const fetchShopInfo = async ({ force = false } = {}) => {
     try {

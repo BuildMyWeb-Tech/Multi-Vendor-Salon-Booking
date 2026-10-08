@@ -63,7 +63,21 @@ export default function WhatsAppConnect() {
 
   useEffect(() => {
     fetchStatus();
-    pollRef.current = setInterval(fetchStatus, 2000);
+    // Poll fast (2s) only while transitioning; slow down to 15s when already connected/disconnected
+    const FAST_STATES = new Set(['STARTING', 'AUTHENTICATING', 'QR_REQUIRED', 'RECONNECTING']);
+    const getInterval = (s) => (s && FAST_STATES.has(s.connectionState) ? 2000 : 15000);
+
+    let currentInterval = 2000;
+    pollRef.current = setInterval(() => {
+      fetchStatus();
+      // Re-schedule at the right rate after status updates
+      const next = getInterval(status);
+      if (next !== currentInterval) {
+        clearInterval(pollRef.current);
+        currentInterval = next;
+        pollRef.current = setInterval(fetchStatus, currentInterval);
+      }
+    }, currentInterval);
     return () => clearInterval(pollRef.current);
   }, [fetchStatus]);
 
