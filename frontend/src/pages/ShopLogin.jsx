@@ -46,7 +46,7 @@ const ShopLogin = () => {
           toast.error(data.message);
         }
       } else {
-        const { data } = await axios.post(`${backendUrl}/api/user/login`, { email, password });
+        const { data } = await axios.post(`${backendUrl}/api/user/login`, { email, password, shopId: currentShop?.shopId || '' });
         if (data.success) {
           localStorage.setItem('token', data.token);
           setToken(data.token);

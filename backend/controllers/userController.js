@@ -60,14 +60,14 @@ const registerUser = async (req, res) => {
       return res.json({ success: false, message: 'Please enter a valid 10-digit mobile number' });
     if (password.length < 8)
       return res.json({ success: false, message: 'Please enter a strong password' });
-    if (await userModel.findOne({ email }))
+    const tenantId = shopId || 'SHOP001';
+    if (await userModel.findOne({ email, shopId: tenantId }))
       return res.json({ success: false, message: 'User already exists with this email' });
-    if (await userModel.findOne({ phone: normalizedPhone, shopId: shopId || 'SHOP001' }))
+    if (await userModel.findOne({ phone: normalizedPhone, shopId: tenantId }))
       return res.json({ success: false, message: 'Phone number already registered at this salon' });
 
     const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
-    const userDoc = { name, email, password: hashedPassword, phone: normalizedPhone };
-    if (shopId) userDoc.shopId = shopId;
+    const userDoc = { name, email, password: hashedPassword, phone: normalizedPhone, shopId: tenantId };
     const user = await new userModel(userDoc).save();
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ success: true, token });
@@ -79,8 +79,10 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await userModel.findOne({ email });
+    const { email, password, shopId } = req.body;
+    const tenantId = shopId || 'SHOP001';
+    // Always scope login to the current salon — same email in another salon must NOT match
+    const user = await userModel.findOne({ email, shopId: tenantId });
     if (!user) return res.json({ success: false, message: 'User does not exist' });
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.json({ success: false, message: 'Invalid credentials' });

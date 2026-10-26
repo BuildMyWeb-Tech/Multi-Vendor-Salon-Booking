@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
     image: {
       type: String,
       default:
@@ -52,7 +52,8 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index: same phone can exist in different salons, but not twice in the same salon
+// Tenant-scoped uniqueness: same email/phone may exist across different salons
+userSchema.index({ email: 1, shopId: 1 }, { unique: true });
 userSchema.index({ phone: 1, shopId: 1 }, { unique: true });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);
