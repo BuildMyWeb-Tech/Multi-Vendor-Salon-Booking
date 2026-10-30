@@ -246,6 +246,21 @@ const StylistSidebar = ({ slug }) => {
           <ul>{renderLinks()}</ul>
         </div>
 
+        {/* Powered by BuildMyWeb */}
+        {!collapsed && (
+          <div className="px-4 pb-2 text-center">
+            <a
+              href="http://buildmyweb.info/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-gray-400 hover:text-primary transition-colors"
+            >
+              Powered by{' '}
+              <span className="font-semibold text-primary">BuildMyWeb</span>
+            </a>
+          </div>
+        )}
+
         {/* ----------------------------------------------------
             LOGOUT
         ---------------------------------------------------- */}
@@ -375,6 +390,19 @@ const StylistSidebar = ({ slug }) => {
           {/* Mobile Navigation */}
 
           <ul className="flex-1 py-4">{renderLinks(() => setMobileOpen(false))}</ul>
+
+          {/* Powered by BuildMyWeb — mobile */}
+          <div className="px-4 pb-2 text-center">
+            <a
+              href="http://buildmyweb.info/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-gray-400 hover:text-primary transition-colors"
+            >
+              Powered by{' '}
+              <span className="font-semibold text-primary">BuildMyWeb</span>
+            </a>
+          </div>
 
           {/* Mobile Logout */}
 

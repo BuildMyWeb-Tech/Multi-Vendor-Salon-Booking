@@ -104,6 +104,21 @@ const SuperAdminSidebar = () => {
         </div>
       )}
 
+      {/* Powered by BuildMyWeb */}
+      {(!collapsed || mobile) && (
+        <div className="mx-2 mb-2 px-3 py-2 text-center">
+          <a
+            href="http://buildmyweb.info/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-gray-400 hover:text-primary transition-colors"
+          >
+            Powered by{' '}
+            <span className="font-semibold text-primary">BuildMyWeb</span>
+          </a>
+        </div>
+      )}
+
       {/* Logout */}
       <div className="p-2 border-t border-gray-100">
         <button

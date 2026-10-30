@@ -157,6 +157,21 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
             {renderLinks(stylistLinks)}
           </ul>
         )}
+
+        {/* Powered by BuildMyWeb */}
+        {!collapsed && (
+          <div className="px-4 py-3 border-t border-gray-100 text-center">
+            <a
+              href="http://buildmyweb.info/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-gray-400 hover:text-primary transition-colors"
+            >
+              Powered by{' '}
+              <span className="font-semibold text-primary">BuildMyWeb</span>
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Mobile overlay */}
@@ -187,18 +202,40 @@ const AdminSidebar = ({ shopSlug: shopSlugProp }) => {
           </div>
 
           {aToken && (
-            <div className="overflow-y-auto h-[calc(100vh-80px)]">
-              <ul className="text-[#515151] py-2 flex flex-col">
+            <div className="overflow-y-auto h-[calc(100vh-80px)] flex flex-col">
+              <ul className="text-[#515151] py-2 flex flex-col flex-grow">
                 {renderMobileLinks(adminLinks)}
               </ul>
+              <div className="px-4 py-3 border-t border-gray-100 text-center">
+                <a
+                  href="http://buildmyweb.info/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-gray-400 hover:text-primary transition-colors"
+                >
+                  Powered by{' '}
+                  <span className="font-semibold text-primary">BuildMyWeb</span>
+                </a>
+              </div>
             </div>
           )}
 
           {dToken && (
-            <div className="overflow-y-auto h-[calc(100vh-80px)]">
-              <ul className="text-[#515151] py-2 flex flex-col">
+            <div className="overflow-y-auto h-[calc(100vh-80px)] flex flex-col">
+              <ul className="text-[#515151] py-2 flex flex-col flex-grow">
                 {renderMobileLinks(stylistLinks)}
               </ul>
+              <div className="px-4 py-3 border-t border-gray-100 text-center">
+                <a
+                  href="http://buildmyweb.info/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-gray-400 hover:text-primary transition-colors"
+                >
+                  Powered by{' '}
+                  <span className="font-semibold text-primary">BuildMyWeb</span>
+                </a>
+              </div>
             </div>
           )}
         </div>
