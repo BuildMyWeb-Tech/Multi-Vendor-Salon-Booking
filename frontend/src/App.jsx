@@ -1,4 +1,5 @@
-﻿import React, { lazy, Suspense, useContext, useEffect } from 'react'
+﻿/* eslint-disable react-refresh/only-export-components */
+import React, { lazy, Suspense, useContext, useEffect } from 'react'
 import { Routes, Route, useParams, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -10,7 +11,6 @@ import { SuperAdminContext } from './context/SuperAdminContext'
 import { SalonAdminContext } from './context/SalonAdminContext'
 import { AdminContext } from './context/AdminContext'
 import { ShopContext } from './context/ShopContext'
-import { StylistContext } from './context/StylistContext'
 
 // Shell components (always needed — no lazy loading)
 import SuperAdminSidebar from './components/admin/SuperAdminSidebar'
@@ -254,24 +254,24 @@ const ShopCustomerSection = () => {
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 const App = () => (
   <>
-    <ToastContainer position=”top-center” autoClose={3000} />
+    <ToastContainer position="top-center" autoClose={3000} />
     <ScrollToTop />
     <Suspense fallback={<PageSpinner />}>
     <Routes>
-      {/* Super Admin — must be before /:shopSlug/* to avoid slug capturing “super-admin” */}
-      <Route path=”/super-admin/*” element={<SuperAdminSection />} />
+      {/* Super Admin — must be before /:shopSlug/* to avoid slug capturing "super-admin" */}
+      <Route path="/super-admin/*" element={<SuperAdminSection />} />
 
       {/* Shop Admin — must be before /:shopSlug/* */}
-      <Route path=”/:shopSlug/admin/*” element={<ShopAdminSection />} />
+      <Route path="/:shopSlug/admin/*" element={<ShopAdminSection />} />
 
       {/* Stylist Panel — must be before /:shopSlug/* */}
-      <Route path=”/:shopSlug/stylist/*” element={<StylistSection />} />
+      <Route path="/:shopSlug/stylist/*" element={<StylistSection />} />
 
       {/* Customer shop pages */}
-      <Route path=”/:shopSlug/*” element={<ShopCustomerSection />} />
+      <Route path="/:shopSlug/*" element={<ShopCustomerSection />} />
 
       {/* Create Your Own Salon — public form */}
-      <Route path=”/create-salon” element={<CreateYourSalon />} />
+      <Route path="/create-salon" element={<CreateYourSalon />} />
 
       {/* Platform root */}
       <Route path="/" element={<PlatformRoot />} />
